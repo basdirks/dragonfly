@@ -1,5 +1,6 @@
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ParseError {
+    CustomError { message: String },
     UnexpectedEof,
     UnmatchedChar { expected: char, actual: char },
     UnmatchedCharPredicate { description: String, actual: char },
