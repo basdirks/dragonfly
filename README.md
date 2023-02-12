@@ -84,3 +84,53 @@ enum Category {
 ## Development
 
 Parsers do not concern themselves with their own padding/indentation. This is handled inside their parent parser.
+
+```rust
+// Not this:
+fn parse_a<T>(input: &str) -> ParseResult<T> {
+    let (b, input) = parse_b(input)?;
+    // ...
+    Ok((foo, input))
+}
+
+fn parse_b<T>(input: &str) -> ParseResult<T> {
+    let (_, input) = spaces(input)?;
+    let (b, input) = do_parse_b(input)?;
+    let (_, input) = spaces(input)?;
+    // ...
+    Ok((parsed, input))
+}
+
+// But this:
+fn parse_a<T>(input: &str) -> ParseResult<T> {
+    let (_, input) = spaces(input)?;
+    let (b, input) = parse_b(input)?;
+    let (_, input) = spaces(input)?;
+    // ...
+    Ok((foo, input))
+}
+
+fn parse_b<T>(input: &str) -> ParseResult<T> {
+    let (b, input) = do_parse_b(input)?;
+    // ...
+    Ok((b, input))
+}
+```
+
+High-level parsers do not concern themselves with EOF. This is handled in parsers like `char` and `literal`.
+
+```rust
+// Not this:
+fn parse<T>(input: &str) -> ParseResult<T> {
+    if input.is_empty() {
+        return Err(ParseError::UnexpectedEof);
+    }
+
+    let (b, input) = char(input, 'a')?;
+}
+
+// But this:
+fn parse<T>(input: &str) -> ParseResult<T> {
+    let (b, input) = char(input, 'a')?;
+}
+```

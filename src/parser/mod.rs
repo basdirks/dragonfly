@@ -1,6 +1,6 @@
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ParseError {
-    InputEmpty,
+    UnexpectedEof,
     UnmatchedChar { expected: char, actual: char },
     UnmatchedCharPredicate,
     UnmatchedChoice,
@@ -80,13 +80,13 @@ pub fn between<T>(input: &str, open: &str, parser: ParseFn<T>, close: &str) -> P
 /// assert_eq!(char("a", 'a'), Ok(('a', "".to_string())));
 /// assert_eq!(char("ab", 'a'), Ok(('a', "b".to_string())));
 /// assert_eq!(char("a", 'b'), Err(ParseError::UnmatchedChar { expected: 'b', actual: 'a' }));
-/// assert_eq!(char("", 'b'), Err(ParseError::InputEmpty));
+/// assert_eq!(char("", 'b'), Err(ParseError::UnexpectedEof));
 /// ```
 pub fn char(input: &str, char: char) -> ParseResult<char> {
     input
         .chars()
         .next()
-        .map_or(Err(ParseError::InputEmpty), |c| {
+        .map_or(Err(ParseError::UnexpectedEof), |c| {
             if c == char {
                 Ok((char, input[1..].to_string()))
             } else {
@@ -118,8 +118,13 @@ pub fn char(input: &str, char: char) -> ParseResult<char> {
 /// assert_eq!(literal("foobar", "foo"), Ok(("foo".to_string(), "bar".to_string())));
 /// assert_eq!(literal("foo", "bar"), Err(ParseError::UnmatchedLiteral { expected: "bar".to_string() }));
 /// assert_eq!(literal("bbar", "bar"), Err(ParseError::UnmatchedLiteral { expected: "bar".to_string() }));
+/// assert_eq!(literal("", "bar"), Err(ParseError::UnexpectedEof));
 /// ```
 pub fn literal(input: &str, literal: &str) -> ParseResult<String> {
+    if input.is_empty() {
+        return Err(ParseError::UnexpectedEof);
+    }
+
     input.strip_prefix(literal).map_or_else(
         || {
             Err(ParseError::UnmatchedLiteral {

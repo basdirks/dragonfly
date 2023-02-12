@@ -84,6 +84,7 @@ impl Type {
     /// # Examples
     ///
     /// ```rust
+    /// use dragonfly::parser::ParseError;
     /// use dragonfly::ast::r#type::{Primitive, Type};
     ///
     /// assert_eq!(Type::parse("String"), Ok((Type::One(Primitive::String), "".to_string())));
@@ -103,6 +104,12 @@ impl Type {
     ///
     /// // Nested arrays are not supported.
     /// assert!(Type::parse("[[String]]").is_err());
+    ///
+    /// // A type name must start with an uppercase letter.
+    /// assert!(Type::parse("foo").is_err());
+    ///
+    /// // An empty string is not a valid type.
+    /// assert!(Type::parse("").is_err());
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice::<Self>(input, vec![Self::parse_one, Self::parse_array])
