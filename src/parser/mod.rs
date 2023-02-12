@@ -9,6 +9,8 @@ pub enum ParseError {
 
 pub type ParseResult<T, E = ParseError> = Result<(T, String), E>;
 
+pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
+
 /// Apply a parser and map the result.
 ///
 /// # Arguments
@@ -20,11 +22,7 @@ pub type ParseResult<T, E = ParseError> = Result<(T, String), E>;
 /// # Errors
 ///
 /// * If the parser fails.
-pub fn map_ok<T, U>(
-    input: &str,
-    parser: fn(&str) -> ParseResult<T>,
-    f: fn(T) -> U,
-) -> ParseResult<U> {
+pub fn map_ok<T, U>(input: &str, parser: ParseFn<T>, f: fn(T) -> U) -> ParseResult<U> {
     parser(input).map(|(t, input)| (f(t), input))
 }
 
@@ -55,12 +53,7 @@ pub fn map_ok<T, U>(
 ///     Ok(('o', "".to_string())),
 /// );
 /// ```
-pub fn between<T>(
-    input: &str,
-    open: &str,
-    parser: fn(&str) -> ParseResult<T>,
-    close: &str,
-) -> ParseResult<T> {
+pub fn between<T>(input: &str, open: &str, parser: ParseFn<T>, close: &str) -> ParseResult<T> {
     let (_, input) = literal(input, open)?;
     let (t, input) = parser(&input)?;
     let (_, input) = literal(&input, close)?;
@@ -188,7 +181,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 /// assert_eq!(many("a23", alphabetic), Ok((vec!['a'], "23".to_string())));
 /// assert_eq!(many("123", alphabetic), Ok((vec![], "123".to_string())));
 /// ```
-pub fn many<T>(input: &str, parser: fn(&str) -> ParseResult<T>) -> ParseResult<Vec<T>> {
+pub fn many<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
     let mut input = input.to_string();
     let mut result = vec![];
 
@@ -221,7 +214,7 @@ pub fn many<T>(input: &str, parser: fn(&str) -> ParseResult<T>) -> ParseResult<V
 /// assert_eq!(many1("a23", alphabetic), Ok((vec!['a'], "23".to_string())));
 /// assert_eq!(many1("123", alphabetic), Err(ParseError::UnmatchedCharPredicate));
 /// ```
-pub fn many1<T>(input: &str, parser: fn(&str) -> ParseResult<T>) -> ParseResult<Vec<T>> {
+pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
     let (head, input) = parser(input)?;
     let (mut tail, input) = many(&input, parser)?;
 
@@ -286,7 +279,7 @@ pub fn many1<T>(input: &str, parser: fn(&str) -> ParseResult<T>) -> ParseResult<
 ///
 /// assert_eq!(choice::<bool>(input, vec![]), Err(ParseError::UnmatchedChoice));
 /// ```
-pub fn choice<T>(input: &str, parsers: Vec<fn(&str) -> ParseResult<T>>) -> ParseResult<T> {
+pub fn choice<T>(input: &str, parsers: Vec<ParseFn<T>>) -> ParseResult<T> {
     for parser in parsers {
         if let Ok((value, input)) = parser(input) {
             return Ok((value, input));
@@ -435,7 +428,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///     Ok((None, "def".to_string()))
 /// );
 /// ```
-pub fn maybe<T>(input: &str, parser: fn(&str) -> ParseResult<T>) -> ParseResult<Option<T>> {
+pub fn maybe<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Option<T>> {
     match parser(input) {
         Ok((value, input)) => Ok((Some(value), input)),
         Err(_) => Ok((None, input.to_string())),
