@@ -23,15 +23,6 @@ pub enum TypeError {
     UnknownSelectorField(String),
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct Ast {
-    pub components: HashMap<String, Component>,
-    pub enums: HashMap<String, Enum>,
-    pub models: HashMap<String, Model>,
-    pub queries: HashMap<String, Query>,
-    pub routes: HashMap<String, Route>,
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Statement {
     Component(Component),
@@ -125,6 +116,15 @@ impl Statement {
             ],
         )
     }
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct Ast {
+    pub components: HashMap<String, Component>,
+    pub enums: HashMap<String, Enum>,
+    pub models: HashMap<String, Model>,
+    pub queries: HashMap<String, Query>,
+    pub routes: HashMap<String, Route>,
 }
 
 impl Ast {

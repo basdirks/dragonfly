@@ -1,5 +1,5 @@
 use crate::parser::{
-    brace_close, brace_open, capitalized, char, chars_if, literal, spaces, ParseResult,
+    brace_close, brace_open, capitalized, chars_if, colon, literal, spaces, ParseResult,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -43,7 +43,7 @@ impl Component {
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = literal(&input, "path")?;
-        let (_, input) = char(&input, ':')?;
+        let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
 
         // TODO: Replace with `path` parser.
