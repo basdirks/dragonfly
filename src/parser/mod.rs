@@ -2,7 +2,7 @@
 pub enum ParseError {
     UnexpectedEof,
     UnmatchedChar { expected: char, actual: char },
-    UnmatchedCharPredicate,
+    UnmatchedCharPredicate { description: String, actual: char },
     UnmatchedChoice,
     UnmatchedLiteral { expected: String },
 }
@@ -21,7 +21,7 @@ pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
 ///
 /// # Errors
 ///
-/// * If the parser fails.
+/// * `ParseError` - If the parser fails.
 pub fn map_ok<T, U>(input: &str, parser: ParseFn<T>, f: fn(T) -> U) -> ParseResult<U> {
     parser(input).map(|(t, input)| (f(t), input))
 }
@@ -37,9 +37,10 @@ pub fn map_ok<T, U>(input: &str, parser: ParseFn<T>, f: fn(T) -> U) -> ParseResu
 ///
 /// # Errors
 ///
-/// * If the input does not start with the specified string.
-/// * If the parser fails.
-/// * If the input does not end with the specified string.
+/// * `ParseError::UnmatchedLiteral` - If the input does not start with the specified string.
+/// * `ParseError` - If the parser fails.
+/// * `ParseError::UnmatchedLiteral` - If the input does not end with the specified string.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -71,6 +72,7 @@ pub fn between<T>(input: &str, open: &str, parser: ParseFn<T>, close: &str) -> P
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the input does not start with the specified character.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -108,6 +110,7 @@ pub fn char(input: &str, char: char) -> ParseResult<char> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedLiteral` - If the input does not start with the specified literal.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -116,8 +119,17 @@ pub fn char(input: &str, char: char) -> ParseResult<char> {
 ///
 /// assert_eq!(literal("foo", "foo"), Ok(("foo".to_string(), "".to_string())));
 /// assert_eq!(literal("foobar", "foo"), Ok(("foo".to_string(), "bar".to_string())));
-/// assert_eq!(literal("foo", "bar"), Err(ParseError::UnmatchedLiteral { expected: "bar".to_string() }));
-/// assert_eq!(literal("bbar", "bar"), Err(ParseError::UnmatchedLiteral { expected: "bar".to_string() }));
+///
+/// assert_eq!(
+///     literal("foo", "bar"),
+///     Err(ParseError::UnmatchedLiteral { expected: "bar".to_string() })
+/// );
+///
+/// assert_eq!(
+///     literal("bbar", "bar"),
+///     Err(ParseError::UnmatchedLiteral { expected: "bar".to_string() })
+/// );
+///
 /// assert_eq!(literal("", "bar"), Err(ParseError::UnexpectedEof));
 /// ```
 pub fn literal(input: &str, literal: &str) -> ParseResult<String> {
@@ -143,7 +155,8 @@ pub fn literal(input: &str, literal: &str) -> ParseResult<String> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the first character is not uppercase.
+/// * `ParseError::UnmatchedCharPredicate` - If the first character is not uppercase.
+/// * `ParseError` - If the parser fails.
 ///
 /// # Examples
 ///
@@ -155,8 +168,10 @@ pub fn literal(input: &str, literal: &str) -> ParseResult<String> {
 /// assert_eq!(capitalized("Foo Bar"), Ok(("Foo".to_string(), " Bar".to_string())));
 /// assert_eq!(capitalized("FooBar"), Ok(("FooBar".to_string(), "".to_string())));
 ///
-/// assert_eq!(capitalized("foo"), Err(ParseError::UnmatchedCharPredicate));
-/// assert_eq!(capitalized("fOO"), Err(ParseError::UnmatchedCharPredicate));
+/// assert_eq!(capitalized("foo"), Err(ParseError::UnmatchedCharPredicate {
+///     actual: 'f',
+///     description: "should be uppercase".to_string(),
+/// }));
 /// ```
 pub fn capitalized(input: &str) -> ParseResult<String> {
     let (head, input) = uppercase(input)?;
@@ -217,7 +232,11 @@ pub fn many<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 /// assert_eq!(many1("abc", alphabetic), Ok((vec!['a', 'b', 'c'], "".to_string())));
 /// assert_eq!(many1("ab3", alphabetic), Ok((vec!['a', 'b'], "3".to_string())));
 /// assert_eq!(many1("a23", alphabetic), Ok((vec!['a'], "23".to_string())));
-/// assert_eq!(many1("123", alphabetic), Err(ParseError::UnmatchedCharPredicate));
+///
+/// assert_eq!(many1("123", alphabetic), Err(ParseError::UnmatchedCharPredicate {
+///     actual: '1',
+///     description: "should be alphabetic".to_string(),
+/// }));
 /// ```
 pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
     let (head, input) = parser(input)?;
@@ -300,27 +319,49 @@ pub fn choice<T>(input: &str, parsers: Vec<ParseFn<T>>) -> ParseResult<T> {
 ///
 /// * `input` - The input string to parse.
 /// * `predicate` - The predicate to apply.
+/// * `description` - A description of the predicate, used in error messages.
 ///
 /// # Errors
 ///
 /// * `ParseError::UnmatchedCharPredicate` - If the character does not fulfill the predicate.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
 /// ```rust
 /// use dragonfly::parser::{char_if, ParseError};
 ///
-/// assert_eq!(char_if("a", |c| c == 'a'), Ok(('a', "".to_string())));
-/// assert_eq!(char_if("b", |c| c == 'a'), Err(ParseError::UnmatchedCharPredicate));
+/// assert_eq!(
+///     char_if("a", |c| c.is_ascii_lowercase(), "should be lowercase"),
+///     Ok(('a', "".to_string()))
+/// );
+///
+/// assert_eq!(
+///     char_if("A", |c| c.is_ascii_lowercase(), "should be lowercase"),
+///     Err(ParseError::UnmatchedCharPredicate {
+///         actual: 'A',
+///         description: "should be lowercase".to_string()
+///     })
+/// );
+///
+/// assert_eq!(
+///     char_if("", |c| c.is_ascii_lowercase(), "should be lowercase"),
+///     Err(ParseError::UnexpectedEof)
+/// );
 /// ```
-pub fn char_if(input: &str, predicate: fn(char) -> bool) -> ParseResult<char> {
+pub fn char_if(input: &str, predicate: fn(char) -> bool, description: &str) -> ParseResult<char> {
     if let Some(char) = input.chars().next() {
         if predicate(char) {
             return Ok((char, input[1..].to_string()));
         }
+
+        return Err(ParseError::UnmatchedCharPredicate {
+            actual: char,
+            description: description.to_string(),
+        });
     }
 
-    Err(ParseError::UnmatchedCharPredicate)
+    Err(ParseError::UnexpectedEof)
 }
 
 /// Parse one or more characters that fulfill the specified predicate into a string.
@@ -329,24 +370,40 @@ pub fn char_if(input: &str, predicate: fn(char) -> bool) -> ParseResult<char> {
 ///
 /// * `input` - The input string to parse.
 /// * `predicate` - The predicate to apply.
+/// * `description` - The description of the predicate, used in error messages.
 ///
 /// # Errors
 ///
-/// None. This parser always succeeds.
+/// * `ParseError::UnmatchedCharPredicate` - If the first character does not fulfill the predicate.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
 /// ```rust
-/// use dragonfly::parser::chars_if;
+/// use dragonfly::parser::{chars_if, ParseError};
 ///
-/// assert_eq!(chars_if("abc", |c| c.is_ascii_alphabetic()), Ok(("abc".to_string(), "".to_string())));
-/// assert!(chars_if("123", |c| c.is_ascii_alphabetic()).is_err());
+/// assert_eq!(
+///     chars_if("abc", |c| c.is_ascii_alphabetic(), "should be alphabetic"),
+///     Ok(("abc".to_string(), "".to_string()))
+/// );
+///
+/// assert_eq!(
+///     chars_if("123", |c| c.is_ascii_alphabetic(), "should be alphabetic"),
+///     Err(ParseError::UnmatchedCharPredicate {
+///         actual: '1',
+///         description: "should be alphabetic".to_string()
+///     })
+/// );
 /// ```
-pub fn chars_if(input: &str, predicate: fn(char) -> bool) -> ParseResult<String> {
-    let (head, mut input) = char_if(input, predicate)?;
+pub fn chars_if(
+    input: &str,
+    predicate: fn(char) -> bool,
+    description: &str,
+) -> ParseResult<String> {
+    let (head, mut input) = char_if(input, predicate, description)?;
     let mut result = head.to_string();
 
-    while let Ok((char, new_input)) = char_if(&input, predicate) {
+    while let Ok((char, new_input)) = char_if(&input, predicate, description) {
         result.push(char);
         input = new_input;
     }
@@ -362,7 +419,8 @@ pub fn chars_if(input: &str, predicate: fn(char) -> bool) -> ParseResult<String>
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the character is not alphabetic.
+/// * `ParseError::UnmatchedCharPredicate` - If the character is not alphabetic.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -371,11 +429,41 @@ pub fn chars_if(input: &str, predicate: fn(char) -> bool) -> ParseResult<String>
 ///
 /// assert!(alphabetic("a").is_ok());
 /// assert!(alphabetic("A").is_ok());
-/// assert!(alphabetic("1").is_err());
-/// assert!(alphabetic("1").is_err());
+///
+/// assert_eq!(
+///     alphabetic("1"),
+///     Err(ParseError::UnmatchedCharPredicate {
+///         actual: '1',
+///         description: "should be alphabetic".to_string()
+///     })
+/// );
 /// ```
 pub fn alphabetic(input: &str) -> ParseResult<char> {
-    char_if(input, |char| char.is_ascii_alphabetic())
+    char_if(
+        input,
+        |char| char.is_ascii_alphabetic(),
+        "should be alphabetic",
+    )
+}
+
+/// Parse one or more alphabetic ASCII characters into a string.
+///
+/// # Arguments
+///
+/// * `input` - The input string to parse.
+///
+/// # Errors
+///
+/// * `ParseError::UnmatchedCharPredicate` - If the first character is not alphabetic.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
+///
+/// TODO: add examples
+pub fn alphabetics(input: &str) -> ParseResult<String> {
+    chars_if(
+        input,
+        |char| char.is_ascii_alphabetic(),
+        "should be alphabetic",
+    )
 }
 
 /// Parse an alphanumeric ASCII character.
@@ -386,7 +474,8 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the character is not alphanumeric.
+/// * `ParseError::UnmatchedCharPredicate` - If the character is not alphanumeric.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -396,10 +485,21 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 /// assert!(alphanumeric("a").is_ok());
 /// assert!(alphanumeric("A").is_ok());
 /// assert!(alphanumeric("1").is_ok());
-/// assert!(alphanumeric(" ").is_err());
+///
+/// assert_eq!(
+///     alphanumeric(" "),
+///     Err(ParseError::UnmatchedCharPredicate {
+///         actual: ' ',
+///         description: "should be alphanumeric".to_string()
+///     })
+/// );
 /// ```
 pub fn alphanumeric(input: &str) -> ParseResult<char> {
-    char_if(input, |char| char.is_ascii_alphanumeric())
+    char_if(
+        input,
+        |char| char.is_ascii_alphanumeric(),
+        "should be alphanumeric",
+    )
 }
 
 /// Optionally apply a parser.
@@ -448,7 +548,8 @@ pub fn maybe<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Option<T>> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the character is not a digit.
+/// * `ParseError::UnmatchedCharPredicate` - If the character is not a digit.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -456,10 +557,21 @@ pub fn maybe<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Option<T>> {
 /// use dragonfly::parser::{digit, ParseError};
 ///
 /// assert!(digit("1").is_ok());
-/// assert!(digit("a").is_err());
+///
+/// assert_eq!(
+///     digit("a"),
+///     Err(ParseError::UnmatchedCharPredicate {
+///         actual: 'a',
+///         description: "should be a decimal digit".to_string()
+///     })
+/// );
 /// ```
 pub fn digit(input: &str) -> ParseResult<char> {
-    char_if(input, |char| char.is_ascii_digit())
+    char_if(
+        input,
+        |char| char.is_ascii_digit(),
+        "should be a decimal digit",
+    )
 }
 
 /// Parse an ASCII lowercase letter.
@@ -470,7 +582,8 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the character is not lowercase.
+/// * `ParseError::UnmatchedCharPredicate` - If the character is not lowercase.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -478,11 +591,18 @@ pub fn digit(input: &str) -> ParseResult<char> {
 /// use dragonfly::parser::{lowercase, ParseError};
 ///
 /// assert!(lowercase("a").is_ok());
-/// assert!(lowercase("A").is_err());
-/// assert!(lowercase("1").is_err());
+///
+/// assert_eq!(lowercase("A"), Err(ParseError::UnmatchedCharPredicate {
+///     actual: 'A',
+///     description: "should be lowercase".to_string()
+/// }));
 /// ```
 pub fn lowercase(input: &str) -> ParseResult<char> {
-    char_if(input, |char| char.is_ascii_lowercase())
+    char_if(
+        input,
+        |char| char.is_ascii_lowercase(),
+        "should be lowercase",
+    )
 }
 
 /// Parse an ASCII uppercase letter.
@@ -493,7 +613,8 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the character is not uppercase.
+/// * `ParseError::UnmatchedCharPredicate` - If the character is not uppercase.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -501,11 +622,18 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 /// use dragonfly::parser::{uppercase, ParseError};
 ///
 /// assert!(uppercase("A").is_ok());
-/// assert!(uppercase("a").is_err());
-/// assert!(uppercase("1").is_err());
+///
+/// assert_eq!(uppercase("a"), Err(ParseError::UnmatchedCharPredicate {
+///     actual: 'a',
+///     description: "should be uppercase".to_string()
+/// }));
 /// ```
 pub fn uppercase(input: &str) -> ParseResult<char> {
-    char_if(input, |char| char.is_ascii_uppercase())
+    char_if(
+        input,
+        |char| char.is_ascii_uppercase(),
+        "should be uppercase",
+    )
 }
 
 /// Parse an ASCII whitespace character.
@@ -516,7 +644,8 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the character is not whitespace.
+/// * `ParseError::UnmatchedCharPredicate` - If the character is not whitespace.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -527,10 +656,18 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 /// assert!(whitespace("\t").is_ok());
 /// assert!(whitespace("\r").is_ok());
 /// assert!(whitespace("\n").is_ok());
-/// assert!(whitespace("a").is_err());
+///
+/// assert_eq!(whitespace("a"), Err(ParseError::UnmatchedCharPredicate {
+///     actual: 'a',
+///     description: "should be whitespace".to_string()
+/// }));
 /// ```
 pub fn whitespace(input: &str) -> ParseResult<char> {
-    char_if(input, |char| char.is_ascii_whitespace())
+    char_if(
+        input,
+        |char| char.is_ascii_whitespace(),
+        "should be whitespace",
+    )
 }
 
 /// Consume zero or more whitespace characters.
@@ -563,7 +700,8 @@ pub fn spaces(input: &str) -> ParseResult<Vec<char>> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If there are no whitespace characters.
+/// * `ParseError::UnmatchedCharPredicate` - If there are no whitespace characters.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -571,7 +709,11 @@ pub fn spaces(input: &str) -> ParseResult<Vec<char>> {
 /// use dragonfly::parser::{spaces1, ParseError};
 ///
 /// assert_eq!(spaces1(" \t\r\n"), Ok((" \t\r\n".to_string(), "".to_string())));
-/// assert_eq!(spaces1("abc"), Err(ParseError::UnmatchedCharPredicate));
+///
+/// assert_eq!(spaces1("abc"), Err(ParseError::UnmatchedCharPredicate {
+///     actual: 'a',
+///     description: "should be whitespace".to_string()
+/// }));
 /// ```
 pub fn spaces1(input: &str) -> ParseResult<String> {
     let (whitespace, input) = many1(input, whitespace)?;
@@ -588,6 +730,7 @@ pub fn spaces1(input: &str) -> ParseResult<String> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the next character is not an opening brace.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -610,6 +753,7 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the next character is not a closing brace.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -632,6 +776,7 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the next character is not a colon.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -654,6 +799,7 @@ pub fn colon(input: &str) -> ParseResult<char> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the next character is not an opening parenthesis.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -676,6 +822,7 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the next character is not a closing parenthesis.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -698,6 +845,7 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the next character is not a dollar sign.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///
@@ -720,6 +868,7 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 /// # Errors
 ///
 /// * `ParseError::UnmatchedChar` - If the next character is not a comma.
+/// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
 /// # Examples
 ///

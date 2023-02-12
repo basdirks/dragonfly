@@ -45,7 +45,14 @@ impl Component {
         let (_, input) = literal(&input, "path")?;
         let (_, input) = char(&input, ':')?;
         let (_, input) = spaces(&input)?;
-        let (path, input) = chars_if(&input, |c| c.is_ascii_alphabetic() || c == '/')?;
+
+        // TODO: Replace with `path` parser.
+        let (path, input) = chars_if(
+            &input,
+            |c| c.is_ascii_alphabetic() || c == '/',
+            "should be alphabetic or '/'",
+        )?;
+
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 

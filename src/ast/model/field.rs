@@ -1,4 +1,4 @@
-use crate::parser::{chars_if, colon, spaces, ParseResult};
+use crate::parser::{alphabetics, colon, spaces, ParseResult};
 
 use super::super::r#type::Type;
 
@@ -35,7 +35,7 @@ impl Field {
     /// assert_eq!(Field::parse(input), Ok((expected, "".to_string())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
-        let (name, input) = chars_if(input, char::is_alphabetic)?;
+        let (name, input) = alphabetics(input)?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
         let (r#type, input) = Type::parse(&input)?;

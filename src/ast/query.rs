@@ -1,6 +1,6 @@
 use crate::parser::{
-    brace_close, brace_open, chars_if, choice, colon, comma, dollar, literal, many1, maybe,
-    paren_close, paren_open, spaces, ParseResult,
+    alphabetics, brace_close, brace_open, choice, colon, comma, dollar, literal, many1, map_ok,
+    maybe, paren_close, paren_open, spaces, ParseResult,
 };
 
 use super::r#type::Type;
@@ -179,7 +179,7 @@ impl Where {
     /// );
     /// ```
     pub fn parse_node(input: &str) -> ParseResult<Self> {
-        let (name, input) = chars_if(input, |c| c.is_ascii_alphabetic())?;
+        let (name, input) = alphabetics(input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
@@ -298,7 +298,7 @@ pub enum Schema {
 
 impl Schema {
     fn parse_node(input: &str) -> ParseResult<Self> {
-        let (name, input) = chars_if(input, |c| c.is_ascii_alphabetic())?;
+        let (name, input) = alphabetics(input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
@@ -316,9 +316,7 @@ impl Schema {
     }
 
     fn parse_identifier(input: &str) -> ParseResult<Self> {
-        let (identifier, input) = chars_if(input, |c| c.is_ascii_alphabetic())?;
-
-        Ok((Self::Identifier(identifier), input))
+        map_ok(input, alphabetics, Self::Identifier)
     }
 
     /// Parse a schema from the given input.
@@ -494,7 +492,7 @@ impl Query {
     pub fn parse_variable(input: &str) -> ParseResult<String> {
         let (_, input) = dollar(input)?;
 
-        chars_if(&input, |c| c.is_ascii_alphabetic())
+        alphabetics(&input)
     }
 
     /// Parse a query from the given input.
@@ -639,7 +637,7 @@ impl Query {
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "query")?;
         let (_, input) = spaces(&input)?;
-        let (name, input) = chars_if(&input, |c| c.is_ascii_alphabetic())?;
+        let (name, input) = alphabetics(&input)?;
         let (_, input) = spaces(&input)?;
         let (arguments, input) = Self::parse_arguments(&input)?;
         let (_, input) = colon(&input)?;

@@ -1,5 +1,5 @@
 use crate::parser::{
-    brace_close, brace_open, chars_if, choice, colon, literal, spaces, ParseResult,
+    alphabetics, brace_close, brace_open, chars_if, choice, colon, literal, spaces, ParseResult,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -23,7 +23,7 @@ impl Route {
         let (_, input) = literal(input, "root")?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
-        let (root, input) = chars_if(&input, |c| c.is_ascii_alphabetic())?;
+        let (root, input) = alphabetics(&input)?;
 
         Ok((root, input))
     }
@@ -41,7 +41,7 @@ impl Route {
         let (_, input) = literal(input, "title")?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
-        let (title, input) = chars_if(&input, |c| c.is_ascii_alphabetic())?;
+        let (title, input) = alphabetics(&input)?;
 
         Ok((title, input))
     }
@@ -97,10 +97,20 @@ impl Route {
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "route")?;
         let (_, input) = spaces(&input)?;
-        let (path, input) = chars_if(&input, |c| c.is_ascii_alphanumeric() || c == '/')?;
+
+        // TODO: Replace with `path` parser.
+        let (path, input) = chars_if(
+            &input,
+            |c| c.is_ascii_alphanumeric() || c == '/',
+            "should be alphanumeric or '/'",
+        )?;
+
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
+
+        // TODO: Replace with variant of `choice` that applies each parser
+        // exactly once, regardless of order.
         let ((root, title), input) = choice(
             &input,
             vec![
@@ -118,6 +128,7 @@ impl Route {
                 },
             ],
         )?;
+
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
