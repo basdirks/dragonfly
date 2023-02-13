@@ -71,6 +71,10 @@ impl Route {
     ///     root: "Foo".to_string(),
     ///     title: "Foobar".to_string(),
     /// }, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::route::Route;
     ///
     /// let input = "route / {
     ///   root: Index
@@ -82,6 +86,10 @@ impl Route {
     ///     root: "Index".to_string(),
     ///     title: "Home".to_string(),
     /// }, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::route::Route;
     ///
     /// let input = "route / {
     ///   title: Home

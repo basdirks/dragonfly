@@ -44,6 +44,11 @@ impl Enum {
     /// };
     ///
     /// assert_eq!(Enum::parse(input), Ok((expected, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::parser::ParseError;
+    /// use dragonfly::ast::r#enum::Enum;
     ///
     /// let input = "enum Foo {
     ///     bar
@@ -56,6 +61,11 @@ impl Enum {
     ///         actual: 'b'
     ///     })
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::parser::ParseError;
+    /// use dragonfly::ast::r#enum::Enum;
     ///
     /// let input = "enum Foo {
     ///     Bar

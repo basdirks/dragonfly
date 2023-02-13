@@ -39,6 +39,10 @@ impl Primitive {
     /// assert_eq!(Primitive::parse("Int"), Ok((Primitive::Int, "".to_string())));
     /// assert_eq!(Primitive::parse("Float"), Ok((Primitive::Float, "".to_string())));
     /// assert_eq!(Primitive::parse("Boolean"), Ok((Primitive::Boolean, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::Primitive;
     ///
     /// assert_eq!(Primitive::parse("Foo"), Ok((Primitive::Identifier("Foo".to_string()), "".to_string())));
     /// ```
@@ -93,24 +97,47 @@ impl Type {
     /// assert_eq!(Type::parse("Int"), Ok((Type::One(Primitive::Int), "".to_string())));
     /// assert_eq!(Type::parse("Float"), Ok((Type::One(Primitive::Float), "".to_string())));
     /// assert_eq!(Type::parse("Boolean"), Ok((Type::One(Primitive::Boolean), "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::{Primitive, Type};
     ///
     /// assert_eq!(
     ///     Type::parse("[String]"),
     ///     Ok((Type::Array(Primitive::String), "".to_string())),
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::{Primitive, Type};
     ///
     /// assert_eq!(
     ///     Type::parse("[Foo]"),
     ///     Ok((Type::Array(Primitive::Identifier("Foo".to_string())), "".to_string())),
     /// );
+    /// ```
     ///
-    /// // Nested arrays are not supported.
+    /// Nested arrays are not supported:
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::Type;
+    ///
     /// assert!(Type::parse("[[String]]").is_err());
+    /// ```
     ///
-    /// // A type name must start with an uppercase letter.
+    /// A type name must start with an uppercase letter:
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::Type;
+    ///
     /// assert!(Type::parse("foo").is_err());
+    /// ```
     ///
-    /// // An empty string is not a valid type.
+    /// An empty string is not a valid type:
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::Type;
+    ///
     /// assert!(Type::parse("").is_err());
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {

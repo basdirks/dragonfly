@@ -106,12 +106,6 @@ impl Statement {
     /// ```rust
     /// use dragonfly::ast::Statement;
     /// use dragonfly::ast::component::Component;
-    /// use dragonfly::ast::r#enum::Enum;
-    /// use dragonfly::ast::model::{field::Field, Model};
-    /// use dragonfly::ast::query::Query;
-    /// use dragonfly::ast::route::Route;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
-    /// use std::collections::{HashMap, HashSet};
     ///
     /// let input = "component Foo {
     ///     path: /foo
@@ -123,6 +117,12 @@ impl Statement {
     /// });
     ///
     /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Statement;
+    /// use dragonfly::ast::r#enum::Enum;
+    /// use std::collections::HashSet;
     ///
     /// let input = "enum Foo {
     ///     Bar
@@ -140,6 +140,15 @@ impl Statement {
     /// });
     ///
     /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Statement;
+    /// use dragonfly::ast::model::{field::Field, Model};
+    /// use dragonfly::ast::query::Query;
+    /// use dragonfly::ast::route::Route;
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use std::collections::HashMap;
     ///
     /// let input = "model Foo {
     ///     foo: String

@@ -476,7 +476,24 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 /// * `ParseError::UnmatchedCharPredicate` - If the first character is not alphabetic.
 /// * `ParseError::UnexpectedEof` - If the input is empty.
 ///
-/// TODO: add examples
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::parser::{alphabetics, ParseError};
+///
+/// assert_eq!(
+///     alphabetics("abc"),
+///     Ok(("abc".to_string(), "".to_string())),
+/// );
+///
+/// assert_eq!(
+///     alphabetics("123"),
+///     Err(ParseError::UnmatchedCharPredicate {
+///         actual: '1',
+///         description: "should be alphabetic".to_string(),
+///     }),
+/// );
+/// ```
 pub fn alphabetics(input: &str) -> ParseResult<String> {
     chars_if(
         input,

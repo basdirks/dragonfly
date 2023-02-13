@@ -103,6 +103,10 @@ impl Where {
     ///         "".to_string(),
     ///     ))
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::{Selector, Where};
     ///
     /// let input = "equals: $bar";
     ///
@@ -153,6 +157,10 @@ impl Where {
     ///         "".to_string()
     ///     ))
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::{Selector, Where};
     ///
     /// let input = "foo {
     ///     bar {
@@ -413,6 +421,10 @@ impl Schema {
     ///         "".to_string()
     ///     )),
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::Schema;
     ///
     /// let input = "user {
     ///   name {
@@ -439,6 +451,10 @@ impl Schema {
     ///         "".to_string()
     ///     )),
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::Schema;
     ///
     /// let input = "user";
     ///
@@ -462,6 +478,10 @@ impl Schema {
     /// let schema = Schema::Identifier("user".to_string());
     ///
     /// assert_eq!(schema.is_empty(), true);
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::Schema;
     ///
     /// let schema = Schema::Node(
     ///     "user".to_string(),
@@ -516,6 +536,11 @@ impl Query {
     ///         "".to_string()
     ///    ))
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query};
     ///
     /// assert_eq!(
     ///     Query::parse_arguments("($id: UUID, $name: [String])"),
@@ -574,6 +599,10 @@ impl Query {
     ///    Query::parse_reference("$name"),
     ///    Ok(("name".to_string(), "".to_string()))
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::Query;
     ///
     /// assert!(Query::parse_reference("name").is_err());
     /// ```
@@ -619,6 +648,11 @@ impl Query {
     /// };
     ///
     /// assert_eq!(Query::parse(input), Ok((expected, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
     ///
     /// let input = "query images($tag: String, $title: String): [Image] {
     ///   image {
@@ -675,6 +709,11 @@ impl Query {
     /// };
     ///
     /// assert_eq!(Query::parse(input), Ok((expected, "".to_string())));
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
     ///
     /// let input = "query imagesByCountryName($name: CountryName): [Image] {
     ///   image {
@@ -767,9 +806,7 @@ impl Query {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::TypeError;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
-    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    /// use dragonfly::ast::query::Query;
     ///
     /// let input = "query images: [Image] {
     ///     image {
@@ -785,6 +822,11 @@ impl Query {
     /// }";
     ///
     /// assert!(Query::parse(input).unwrap().0.check_root_nodes().is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::TypeError;
+    /// use dragonfly::ast::query::Query;
     ///
     /// let input = "query images: [Image] {
     ///     image {
@@ -833,8 +875,7 @@ impl Query {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
-    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    /// use dragonfly::ast::query::Query;
     ///
     /// let input = "query images: [Image] {
     ///     image {
@@ -843,6 +884,10 @@ impl Query {
     /// }";
     ///
     /// assert!(Query::parse(input).is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::Query;
     ///
     /// let input = "query images: [Image] {}";
     ///
@@ -868,10 +913,7 @@ impl Query {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::TypeError;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
-    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
-    /// use std::collections::HashSet;
+    /// use dragonfly::ast::query::Query;
     ///
     /// let input = "query images($name: CountryName): [Image] {
     ///     image {
@@ -889,6 +931,12 @@ impl Query {
     /// }";
     ///
     /// assert!(Query::parse(input).unwrap().0.check_unused_arguments().is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::TypeError;
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query};
     ///
     /// let input = "query images($name: CountryName): [Image] {
     ///     image {
@@ -906,6 +954,12 @@ impl Query {
     ///         },
     ///     }),
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::TypeError;
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query};
     ///
     /// let input = "query images($name: CountryName, $tag: String): [Image] {
     ///     image {
@@ -932,7 +986,6 @@ impl Query {
     ///         },
     ///     }),
     /// );
-    ///
     /// ```
     pub fn check_unused_arguments(&self) -> Result<(), TypeError> {
         let selector_references = self
