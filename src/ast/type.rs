@@ -1,4 +1,8 @@
-use crate::parser::{alphabetics, between, choice, literal, ParseResult};
+use crate::{
+    literal, map,
+    parser::{between, capitalized, choice, literal, map, tag, ParseResult},
+    tag,
+};
 
 /// Primitive types.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -42,15 +46,11 @@ impl Primitive {
         choice::<Self>(
             input,
             vec![
-                |input| literal(input, "String").map(|(_, rem)| (Self::String, rem)),
-                |input| literal(input, "Int").map(|(_, rem)| (Self::Int, rem)),
-                |input| literal(input, "Float").map(|(_, rem)| (Self::Float, rem)),
-                |input| literal(input, "Boolean").map(|(_, rem)| (Self::Boolean, rem)),
-                |input| {
-                    let (identifier, input) = alphabetics(input)?;
-
-                    Ok((Self::Identifier(identifier), input))
-                },
+                tag!(literal!("String"), Self::String),
+                tag!(literal!("Int"), Self::Int),
+                tag!(literal!("Float"), Self::Float),
+                tag!(literal!("Boolean"), Self::Boolean),
+                map!(capitalized, Self::Identifier),
             ],
         )
     }
@@ -64,7 +64,7 @@ pub enum Type {
 
 impl Type {
     fn parse_one(input: &str) -> ParseResult<Self> {
-        Primitive::parse(input).map(|(primitive, input)| (Self::One(primitive), input))
+        map(input, Primitive::parse, Self::One)
     }
 
     fn parse_array(input: &str) -> ParseResult<Self> {

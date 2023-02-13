@@ -8,6 +8,7 @@ pub enum ParseError {
     UnmatchedLiteral { expected: String },
 }
 
+/// Make this a struct and implement `std::ops::Try` so we can also impl `Iterator` and friends.
 pub type ParseResult<T, E = ParseError> = Result<(T, String), E>;
 
 pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
@@ -23,8 +24,23 @@ pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
 /// # Errors
 ///
 /// * `ParseError` - If the parser fails.
-pub fn map_ok<T, U>(input: &str, parser: ParseFn<T>, f: fn(T) -> U) -> ParseResult<U> {
+pub fn map<T, U>(input: &str, parser: ParseFn<T>, f: fn(T) -> U) -> ParseResult<U> {
     parser(input).map(|(t, input)| (f(t), input))
+}
+
+/// Apply a parser and return the given value instead of the parsed result.
+///
+/// # Arguments
+///
+/// * `input` - The input string to parse.
+/// * `parser` - The parser to apply.
+/// * `value` - The value to return.
+///
+/// # Errors
+///
+/// * `ParseError` - If the parser fails.
+pub fn tag<T, U>(input: &str, parser: ParseFn<T>, value: U) -> ParseResult<U> {
+    parser(input).map(|(_, input)| (value, input))
 }
 
 /// Parse an expression surrounded by two specified string literals.
@@ -262,7 +278,7 @@ pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 /// # Examples
 ///
 /// ```rust
-/// use dragonfly::parser::{choice, literal, ParseError};
+/// use dragonfly::parser::{choice, literal, ParseError, tag};
 ///
 /// #[derive(Debug, Eq, PartialEq)]
 /// enum Choice {
@@ -276,8 +292,8 @@ pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 ///     choice(
 ///         input,
 ///         vec![
-///             |input| literal(input, "abc").map(|(_, rem)| (Choice::A, rem)),
-///             |input| literal(input, "abc").map(|(_, rem)| (Choice::B, rem)),
+///             |input| tag(input, |input| literal(input, "abc"), Choice::A),
+///             |input| tag(input, |input| literal(input, "abc"), Choice::B),
 ///         ]
 ///     ),
 ///     Ok((Choice::A, "".to_string()))
@@ -287,8 +303,8 @@ pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 ///     choice(
 ///         input,
 ///         vec![
-///             |input| literal(input, "abc").map(|(_, rem)| (Choice::B, rem)),
-///             |input| literal(input, "abc").map(|(_, rem)| (Choice::A, rem)),
+///             |input| tag(input, |input| literal(input, "abc"), Choice::B),
+///             |input| tag(input, |input| literal(input, "abc"), Choice::A),
 ///         ]
 ///     ),
 ///     Ok((Choice::B, "".to_string()))
@@ -297,7 +313,7 @@ pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 /// assert_eq!(
 ///     choice(
 ///         input,
-///         vec![|input| literal(input, "def").map(|(_, rem)| (Choice::A, rem))]
+///         vec![|input| tag(input, |input| literal(input, "def"), Choice::A)]
 ///     ),
 ///     Err(ParseError::UnmatchedChoice)
 /// );
@@ -881,4 +897,25 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 /// ```
 pub fn comma(input: &str) -> ParseResult<char> {
     char(input, ',')
+}
+
+#[macro_export]
+macro_rules! literal {
+    ($literal:expr) => {
+        |input| literal(input, $literal)
+    };
+}
+
+#[macro_export]
+macro_rules! tag {
+    ($parser:expr, $f:expr) => {
+        |input| tag(input, $parser, $f)
+    };
+}
+
+#[macro_export]
+macro_rules! map {
+    ($parser:expr, $f:expr) => {
+        |input| map(input, $parser, $f)
+    };
 }

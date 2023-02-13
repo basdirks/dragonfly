@@ -1,6 +1,6 @@
 use crate::parser::{
-    alphabetics, brace_close, brace_open, choice, colon, comma, dollar, literal, many1, map_ok,
-    maybe, paren_close, paren_open, spaces, ParseResult,
+    alphabetics, brace_close, brace_open, choice, colon, comma, dollar, literal, many1, map, maybe,
+    paren_close, paren_open, spaces, ParseResult,
 };
 
 use super::r#type::Type;
@@ -302,6 +302,7 @@ impl Schema {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
+
         let (structure, input) = many1(&input, |input| {
             let (_, input) = spaces(input)?;
             let (schema, input) = Self::parse(&input)?;
@@ -309,6 +310,7 @@ impl Schema {
 
             Ok((schema, input))
         })?;
+
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
@@ -316,7 +318,7 @@ impl Schema {
     }
 
     fn parse_identifier(input: &str) -> ParseResult<Self> {
-        map_ok(input, alphabetics, Self::Identifier)
+        map(input, alphabetics, Self::Identifier)
     }
 
     /// Parse a schema from the given input.
@@ -647,10 +649,12 @@ impl Query {
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
         let (schema, input) = Schema::parse(&input)?;
+
         let (r#where, input) = maybe(&input, |input| {
             let (_, input) = spaces(input)?;
             Where::parse(&input)
         })?;
+
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 

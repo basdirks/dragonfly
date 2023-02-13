@@ -1,7 +1,10 @@
 use self::{
     component::Component, model::Model, query::Query, r#enum::Enum, r#type::Type, route::Route,
 };
-use crate::parser::{choice, map_ok, spaces, ParseError, ParseResult};
+use crate::{
+    map,
+    parser::{choice, map, spaces, ParseError, ParseResult},
+};
 use std::collections::HashMap;
 
 pub mod component;
@@ -108,11 +111,11 @@ impl Statement {
         choice(
             input,
             vec![
-                |input| map_ok(input, Component::parse, Statement::Component),
-                |input| map_ok(input, Enum::parse, Statement::Enum),
-                |input| map_ok(input, Model::parse, Statement::Model),
-                |input| map_ok(input, Query::parse, Statement::Query),
-                |input| map_ok(input, Route::parse, Statement::Route),
+                map!(Component::parse, Statement::Component),
+                map!(Enum::parse, Statement::Enum),
+                map!(Model::parse, Statement::Model),
+                map!(Query::parse, Statement::Query),
+                map!(Route::parse, Statement::Route),
             ],
         )
     }

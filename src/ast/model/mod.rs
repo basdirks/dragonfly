@@ -61,6 +61,7 @@ impl Model {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
+
         let (fields, input) = many1(&input, |input| {
             let (_, input) = spaces(input)?;
             let (field, input) = Field::parse(&input)?;
@@ -68,6 +69,7 @@ impl Model {
 
             Ok((field, input))
         })?;
+
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
