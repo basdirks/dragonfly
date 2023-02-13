@@ -33,6 +33,7 @@ pub enum TypeError {
     },
     /// The type of a selector (as given by the corresponding argument) does not
     /// match the type of the corresponding field.
+    // TODO: Make sure to check compatibility between selector and argument AND selector and field.
     IncompatibleQuerySelectorType {
         query_name: String,
         selector: Selector,
@@ -46,6 +47,11 @@ pub enum TypeError {
     IncompatibleQueryRootNodes {
         schema_root: String,
         where_root: String,
+        query_name: String,
+    },
+    /// The type of an argument may not be an array or a model.
+    InvalidQueryArgumentType {
+        argument: Argument,
         query_name: String,
     },
     /// The type of a field of a model is undefined.
@@ -625,6 +631,7 @@ impl Ast {
             // Self::check_query_selector_names(query, self)?;
             // Self::check_query_argument_types(query, self)?;
             // Self::check_query_return_type(query, self)?;
+            // query.check_argument_types(self)?;
             query.check_unused_arguments()?;
             query.check_non_empty_schema()?;
             query.check_root_nodes()?;

@@ -482,6 +482,7 @@ impl Schema {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Query {
     pub name: String,
+    // TODO: Change to `HashMap`.
     pub arguments: Vec<Argument>,
     pub schema: Schema,
     pub r#type: Type,
