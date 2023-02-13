@@ -1,11 +1,17 @@
-use crate::parser::{alphabetic, between, choice, literal, many, uppercase, ParseResult};
+use crate::parser::{alphabetics, between, choice, literal, ParseResult};
 
+/// Primitive types.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Primitive {
+    /// A UTF-8 string.
     String,
+    /// A 64-bit integer.
     Int,
+    /// A 64-bit floating point number.
     Float,
+    /// A boolean.
     Boolean,
+    /// A user-defined type.
     Identifier(String),
 }
 
@@ -41,13 +47,9 @@ impl Primitive {
                 |input| literal(input, "Float").map(|(_, rem)| (Self::Float, rem)),
                 |input| literal(input, "Boolean").map(|(_, rem)| (Self::Boolean, rem)),
                 |input| {
-                    let (head, input) = uppercase(input)?;
-                    let (tail, input) = many(&input, alphabetic)?;
+                    let (identifier, input) = alphabetics(input)?;
 
-                    Ok((
-                        Self::Identifier(format!("{head}{}", tail.iter().collect::<String>())),
-                        input,
-                    ))
+                    Ok((Self::Identifier(identifier), input))
                 },
             ],
         )
