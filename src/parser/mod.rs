@@ -8,7 +8,8 @@ pub enum ParseError {
     UnmatchedLiteral { expected: String },
 }
 
-/// Make this a struct and implement `std::ops::Try` so we can also impl `Iterator` and friends.
+/// TODO: Make this a struct and implement `std::ops::Try` so we can also impl
+/// `Iterator` and friends.
 pub type ParseResult<T, E = ParseError> = Result<(T, String), E>;
 
 pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
@@ -278,6 +279,7 @@ pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 /// # Examples
 ///
 /// ```rust
+/// use dragonfly::{literal, tag};
 /// use dragonfly::parser::{choice, literal, ParseError, tag};
 ///
 /// #[derive(Debug, Eq, PartialEq)]
@@ -292,30 +294,30 @@ pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 ///     choice(
 ///         input,
 ///         vec![
-///             |input| tag(input, |input| literal(input, "abc"), Choice::A),
-///             |input| tag(input, |input| literal(input, "abc"), Choice::B),
+///             tag!(literal!("abc"), Choice::A),
+///             tag!(literal!("abc"), Choice::B),
 ///         ]
 ///     ),
-///     Ok((Choice::A, "".to_string()))
+///     Ok((Choice::A, "".to_string())),
 /// );
 ///
 /// assert_eq!(
 ///     choice(
 ///         input,
 ///         vec![
-///             |input| tag(input, |input| literal(input, "abc"), Choice::B),
-///             |input| tag(input, |input| literal(input, "abc"), Choice::A),
+///             tag!(literal!("abc"), Choice::B),
+///             tag!(literal!("abc"), Choice::A),
 ///         ]
 ///     ),
-///     Ok((Choice::B, "".to_string()))
+///     Ok((Choice::B, "".to_string())),
 /// );
 ///
 /// assert_eq!(
 ///     choice(
 ///         input,
-///         vec![|input| tag(input, |input| literal(input, "def"), Choice::A)]
+///         vec![tag!(literal!("def"), Choice::A)],
 ///     ),
-///     Err(ParseError::UnmatchedChoice)
+///     Err(ParseError::UnmatchedChoice),
 /// );
 ///
 /// assert_eq!(choice::<bool>(input, vec![]), Err(ParseError::UnmatchedChoice));
@@ -350,20 +352,20 @@ pub fn choice<T>(input: &str, parsers: Vec<ParseFn<T>>) -> ParseResult<T> {
 ///
 /// assert_eq!(
 ///     char_if("a", |c| c.is_ascii_lowercase(), "should be lowercase"),
-///     Ok(('a', "".to_string()))
+///     Ok(('a', "".to_string())),
 /// );
 ///
 /// assert_eq!(
 ///     char_if("A", |c| c.is_ascii_lowercase(), "should be lowercase"),
 ///     Err(ParseError::UnmatchedCharPredicate {
 ///         actual: 'A',
-///         description: "should be lowercase".to_string()
-///     })
+///         description: "should be lowercase".to_string(),
+///     }),
 /// );
 ///
 /// assert_eq!(
 ///     char_if("", |c| c.is_ascii_lowercase(), "should be lowercase"),
-///     Err(ParseError::UnexpectedEof)
+///     Err(ParseError::UnexpectedEof),
 /// );
 /// ```
 pub fn char_if(input: &str, predicate: fn(char) -> bool, description: &str) -> ParseResult<char> {
@@ -401,15 +403,15 @@ pub fn char_if(input: &str, predicate: fn(char) -> bool, description: &str) -> P
 ///
 /// assert_eq!(
 ///     chars_if("abc", |c| c.is_ascii_alphabetic(), "should be alphabetic"),
-///     Ok(("abc".to_string(), "".to_string()))
+///     Ok(("abc".to_string(), "".to_string())),
 /// );
 ///
 /// assert_eq!(
 ///     chars_if("123", |c| c.is_ascii_alphabetic(), "should be alphabetic"),
 ///     Err(ParseError::UnmatchedCharPredicate {
 ///         actual: '1',
-///         description: "should be alphabetic".to_string()
-///     })
+///         description: "should be alphabetic".to_string(),
+///     }),
 /// );
 /// ```
 pub fn chars_if(
@@ -451,7 +453,7 @@ pub fn chars_if(
 ///     alphabetic("1"),
 ///     Err(ParseError::UnmatchedCharPredicate {
 ///         actual: '1',
-///         description: "should be alphabetic".to_string()
+///         description: "should be alphabetic".to_string(),
 ///     })
 /// );
 /// ```
@@ -507,8 +509,8 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///     alphanumeric(" "),
 ///     Err(ParseError::UnmatchedCharPredicate {
 ///         actual: ' ',
-///         description: "should be alphanumeric".to_string()
-///     })
+///         description: "should be alphanumeric".to_string(),
+///     }),
 /// );
 /// ```
 pub fn alphanumeric(input: &str) -> ParseResult<char> {
@@ -537,17 +539,17 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     maybe(
 ///         "abc",
-///         |input| literal(input, "abc")
+///         |input| literal(input, "abc"),
 ///     ),
-///     Ok((Some("abc".to_string()), "".to_string()))
+///     Ok((Some("abc".to_string()), "".to_string())),
 /// );
 ///
 /// assert_eq!(
 ///     maybe(
 ///         "def",
-///         |input| literal(input, "abc")
+///         |input| literal(input, "abc"),
 ///     ),
-///     Ok((None, "def".to_string()))
+///     Ok((None, "def".to_string())),
 /// );
 /// ```
 pub fn maybe<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Option<T>> {
@@ -579,8 +581,8 @@ pub fn maybe<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Option<T>> {
 ///     digit("a"),
 ///     Err(ParseError::UnmatchedCharPredicate {
 ///         actual: 'a',
-///         description: "should be a decimal digit".to_string()
-///     })
+///         description: "should be a decimal digit".to_string(),
+///     }),
 /// );
 /// ```
 pub fn digit(input: &str) -> ParseResult<char> {
@@ -611,7 +613,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(lowercase("A"), Err(ParseError::UnmatchedCharPredicate {
 ///     actual: 'A',
-///     description: "should be lowercase".to_string()
+///     description: "should be lowercase".to_string(),
 /// }));
 /// ```
 pub fn lowercase(input: &str) -> ParseResult<char> {
@@ -642,7 +644,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(uppercase("a"), Err(ParseError::UnmatchedCharPredicate {
 ///     actual: 'a',
-///     description: "should be uppercase".to_string()
+///     description: "should be uppercase".to_string(),
 /// }));
 /// ```
 pub fn uppercase(input: &str) -> ParseResult<char> {
@@ -676,7 +678,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(whitespace("a"), Err(ParseError::UnmatchedCharPredicate {
 ///     actual: 'a',
-///     description: "should be whitespace".to_string()
+///     description: "should be whitespace".to_string(),
 /// }));
 /// ```
 pub fn whitespace(input: &str) -> ParseResult<char> {
@@ -729,7 +731,7 @@ pub fn spaces(input: &str) -> ParseResult<Vec<char>> {
 ///
 /// assert_eq!(spaces1("abc"), Err(ParseError::UnmatchedCharPredicate {
 ///     actual: 'a',
-///     description: "should be whitespace".to_string()
+///     description: "should be whitespace".to_string(),
 /// }));
 /// ```
 pub fn spaces1(input: &str) -> ParseResult<String> {
