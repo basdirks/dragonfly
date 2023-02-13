@@ -1,9 +1,11 @@
+use std::collections::HashSet;
+
 use crate::parser::{
     alphabetics, brace_close, brace_open, choice, colon, comma, dollar, literal, many1, map, maybe,
     paren_close, paren_open, spaces, ParseResult,
 };
 
-use super::r#type::Type;
+use super::{r#type::Type, TypeError};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Selector {
@@ -16,7 +18,7 @@ impl Selector {
         let (_, input) = literal(input, "contains")?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
-        let (value, input) = Query::parse_variable(&input)?;
+        let (value, input) = Query::parse_reference(&input)?;
 
         Ok((Self::Contains(value), input))
     }
@@ -25,7 +27,7 @@ impl Selector {
         let (_, input) = literal(input, "equals")?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
-        let (value, input) = Query::parse_variable(&input)?;
+        let (value, input) = Query::parse_reference(&input)?;
 
         Ok((Self::Equals(value), input))
     }
@@ -244,6 +246,62 @@ impl Where {
 
         Ok((where_clause, input))
     }
+
+    /// Return all references used in the selectors of this where clause.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::{Selector, Where};
+    /// use std::collections::HashSet;
+    ///
+    /// let where_clause = Where::Node(
+    ///     "foo".to_string(),
+    ///     vec![
+    ///         Where::Node(
+    ///             "bar".to_string(),
+    ///             vec![
+    ///                 Where::Selector(Selector::Contains("bar".to_string())),
+    ///                 Where::Selector(Selector::Contains("baz".to_string())),
+    ///             ],
+    ///         ),
+    ///         Where::Node(
+    ///             "baz".to_string(),
+    ///             vec![
+    ///                 Where::Selector(Selector::Contains("bar".to_string())),
+    ///                 Where::Selector(Selector::Contains("foo".to_string())),
+    ///             ],
+    ///         ),
+    ///     ],
+    /// );
+    ///
+    /// let mut expected = HashSet::new();
+    ///
+    /// expected.insert("foo".to_string());
+    /// expected.insert("bar".to_string());
+    /// expected.insert("baz".to_string());
+    ///
+    /// assert_eq!(where_clause.references(), expected);
+    /// ```
+    pub fn references(&self) -> HashSet<String> {
+        let mut references = HashSet::new();
+
+        match self {
+            Self::Selector(Selector::Contains(reference) | Selector::Equals(reference)) => {
+                references.insert(reference.clone());
+            }
+            Self::Node(_, structure) => {
+                references.extend(
+                    structure
+                        .iter()
+                        .flat_map(Self::references)
+                        .collect::<HashSet<String>>(),
+                );
+            }
+        }
+
+        references
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -281,7 +339,7 @@ impl Argument {
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
-        let (name, input) = Query::parse_variable(input)?;
+        let (name, input) = Query::parse_reference(input)?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
         let (r#type, input) = Type::parse(&input)?;
@@ -392,6 +450,33 @@ impl Schema {
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice(input, vec![Self::parse_node, Self::parse_identifier])
     }
+
+    /// Check if the schema is empty. The schema is empty if the root node has
+    /// no children.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::Schema;
+    ///
+    /// let schema = Schema::Identifier("user".to_string());
+    ///
+    /// assert_eq!(schema.is_empty(), true);
+    ///
+    /// let schema = Schema::Node(
+    ///     "user".to_string(),
+    ///     vec![Schema::Identifier("name".to_string())],
+    /// );
+    ///
+    /// assert_eq!(schema.is_empty(), false);
+    /// ```
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Identifier(_) => true,
+            Self::Node(_, structure) => structure.is_empty(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -469,7 +554,7 @@ impl Query {
         Ok((vec![], input.to_string()))
     }
 
-    /// Parse a variable from the given input.
+    /// Parse a reference from the given input.
     ///
     /// # Arguments
     ///
@@ -477,7 +562,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid variable.
+    /// * If the input is not a valid reference.
     ///
     /// # Examples
     ///
@@ -485,13 +570,13 @@ impl Query {
     /// use dragonfly::ast::query::Query;
     ///
     /// assert_eq!(
-    ///    Query::parse_variable("$name"),
+    ///    Query::parse_reference("$name"),
     ///    Ok(("name".to_string(), "".to_string()))
     /// );
     ///
-    /// assert!(Query::parse_variable("name").is_err());
+    /// assert!(Query::parse_reference("name").is_err());
     /// ```
-    pub fn parse_variable(input: &str) -> ParseResult<String> {
+    pub fn parse_reference(input: &str) -> ParseResult<String> {
         let (_, input) = dollar(input)?;
 
         alphabetics(&input)
@@ -668,5 +753,202 @@ impl Query {
             },
             input,
         ))
+    }
+
+    /// Check whether the root node of the schema has the same name as the root
+    /// node of the where-clause.
+    ///
+    /// # Errors
+    ///
+    /// * `TypeError::IncompatibleQueryRootNodes` - If the root nodes of the
+    ///   schema and the where-clause are not the same.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::TypeError;
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    ///
+    /// let input = "query images: [Image] {
+    ///     image {
+    ///         title
+    ///     }
+    ///     where {
+    ///         image {
+    ///             title {
+    ///                 equals: $title
+    ///             }
+    ///         }
+    ///     }
+    /// }";
+    ///
+    /// assert!(Query::parse(input).unwrap().0.check_root_nodes().is_ok());
+    ///
+    /// let input = "query images: [Image] {
+    ///     image {
+    ///         title
+    ///     }
+    ///     where {
+    ///         images {
+    ///             title {
+    ///                 equals: $title
+    ///             }
+    ///         }
+    ///     }
+    /// }";
+    ///
+    /// assert_eq!(
+    ///     Query::parse(input).unwrap().0.check_root_nodes(),
+    ///     Err(TypeError::IncompatibleQueryRootNodes {
+    ///         query_name: "images".to_string(),
+    ///         schema_root: "image".to_string(),
+    ///         where_root: "images".to_string(),
+    ///     })
+    /// );
+    /// ```
+    pub fn check_root_nodes(&self) -> Result<(), TypeError> {
+        if let Some(Where::Node(where_root, _)) = &self.r#where {
+            if let Schema::Node(schema_root, _) = &self.schema {
+                if where_root != schema_root {
+                    return Err(TypeError::IncompatibleQueryRootNodes {
+                        query_name: self.name.clone(),
+                        schema_root: schema_root.clone(),
+                        where_root: where_root.clone(),
+                    });
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check whether the schema is empty.
+    ///
+    /// # Errors
+    ///
+    /// * `TypeError::EmptyQuerySchema` - if the schema is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    ///
+    /// let input = "query images: [Image] {
+    ///     image {
+    ///         title
+    ///     }
+    /// }";
+    ///
+    /// assert!(Query::parse(input).is_ok());
+    ///
+    /// let input = "query images: [Image] {}";
+    ///
+    /// assert!(Query::parse(input).is_err());
+    /// ```
+    pub fn check_non_empty_schema(&self) -> Result<(), TypeError> {
+        if self.schema.is_empty() {
+            Err(TypeError::EmptyQuerySchema {
+                query_name: self.name.clone(),
+            })
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Check whether all arguments are used in the where-clause.
+    ///
+    /// # Errors
+    ///
+    /// * `TypeError::UnusedQueryArgument` - if any argument is not used in the
+    ///   where-clause.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::TypeError;
+    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    /// use std::collections::HashSet;
+    ///
+    /// let input = "query images($name: CountryName): [Image] {
+    ///     image {
+    ///         title
+    ///     }
+    ///     where {
+    ///         image {
+    ///             country {
+    ///                 name {
+    ///                     equals: $name
+    ///                 }
+    ///             }
+    ///         }
+    ///     }
+    /// }";
+    ///
+    /// assert!(Query::parse(input).unwrap().0.check_unused_arguments().is_ok());
+    ///
+    /// let input = "query images($name: CountryName): [Image] {
+    ///     image {
+    ///         title
+    ///     }
+    /// }";
+    ///
+    /// assert_eq!(
+    ///     Query::parse(input).unwrap().0.check_unused_arguments(),
+    ///     Err(TypeError::UnusedQueryArgument {
+    ///         query_name: "images".to_string(),
+    ///         argument: Argument {
+    ///             name: "name".to_string(),
+    ///             r#type: Type::One(Primitive::Identifier("CountryName".to_string())),
+    ///         },
+    ///     }),
+    /// );
+    ///
+    /// let input = "query images($name: CountryName, $tag: String): [Image] {
+    ///     image {
+    ///         title
+    ///     }
+    ///     where {
+    ///         image {
+    ///             country {
+    ///                 name {
+    ///                     equals: $name
+    ///                 }
+    ///             }
+    ///         }
+    ///     }
+    /// }";
+    ///
+    /// assert_eq!(
+    ///     Query::parse(input).unwrap().0.check_unused_arguments(),
+    ///     Err(TypeError::UnusedQueryArgument {
+    ///         query_name: "images".to_string(),
+    ///         argument: Argument {
+    ///             name: "tag".to_string(),
+    ///             r#type: Type::One(Primitive::String),
+    ///         },
+    ///     }),
+    /// );
+    ///
+    /// ```
+    pub fn check_unused_arguments(&self) -> Result<(), TypeError> {
+        let selector_references = self
+            .r#where
+            .as_ref()
+            .map(Where::references)
+            .unwrap_or_default();
+
+        for argument in &self.arguments {
+            if !selector_references.contains(&argument.name) {
+                return Err(TypeError::UnusedQueryArgument {
+                    query_name: self.name.clone(),
+                    argument: argument.clone(),
+                });
+            }
+        }
+
+        Ok(())
     }
 }

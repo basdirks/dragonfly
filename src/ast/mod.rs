@@ -1,11 +1,16 @@
 use self::{
-    component::Component, model::Model, query::Query, r#enum::Enum, r#type::Type, route::Route,
+    component::Component,
+    model::{field::Field, Model},
+    query::{Argument, Query, Selector},
+    r#enum::Enum,
+    r#type::Type,
+    route::Route,
 };
 use crate::{
     map,
     parser::{choice, map, spaces, ParseError, ParseResult},
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub mod component;
 pub mod r#enum;
@@ -14,16 +19,60 @@ pub mod query;
 pub mod route;
 pub mod r#type;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TypeError {
-    DuplicateEnumVariant(String),
-    DuplicateModelField(String),
-    IncompatibleQuerySchema,
-    IncompatibleQueryWhere,
-    UnknownModelType(Type),
-    UnknownQueryArgumentType(Type),
-    UnknownQueryReturnType(Type),
-    UnknownRouteRoot(String),
-    UnknownSelectorField(String),
+    /// The schema of a query is empty. This means that the query does not
+    /// return any data.
+    EmptyQuerySchema { query_name: String },
+    /// The structure of the schema of a query does not match the return type of
+    /// the query.
+    IncompatibleQuerySchema {
+        actual: Type,
+        expected: Type,
+        query_name: String,
+    },
+    /// The type of a selector (as given by the corresponding argument) does not
+    /// match the type of the corresponding field.
+    IncompatibleQuerySelectorType {
+        query_name: String,
+        selector: Selector,
+        expected: Type,
+    },
+    /// The structure of a where-clause of a query does not match the structure
+    /// of the model and its relations.
+    IncompatibleQueryWhere { query_name: String },
+    /// The name of the root node of the where-clause of a query does not match
+    /// the name of the root node of the schema.
+    IncompatibleQueryRootNodes {
+        schema_root: String,
+        where_root: String,
+        query_name: String,
+    },
+    /// The type of a field of a model is undefined.
+    UnknownModelFieldType {
+        field: Field,
+        model_name: String,
+        r#type: Type,
+    },
+    /// The type of a query argument is undefined.
+    UnknownQueryArgumentType {
+        argument: Argument,
+        query_name: String,
+    },
+    /// The return type of a query is undefined.
+    UnknownQueryReturnType { query_name: String, r#type: Type },
+    /// A selector mentions an undefined argument.
+    UnknownQuerySelectorName {
+        selector: Selector,
+        query_name: String,
+    },
+    /// The root of a route is undefined.
+    UnknownRouteRoot { route_name: String, root: String },
+    /// An argument of a query is not used in the where-clause.
+    UnusedQueryArgument {
+        argument: Argument,
+        query_name: String,
+    },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -56,7 +105,7 @@ impl Statement {
     /// use dragonfly::ast::query::Query;
     /// use dragonfly::ast::route::Route;
     /// use dragonfly::ast::r#type::{Primitive, Type};
-    /// use std::collections::HashSet;
+    /// use std::collections::{HashMap, HashSet};
     ///
     /// let input = "component Foo {
     ///     path: /foo
@@ -91,18 +140,27 @@ impl Statement {
     ///     bar: [Bar]
     /// }";
     ///
+    /// let mut fields = HashMap::new();
+    ///
+    /// fields.insert(
+    ///     "foo".to_string(),
+    ///     Field {
+    ///         name: "foo".to_string(),
+    ///         r#type: Type::One(Primitive::String),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "bar".to_string(),
+    ///     Field {
+    ///         name: "bar".to_string(),
+    ///         r#type: Type::Array(Primitive::Identifier("Bar".to_string())),
+    ///     },
+    /// );
+    ///
     /// let expected = Statement::Model(Model {
     ///     name: "Foo".to_string(),
-    ///     fields: vec![
-    ///         Field {
-    ///             name: "foo".to_string(),
-    ///             r#type: Type::One(Primitive::String),
-    ///         },
-    ///         Field {
-    ///             name: "bar".to_string(),
-    ///             r#type: Type::Array(Primitive::Identifier("Bar".to_string())),
-    ///         },
-    ///      ],
+    ///     fields,
     /// });
     ///
     /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
@@ -150,7 +208,7 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid AST.
+    /// * `ParseError` - If the input is not a valid AST.
     ///
     /// # Examples
     ///
@@ -163,7 +221,7 @@ impl Ast {
     /// use dragonfly::ast::route::Route;
     /// use dragonfly::ast::Statement;
     /// use dragonfly::ast::r#type::{Primitive, Type};
-    /// use std::collections::HashSet;
+    /// use std::collections::{HashMap, HashSet};
     ///
     /// let input = "route / {
     ///   root: Home
@@ -257,28 +315,87 @@ impl Ast {
     ///     },
     /// );
     ///
+    /// let mut fields = HashMap::new();
+    ///
+    /// fields.insert(
+    ///     "id".to_string(),
+    ///     Field {
+    ///         name: "id".to_string(),
+    ///         r#type: Type::One(Primitive::Identifier("ID".to_string())),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "title".to_string(),
+    ///     Field {
+    ///         name: "title".to_string(),
+    ///         r#type: Type::One(Primitive::String),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "country".to_string(),
+    ///     Field {
+    ///         name: "country".to_string(),
+    ///         r#type: Type::One(Primitive::Identifier("Country".to_string())),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "category".to_string(),
+    ///     Field {
+    ///         name: "category".to_string(),
+    ///         r#type: Type::Array(Primitive::Identifier("Category".to_string())),
+    ///     },
+    /// );
+    ///
     /// expected.models.insert(
     ///     "Image".to_string(),
     ///     Model {
     ///         name: "Image".to_string(),
-    ///         fields: vec![
-    ///             Field {
-    ///                 name: "id".to_string(),
-    ///                 r#type: Type::One(Primitive::Identifier("ID".to_string())),
-    ///             },
-    ///             Field {
-    ///                 name: "title".to_string(),
-    ///                 r#type: Type::One(Primitive::String),
-    ///             },
-    ///             Field {
-    ///                 name: "country".to_string(),
-    ///                 r#type: Type::One(Primitive::Identifier("Country".to_string())),
-    ///             },
-    ///             Field {
-    ///                 name: "category".to_string(),
-    ///                 r#type: Type::Array(Primitive::Identifier("Category".to_string())),
-    ///             },
-    ///         ],
+    ///         fields,
+    ///     },
+    /// );
+    ///
+    /// let mut fields = HashMap::new();
+    ///
+    /// fields.insert(
+    ///     "id".to_string(),
+    ///     Field {
+    ///         name: "id".to_string(),
+    ///         r#type: Type::One(Primitive::Identifier("ID".to_string())),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "domain".to_string(),
+    ///     Field {
+    ///         name: "domain".to_string(),
+    ///         r#type: Type::One(Primitive::String),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "drivingSide".to_string(),
+    ///     Field {
+    ///         name: "drivingSide".to_string(),
+    ///         r#type: Type::One(Primitive::Identifier("DrivingSide".to_string())),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "flag".to_string(),
+    ///     Field {
+    ///         name: "flag".to_string(),
+    ///         r#type: Type::One(Primitive::String),
+    ///     },
+    /// );
+    ///
+    /// fields.insert(
+    ///     "name".to_string(),
+    ///     Field {
+    ///         name: "name".to_string(),
+    ///         r#type: Type::One(Primitive::Identifier("CountryName".to_string())),
     ///     },
     /// );
     ///
@@ -286,28 +403,7 @@ impl Ast {
     ///     "Country".to_string(),
     ///     Model {
     ///         name: "Country".to_string(),
-    ///         fields: vec![
-    ///             Field {
-    ///                 name: "id".to_string(),
-    ///                 r#type: Type::One(Primitive::Identifier("ID".to_string())),
-    ///             },
-    ///             Field {
-    ///                 name: "domain".to_string(),
-    ///                 r#type: Type::One(Primitive::String),
-    ///             },
-    ///             Field {
-    ///                 name: "drivingSide".to_string(),
-    ///                 r#type: Type::One(Primitive::Identifier("DrivingSide".to_string())),
-    ///             },
-    ///             Field {
-    ///                 name: "flag".to_string(),
-    ///                 r#type: Type::One(Primitive::String),
-    ///             },
-    ///             Field {
-    ///                 name: "name".to_string(),
-    ///                 r#type: Type::One(Primitive::Identifier("CountryName".to_string())),
-    ///             },
-    ///         ],
+    ///         fields,
     ///     },
     /// );
     ///
@@ -491,8 +587,100 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// * `TypeError` - If the AST is not valid.
-    pub const fn typecheck(&self) -> Result<(), TypeError> {
+    /// ## Query errors
+    ///
+    /// * `TypeError::EmptyQuerySchema` - if the schema of a query is empty.
+    /// * `TypeError::IncompatibleQuerySchema` - if the schema of a query
+    ///    is incompatible with the structure of the models and their relations.
+    /// * `TypeError::IncompatibleQuerySelectorType` - if the type of an
+    ///    argument in a selector does not match the type of the corresponding
+    ///    model field.
+    /// * `TypeError::IncompatibleQueryWhere` - if the where-clause of a query
+    ///    is incompatible to the structure of the models and their relations.
+    /// * `TypeError::IncompatibleQueryRootNodes` - if the top-level schema
+    ///    node name does not match the name of the root node in the where-clause.
+    /// * `TypeError::UnknownQueryArgumentType` - if the type of a query argument
+    ///    is undefined.
+    /// * `TypeError::UnknownQueryReturnType` - if the return type of a query is
+    ///    does not match the (inferred) type of the schema.
+    /// * `TypeError::UnknownQuerySelectorName` - if a selector refers to an
+    ///    undefined query argument.
+    /// * `TypeError::UnusedQueryArgument` - if a query argument is not used in
+    ///    a selector.
+    ///
+    /// ## Route errors
+    ///
+    /// * `TypeError::UnknownRouteRoot` - if the root component of a route is
+    ///    undefined.
+    ///
+    /// ## Model errors
+    ///
+    /// * `TypeError::UnknownModelFieldType` - if the type of a field in a model
+    ///    is undefined.
+    pub fn typecheck(&self) -> Result<(), TypeError> {
+        for query in self.queries.values() {
+            // Self::check_query_schema(query, self)?;
+            // Self::check_query_where(query, self)?;
+            // Self::check_query_selector_types(query, self)?;
+            // Self::check_query_selector_names(query, self)?;
+            // Self::check_query_argument_types(query, self)?;
+            // Self::check_query_return_type(query, self)?;
+            query.check_unused_arguments()?;
+            query.check_non_empty_schema()?;
+            query.check_root_nodes()?;
+        }
+
+        // for model in self.models.values() {
+        //     Self::check_model_field_types(model, self)?;
+        // }
+
+        // for route in self.routes.values() {
+        //     Self::check_route_root(route, self)?;
+        // }
+
         Ok(())
+    }
+
+    /// Return the names of all top-level types in the AST.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use std::collections::HashSet;
+    /// use dragonfly::ast::Ast;
+    ///
+    /// let input = "model User {
+    ///     name: String
+    /// }
+    ///
+    /// enum CountryName {
+    ///     Germany
+    ///     France
+    /// }
+    ///
+    /// model Country {
+    ///     name: CountryName
+    /// }";
+    ///
+    /// let mut expected = HashSet::new();
+    /// expected.insert("User".to_string());
+    /// expected.insert("Country".to_string());
+    /// expected.insert("CountryName".to_string());
+    ///
+    /// assert_eq!(Ast::parse(input).unwrap().0.type_names(), expected);
+    /// ```
+    #[must_use]
+    pub fn type_names(&self) -> HashSet<String> {
+        let mut names = HashSet::new();
+
+        for model in self.models.values() {
+            names.insert(model.name.clone());
+        }
+
+        for r#enum in self.enums.values() {
+            names.insert(r#enum.name.clone());
+        }
+
+        names
     }
 }

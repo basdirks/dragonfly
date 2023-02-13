@@ -24,6 +24,7 @@ impl Enum {
     /// # Examples
     ///
     /// ```rust
+    /// use std::collections::HashSet;
     /// use dragonfly::ast::r#enum::Enum;
     /// use dragonfly::parser::ParseError;
     ///
@@ -32,7 +33,7 @@ impl Enum {
     ///     Baz
     /// }";
     ///
-    /// let mut variants = std::collections::HashSet::new();
+    /// let mut variants = HashSet::new();
     ///
     /// variants.insert("Bar".to_string());
     /// variants.insert("Baz".to_string());

@@ -2,7 +2,7 @@ use crate::parser::{alphabetics, colon, spaces, ParseResult};
 
 use super::super::r#type::Type;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Field {
     pub name: String,
     pub r#type: Type,

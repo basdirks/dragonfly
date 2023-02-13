@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// Primitive types.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Primitive {
     /// A UTF-8 string.
     String,
@@ -56,7 +56,7 @@ impl Primitive {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Type {
     Array(Primitive),
     One(Primitive),
