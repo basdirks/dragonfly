@@ -24,7 +24,8 @@ pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
 ///
 /// # Errors
 ///
-/// * `ParseError` - If the parser fails.
+/// * `ParseError`  
+/// if the parser fails.
 pub fn map<T, U>(input: &str, parser: ParseFn<T>, f: fn(T) -> U) -> ParseResult<U> {
     parser(input).map(|(t, input)| (f(t), input))
 }
@@ -39,7 +40,8 @@ pub fn map<T, U>(input: &str, parser: ParseFn<T>, f: fn(T) -> U) -> ParseResult<
 ///
 /// # Errors
 ///
-/// * `ParseError` - If the parser fails.
+/// * `ParseError`  
+/// if the parser fails.
 pub fn tag<T, U>(input: &str, parser: ParseFn<T>, value: U) -> ParseResult<U> {
     parser(input).map(|(_, input)| (value, input))
 }
@@ -55,10 +57,17 @@ pub fn tag<T, U>(input: &str, parser: ParseFn<T>, value: U) -> ParseResult<U> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedLiteral` - If the input does not start with the specified string.
-/// * `ParseError` - If the parser fails.
-/// * `ParseError::UnmatchedLiteral` - If the input does not end with the specified string.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedLiteral`  
+/// if the input does not start with the specified string.
+///
+/// * `ParseError::UnmatchedLiteral`  
+/// if the input does not end with the specified string.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
+///
+/// * `ParseError`  
+/// if the parser fails.
 ///
 /// # Examples
 ///
@@ -89,8 +98,11 @@ pub fn between<T>(input: &str, open: &str, parser: ParseFn<T>, close: &str) -> P
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the input does not start with the specified character.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the input does not start with the specified character.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -127,8 +139,11 @@ pub fn char(input: &str, char: char) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedLiteral` - If the input does not start with the specified literal.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedLiteral`  
+/// if the input does not start with the specified literal.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -173,8 +188,11 @@ pub fn literal(input: &str, literal: &str) -> ParseResult<String> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the first character is not uppercase.
-/// * `ParseError` - If the parser fails.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the first character is not uppercase.
+///
+/// * `ParseError`  
+/// if the parser fails.
 ///
 /// # Examples
 ///
@@ -240,7 +258,8 @@ pub fn many<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 ///
 /// # Errors
 ///
-/// * `ParseError` - If the parser fails to match at least once.
+/// * `ParseError`  
+/// if the parser fails to match at least once.
 ///
 /// # Examples
 ///
@@ -274,7 +293,8 @@ pub fn many1<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Vec<T>> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChoice` - If none of the parsers match.
+/// * `ParseError::UnmatchedChoice`  
+/// if none of the parsers match.
 ///
 /// # Examples
 ///
@@ -342,8 +362,11 @@ pub fn choice<T>(input: &str, parsers: Vec<ParseFn<T>>) -> ParseResult<T> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the character does not fulfill the predicate.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the character does not fulfill the predicate.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -393,8 +416,11 @@ pub fn char_if(input: &str, predicate: fn(char) -> bool, description: &str) -> P
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the first character does not fulfill the predicate.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the first character does not fulfill the predicate.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -438,8 +464,11 @@ pub fn chars_if(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the character is not alphabetic.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the character is not alphabetic.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -473,8 +502,11 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the first character is not alphabetic.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the first character is not alphabetic.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -510,8 +542,11 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the character is not alphanumeric.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the character is not alphanumeric.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -584,8 +619,11 @@ pub fn maybe<T>(input: &str, parser: ParseFn<T>) -> ParseResult<Option<T>> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the character is not a digit.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the character is not a digit.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -618,8 +656,11 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the character is not lowercase.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the character is not lowercase.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -649,8 +690,11 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the character is not uppercase.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the character is not uppercase.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -680,8 +724,11 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If the character is not whitespace.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if the character is not whitespace.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -736,8 +783,11 @@ pub fn spaces(input: &str) -> ParseResult<Vec<char>> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate` - If there are no whitespace characters.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedCharPredicate`  
+/// if there are no whitespace characters.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -765,8 +815,11 @@ pub fn spaces1(input: &str) -> ParseResult<String> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the next character is not an opening brace.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the next character is not an opening brace.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -788,8 +841,11 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the next character is not a closing brace.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the next character is not a closing brace.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -811,8 +867,11 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the next character is not a colon.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the next character is not a colon.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -834,8 +893,11 @@ pub fn colon(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the next character is not an opening parenthesis.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the next character is not an opening parenthesis.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -857,8 +919,11 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the next character is not a closing parenthesis.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the next character is not a closing parenthesis.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -880,8 +945,11 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the next character is not a dollar sign.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the next character is not a dollar sign.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///
@@ -903,8 +971,11 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar` - If the next character is not a comma.
-/// * `ParseError::UnexpectedEof` - If the input is empty.
+/// * `ParseError::UnmatchedChar`  
+/// if the next character is not a comma.
+///
+/// * `ParseError::UnexpectedEof`  
+/// if the input is empty.
 ///
 /// # Examples
 ///

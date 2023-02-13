@@ -223,7 +223,8 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// * `ParseError` - If the input is not a valid AST.
+    /// * `ParseError`  
+    /// if the input is not a valid AST.
     ///
     /// # Examples
     ///
@@ -604,34 +605,50 @@ impl Ast {
     ///
     /// ## Query errors
     ///
-    /// * `TypeError::EmptyQuerySchema` - if the schema of a query is empty.
-    /// * `TypeError::IncompatibleQuerySchema` - if the schema of a query
-    ///    is incompatible with the structure of the models and their relations.
-    /// * `TypeError::IncompatibleQuerySelectorType` - if the type of an
-    ///    argument in a selector does not match the type of the corresponding
-    ///    model field.
-    /// * `TypeError::IncompatibleQueryWhere` - if the where-clause of a query
-    ///    is incompatible to the structure of the models and their relations.
-    /// * `TypeError::IncompatibleQueryRootNodes` - if the top-level schema
-    ///    node name does not match the name of the root node in the where-clause.
-    /// * `TypeError::UnknownQueryArgumentType` - if the type of a query argument
-    ///    is undefined.
-    /// * `TypeError::UnknownQueryReturnType` - if the return type of a query is
-    ///    does not match the (inferred) type of the schema.
-    /// * `TypeError::UnknownQuerySelectorName` - if a selector refers to an
-    ///    undefined query argument.
-    /// * `TypeError::UnusedQueryArgument` - if a query argument is not used in
-    ///    a selector.
+    /// * `TypeError::EmptyQuerySchema`  
+    /// if the schema of a query is empty.
+    ///
+    /// * `TypeError::IncompatibleQuerySchema`  
+    /// if the schema of a query is incompatible with the structure of the
+    /// models and their relations.
+    ///
+    /// * `TypeError::IncompatibleQuerySelectorType`  
+    /// if the type of an argument in a selector does not match the type of the
+    /// corresponding model field.
+    ///
+    /// * `TypeError::IncompatibleQueryWhere`
+    /// if the where-clause of a query is incompatible to the structure of the
+    /// models and their relations.
+    ///
+    /// * `TypeError::IncompatibleQueryRootNodes`  
+    /// if the top-level schema node name does not match the name of the root
+    /// node in the where-clause.
+    ///
+    /// * `TypeError::InvalidQueryArgumentType`  
+    /// if the type of a query argument is an array or a model.
+    ///
+    /// * `TypeError::UnknownQueryArgumentType`  
+    /// if the type of a query argument is undefined.
+    ///
+    /// * `TypeError::UnknownQueryReturnType`  
+    /// if the return type of a query is does not match the (inferred) type of
+    /// the schema.
+    ///
+    /// * `TypeError::UnknownQuerySelectorName`  
+    /// if a selector refers to an undefined query argument.
+    ///
+    /// * `TypeError::UnusedQueryArgument`  
+    /// if a query argument is not used at least once in the where-clause.
     ///
     /// ## Route errors
     ///
-    /// * `TypeError::UnknownRouteRoot` - if the root component of a route is
-    ///    undefined.
+    /// * `TypeError::UnknownRouteRoot`
+    /// if the root component of a route is undefined.
     ///
     /// ## Model errors
     ///
-    /// * `TypeError::UnknownModelFieldType` - if the type of a field in a model
-    ///    is undefined.
+    /// * `TypeError::UnknownModelFieldType`
+    /// if the type of a field in a model is undefined.
     pub fn typecheck(&self) -> Result<(), TypeError> {
         for query in self.queries.values() {
             // Self::check_query_schema(query, self)?;
@@ -679,6 +696,7 @@ impl Ast {
     /// }";
     ///
     /// let mut expected = HashSet::new();
+    ///
     /// expected.insert("User".to_string());
     /// expected.insert("Country".to_string());
     /// expected.insert("CountryName".to_string());

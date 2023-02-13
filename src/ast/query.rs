@@ -800,8 +800,8 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * `TypeError::IncompatibleQueryRootNodes` - If the root nodes of the
-    ///   schema and the where-clause are not the same.
+    /// * `TypeError::IncompatibleQueryRootNodes`  
+    /// if the root nodes of the schema and the where-clause are not the same.
     ///
     /// # Examples
     ///
@@ -870,7 +870,8 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * `TypeError::EmptyQuerySchema` - if the schema is empty.
+    /// * `TypeError::EmptyQuerySchema`  
+    /// if the schema is empty.
     ///
     /// # Examples
     ///
@@ -907,8 +908,8 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * `TypeError::UnusedQueryArgument` - if any argument is not used in the
-    ///   where-clause.
+    /// * `TypeError::UnusedQueryArgument`  
+    /// if any argument is not used in the where-clause.
     ///
     /// # Examples
     ///
