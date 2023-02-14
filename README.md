@@ -274,9 +274,39 @@ enum Category {
 }
 ```
 
+# Technical overview
+
+Dragonfly syntax is parsed into an AST. The AST is then type-checked and compiled into TypeScript code.
+
+## Parsing
+
+Parsing turns a string into an AST. This step fails if syntax is invalid or if an entity is defined multiple times. The AST type is defined in `dragonfly::ast::Ast`, and the parser is defined in `dragonfly::ast::Ast::parse`.
+
+### TODO
+
+- [ ] Replace `path` in `dragonfly::ast::component::Component` with proper path type.
+- [ ] Replace `root` in `dragonfly::ast::route::Route` with proper path type.
+- [ ] Implement variant of `choice` that counts and restricts parser usage.
+- [ ] Use new variant of `choice` inside `dragonfly::ast::route::Route::parse`.
+
+## Type-checking
+
+Type-checking checks the AST for correctness, see the Rules sections above. Some checks could be done during parsing, but are done separately for simplicity. The type-checker is defined in `dragonfly::ast::Ast::check`.
+
+## Generation
+
+Generation turns the AST into TypeScript code.
+
+### TODO
+
+- [ ] Replace `Display for dragonfly::generator::typescript::ast::Type` with proper pretty printer.
+- [ ] Replace `Display for dragonfly::generator::typescript::ast::Property` with proper pretty printer.
+- [ ] Replace `Display for dragonfly::generator::typescript::ast::Interface` with proper pretty printer.
+- [ ] Support extended parameters in `dragonfly::generator::typescript::ast::Interface`.
+
 # Development
 
-Parsers do not concern themselves with their own padding/indentation. This is handled inside their parent parser.
+Parsers do not concern themselves with their surrounding whitespace. This is handled inside their parent parser.
 
 ```rust
 // Not this:

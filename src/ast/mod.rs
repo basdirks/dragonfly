@@ -33,7 +33,6 @@ pub enum TypeError {
     },
     /// The type of a selector (as given by the corresponding argument) does not
     /// match the type of the corresponding field.
-    // TODO: Make sure to check compatibility between selector and argument AND selector and field.
     IncompatibleQuerySelectorType {
         query_name: String,
         selector: Selector,
@@ -649,7 +648,7 @@ impl Ast {
     ///
     /// * `TypeError::UnknownModelFieldType`
     /// if the type of a field in a model is undefined.
-    pub fn typecheck(&self) -> Result<(), TypeError> {
+    pub fn check(&self) -> Result<(), TypeError> {
         for query in self.queries.values() {
             // Self::check_query_schema(query, self)?;
             // Self::check_query_where(query, self)?;

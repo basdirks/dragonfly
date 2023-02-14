@@ -8,8 +8,6 @@ pub enum ParseError {
     UnmatchedLiteral { expected: String },
 }
 
-/// TODO: Make this a struct and implement `std::ops::Try` so we can also impl
-/// `Iterator` and friends.
 pub type ParseResult<T, E = ParseError> = Result<(T, String), E>;
 
 pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
