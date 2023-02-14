@@ -135,8 +135,7 @@ mod tests {
                 ]
             }
             .to_string(),
-            "
-
+            "\
 enum CountryName {
     France = \"France\",
     Germany = \"Germany\",
@@ -144,10 +143,7 @@ enum CountryName {
     Spain = \"Spain\",
     UnitedKingdom = \"UnitedKingdom\",
     UnitedStates = \"UnitedStates\",
-}
-
-"
-            .trim()
+}"
         );
     }
 }
