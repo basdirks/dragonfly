@@ -1,13 +1,13 @@
 use std::collections::HashSet;
 
 use crate::parser::{
-    brace_close, brace_open, capitalized, literal, spaces, ParseError, ParseResult,
+    brace_close, brace_open, capitalized, literal, many1, spaces, ParseError, ParseResult,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Enum {
     pub name: String,
-    pub variants: HashSet<String>,
+    pub variants: Vec<String>,
 }
 
 impl Enum {
@@ -24,7 +24,6 @@ impl Enum {
     /// # Examples
     ///
     /// ```rust
-    /// use std::collections::HashSet;
     /// use dragonfly::ast::r#enum::Enum;
     /// use dragonfly::parser::ParseError;
     ///
@@ -33,14 +32,9 @@ impl Enum {
     ///     Baz
     /// }";
     ///
-    /// let mut variants = HashSet::new();
-    ///
-    /// variants.insert("Bar".to_string());
-    /// variants.insert("Baz".to_string());
-    ///
     /// let expected = Enum {
     ///     name: "Foo".to_string(),
-    ///     variants,
+    ///     variants: vec!["Bar".to_string(), "Baz".to_string()],
     /// };
     ///
     /// assert_eq!(Enum::parse(input), Ok((expected, "".to_string())));
@@ -85,24 +79,18 @@ impl Enum {
         let (name, input) = capitalized(&input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
-        let (_, input) = spaces(&input)?;
-        let mut variants = HashSet::new();
-        let (variant, input) = capitalized(&input)?;
 
-        variants.insert(variant);
+        let (variants, input) = many1(&input, |input| {
+            let (_, input) = spaces(input)?;
+            let (variant, input) = capitalized(&input)?;
 
-        let (_, mut input) = spaces(&input)?;
+            Ok((variant, input))
+        })?;
 
-        while let Ok((variant, new_input)) = capitalized(&input) {
-            let (_, new_input) = spaces(&new_input)?;
-
-            if !variants.insert(variant) {
-                return Err(ParseError::CustomError {
-                    message: "duplicate enum variant".to_string(),
-                });
-            }
-
-            input = new_input;
+        if variants.len() != variants.iter().collect::<HashSet<_>>().len() {
+            return Err(ParseError::CustomError {
+                message: "duplicate enum variant".to_string(),
+            });
         }
 
         let (_, input) = spaces(&input)?;

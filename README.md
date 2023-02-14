@@ -12,7 +12,7 @@ An application is described as:
 - Routes: the logical structure
 - Components: the user interface
 
-Missing from this list are:
+Unimplemented:
 
 - Mutations
 - Authentication and authorization
@@ -20,7 +20,7 @@ Missing from this list are:
 
 ## Models
 
-A model describes an entity. It has a name and one or more fields. A field has a name and a type. A type can be an array, a primitive type, an enum, or another model.
+A model describes an entity. It has a name and one or more fields. A field has a name and a type. A type can be an array, a primitive type, or a reference to an enum or a model.
 
 Primitive types are:
 
@@ -299,9 +299,10 @@ Generation turns the AST into TypeScript code.
 
 ### TODO
 
-- [ ] Replace `Display for dragonfly::generator::typescript::ast::Type` with proper pretty printer.
-- [ ] Replace `Display for dragonfly::generator::typescript::ast::Property` with proper pretty printer.
-- [ ] Replace `Display for dragonfly::generator::typescript::ast::Interface` with proper pretty printer.
+- [ ] Replace `Display for dragonfly::generator::typescript::enum::Enum` with proper pretty printer.
+- [ ] Replace `Display for dragonfly::generator::typescript::interface::Interface` with proper pretty printer.
+- [ ] Replace `Display for dragonfly::generator::typescript::interface::Property` with proper pretty printer.
+- [ ] Replace `Display for dragonfly::generator::typescript::type::Type` with proper pretty printer.
 - [ ] Support extended parameters in `dragonfly::generator::typescript::ast::Interface`.
 
 # Development

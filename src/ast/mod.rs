@@ -121,21 +121,15 @@ impl Statement {
     /// ```rust
     /// use dragonfly::ast::Statement;
     /// use dragonfly::ast::r#enum::Enum;
-    /// use std::collections::HashSet;
     ///
     /// let input = "enum Foo {
     ///     Bar
     ///     Baz
     /// }";
     ///
-    /// let mut variants = HashSet::new();
-    ///
-    /// variants.insert("Bar".to_string());
-    /// variants.insert("Baz".to_string());
-    ///
     /// let expected = Statement::Enum(Enum {
     ///     name: "Foo".to_string(),
-    ///     variants,
+    ///     variants: vec!["Bar".to_string(), "Baz".to_string()],
     /// });
     ///
     /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
@@ -146,7 +140,7 @@ impl Statement {
     /// use dragonfly::ast::model::{field::Field, Model};
     /// use dragonfly::ast::query::Query;
     /// use dragonfly::ast::route::Route;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use std::collections::HashMap;
     ///
     /// let input = "model Foo {
@@ -160,7 +154,7 @@ impl Statement {
     ///     "foo".to_string(),
     ///     Field {
     ///         name: "foo".to_string(),
-    ///         r#type: Type::One(Primitive::String),
+    ///         r#type: Type::One(Basic::String),
     ///     },
     /// );
     ///
@@ -168,7 +162,7 @@ impl Statement {
     ///     "bar".to_string(),
     ///     Field {
     ///         name: "bar".to_string(),
-    ///         r#type: Type::Array(Primitive::Identifier("Bar".to_string())),
+    ///         r#type: Type::Array(Basic::Identifier("Bar".to_string())),
     ///     },
     /// );
     ///
@@ -235,8 +229,8 @@ impl Ast {
     /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
     /// use dragonfly::ast::route::Route;
     /// use dragonfly::ast::Statement;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
-    /// use std::collections::{HashMap, HashSet};
+    /// use dragonfly::ast::r#type::{Basic, Type};
+    /// use std::collections::HashMap;
     ///
     /// let input = "route / {
     ///   root: Home
@@ -336,7 +330,7 @@ impl Ast {
     ///     "id".to_string(),
     ///     Field {
     ///         name: "id".to_string(),
-    ///         r#type: Type::One(Primitive::Identifier("ID".to_string())),
+    ///         r#type: Type::One(Basic::Identifier("ID".to_string())),
     ///     },
     /// );
     ///
@@ -344,7 +338,7 @@ impl Ast {
     ///     "title".to_string(),
     ///     Field {
     ///         name: "title".to_string(),
-    ///         r#type: Type::One(Primitive::String),
+    ///         r#type: Type::One(Basic::String),
     ///     },
     /// );
     ///
@@ -352,7 +346,7 @@ impl Ast {
     ///     "country".to_string(),
     ///     Field {
     ///         name: "country".to_string(),
-    ///         r#type: Type::One(Primitive::Identifier("Country".to_string())),
+    ///         r#type: Type::One(Basic::Identifier("Country".to_string())),
     ///     },
     /// );
     ///
@@ -360,7 +354,7 @@ impl Ast {
     ///     "category".to_string(),
     ///     Field {
     ///         name: "category".to_string(),
-    ///         r#type: Type::Array(Primitive::Identifier("Category".to_string())),
+    ///         r#type: Type::Array(Basic::Identifier("Category".to_string())),
     ///     },
     /// );
     ///
@@ -378,7 +372,7 @@ impl Ast {
     ///     "id".to_string(),
     ///     Field {
     ///         name: "id".to_string(),
-    ///         r#type: Type::One(Primitive::Identifier("ID".to_string())),
+    ///         r#type: Type::One(Basic::Identifier("ID".to_string())),
     ///     },
     /// );
     ///
@@ -386,7 +380,7 @@ impl Ast {
     ///     "domain".to_string(),
     ///     Field {
     ///         name: "domain".to_string(),
-    ///         r#type: Type::One(Primitive::String),
+    ///         r#type: Type::One(Basic::String),
     ///     },
     /// );
     ///
@@ -394,7 +388,7 @@ impl Ast {
     ///     "drivingSide".to_string(),
     ///     Field {
     ///         name: "drivingSide".to_string(),
-    ///         r#type: Type::One(Primitive::Identifier("DrivingSide".to_string())),
+    ///         r#type: Type::One(Basic::Identifier("DrivingSide".to_string())),
     ///     },
     /// );
     ///
@@ -402,7 +396,7 @@ impl Ast {
     ///     "flag".to_string(),
     ///     Field {
     ///         name: "flag".to_string(),
-    ///         r#type: Type::One(Primitive::String),
+    ///         r#type: Type::One(Basic::String),
     ///     },
     /// );
     ///
@@ -410,7 +404,7 @@ impl Ast {
     ///     "name".to_string(),
     ///     Field {
     ///         name: "name".to_string(),
-    ///         r#type: Type::One(Primitive::Identifier("CountryName".to_string())),
+    ///         r#type: Type::One(Basic::Identifier("CountryName".to_string())),
     ///     },
     /// );
     ///
@@ -422,50 +416,41 @@ impl Ast {
     ///     },
     /// );
     ///
-    /// let mut variants = HashSet::new();
-    ///
-    /// variants.insert("Left".to_string());
-    /// variants.insert("Right".to_string());
-    ///
     /// expected.enums.insert(
     ///     "DrivingSide".to_string(),
     ///     Enum {
     ///         name: "DrivingSide".to_string(),
-    ///         variants,
+    ///         variants: vec!["Left".to_string(), "Right".to_string()],
     ///     },
     /// );
-    ///
-    /// let mut variants = HashSet::new();
-    ///
-    /// variants.insert("Albania".to_string());
-    /// variants.insert("Andorra".to_string());
-    /// variants.insert("Austria".to_string());
-    /// variants.insert("Yemen".to_string());
-    /// variants.insert("Zambia".to_string());
-    /// variants.insert("Zimbabwe".to_string());
     ///
     /// expected.enums.insert(
     ///     "CountryName".to_string(),
     ///     Enum {
     ///         name: "CountryName".to_string(),
-    ///         variants,
+    ///         variants: vec![
+    ///             "Albania".to_string(),
+    ///             "Andorra".to_string(),
+    ///             "Austria".to_string(),
+    ///             "Yemen".to_string(),
+    ///             "Zambia".to_string(),
+    ///             "Zimbabwe".to_string()
+    ///         ],
     ///     },
     /// );
-    ///
-    /// let mut variants = HashSet::new();
-    ///
-    /// variants.insert("Architecture".to_string());
-    /// variants.insert("Bollard".to_string());
-    /// variants.insert("Chevron".to_string());
-    /// variants.insert("TrafficLight".to_string());
-    /// variants.insert("TrafficSign".to_string());
-    /// variants.insert("UtilityPole".to_string());
     ///
     /// expected.enums.insert(
     ///     "Category".to_string(),
     ///     Enum {
     ///         name: "Category".to_string(),
-    ///         variants,
+    ///         variants: vec![
+    ///             "Architecture".to_string(),
+    ///             "Bollard".to_string(),
+    ///             "Chevron".to_string(),
+    ///             "TrafficLight".to_string(),
+    ///             "TrafficSign".to_string(),
+    ///             "UtilityPole".to_string(),
+    ///         ],
     ///     },
     /// );
     ///
@@ -473,7 +458,7 @@ impl Ast {
     ///     "images".to_string(),
     ///     Query {
     ///         name: "images".to_string(),
-    ///         r#type: Type::Array(Primitive::Identifier("Image".to_string())),
+    ///         r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///         schema: Schema::Node(
     ///             "image".to_string(),
     ///             vec![
@@ -494,7 +479,7 @@ impl Ast {
     ///     "imagesByCountryName".to_string(),
     ///     Query {
     ///         name: "imagesByCountryName".to_string(),
-    ///         r#type: Type::Array(Primitive::Identifier("Image".to_string())),
+    ///         r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///         schema: Schema::Node(
     ///             "image".to_string(),
     ///             vec![
@@ -518,7 +503,7 @@ impl Ast {
     ///         ),
     ///         arguments: vec![Argument {
     ///             name: "name".to_string(),
-    ///             r#type: Type::One(Primitive::Identifier("CountryName".to_string())),
+    ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
     ///         }],
     ///     },
     /// );

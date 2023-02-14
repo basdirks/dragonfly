@@ -1,3 +1,4 @@
+use crate::ast::r#type::{Basic as AstBasicType, Type as AstType};
 use std::fmt::Display;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -12,7 +13,7 @@ pub enum Type {
         arguments: Vec<(String, Type)>,
         return_type: Box<Type>,
     },
-    Named {
+    Identifier {
         name: String,
         generics: Vec<String>,
     },
@@ -59,7 +60,7 @@ impl Display for Type {
                     return_type
                 )
             }
-            Self::Named { name, generics } => {
+            Self::Identifier { name, generics } => {
                 write!(
                     f,
                     "{}{}",
@@ -123,129 +124,28 @@ impl Display for Type {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Property {
-    name: String,
-    r#type: Type,
-    optional: bool,
-}
-
-// TODO: Replace with pretty printer.
-impl Display for Property {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Self {
-            name,
-            r#type,
-            optional,
-        } = self;
-
-        if *optional {
-            write!(f, "{name}?: {type};")
-        } else {
-            write!(f, "{name}: {type};")
+impl From<AstBasicType> for Type {
+    fn from(value: AstBasicType) -> Self {
+        match value {
+            AstBasicType::Boolean => Self::Boolean,
+            AstBasicType::Float | AstBasicType::Int => Self::Number,
+            AstBasicType::String => Self::String,
+            AstBasicType::Identifier(name) => Self::Identifier {
+                name,
+                generics: Vec::new(),
+            },
         }
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Extend {
-    name: String,
-    generics: Vec<Extend>,
-}
-
-impl Display for Extend {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Self { name, generics } = self;
-
-        let generics = generics
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        if generics.is_empty() {
-            write!(f, "{name}")
-        } else {
-            write!(f, "{name}<{generics}>")
+impl From<AstType> for Type {
+    fn from(r#type: AstType) -> Self {
+        match r#type {
+            AstType::One(r#type) => r#type.into(),
+            AstType::Array(r#type) => Self::Array {
+                r#type: Box::new(r#type.into()),
+            },
         }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Interface {
-    name: String,
-    extends: Vec<Extend>,
-    // TODO: Support extending of parameters.
-    parameters: Vec<String>,
-    properties: Vec<Property>,
-}
-
-// TODO: Replace with pretty printer.
-impl Display for Interface {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Self {
-            name,
-            extends,
-            parameters,
-            properties,
-        } = self;
-
-        let extends = if extends.is_empty() {
-            String::new()
-        } else {
-            format!(
-                " extends {}",
-                extends
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        };
-
-        let parameters = if parameters.is_empty() {
-            String::new()
-        } else {
-            format!(
-                "<{}>",
-                parameters
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        };
-
-        let properties = properties
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(" ");
-
-        write!(
-            f,
-            "interface {name}{parameters}{extends} {{ {properties} }}"
-        )
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Enum {
-    name: String,
-    values: Vec<String>,
-}
-
-impl Display for Enum {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Self { name, values } = self;
-
-        let values = values
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        write!(f, "enum {name} {{ {values} }}")
     }
 }
 
@@ -262,7 +162,7 @@ mod tests {
     fn test_display_array() {
         assert_eq!(
             Type::Array {
-                r#type: Box::new(Type::Named {
+                r#type: Box::new(Type::Identifier {
                     name: "Partial".to_string(),
                     generics: vec!["Image".to_string()]
                 }),
@@ -289,14 +189,14 @@ mod tests {
                 arguments: vec![
                     (
                         "name".to_string(),
-                        Type::Named {
+                        Type::Identifier {
                             name: "Partial".to_string(),
                             generics: vec!["Image".to_string(),]
                         }
                     ),
                     (
                         "countryName".to_string(),
-                        Type::Named {
+                        Type::Identifier {
                             name: "CountryName".to_string(),
                             generics: vec![],
                         }
@@ -304,7 +204,7 @@ mod tests {
                 ]
                 .into_iter()
                 .collect(),
-                return_type: Box::new(Type::Named {
+                return_type: Box::new(Type::Identifier {
                     name: "String".to_string(),
                     generics: vec![]
                 }),
@@ -317,7 +217,7 @@ mod tests {
     #[test]
     fn test_display_named() {
         assert_eq!(
-            Type::Named {
+            Type::Identifier {
                 name: "Partial".to_string(),
                 generics: vec!["Image".to_string()]
             }
@@ -352,7 +252,7 @@ mod tests {
                             properties: vec![
                                 (
                                     "name".to_string(),
-                                    Type::Named {
+                                    Type::Identifier {
                                         name: "CountryName".to_string(),
                                         generics: vec![],
                                     }
@@ -371,7 +271,7 @@ mod tests {
                     (
                         "tags".to_string(),
                         Type::Array {
-                            r#type: Box::new(Type::Named {
+                            r#type: Box::new(Type::Identifier {
                                 name: "Tag".to_string(),
                                 generics: vec![],
                             })
@@ -401,7 +301,7 @@ mod tests {
         assert_eq!(
             Type::Tuple {
                 types: vec![
-                    Type::Named {
+                    Type::Identifier {
                         name: "CountryName".to_string(),
                         generics: vec![],
                     },
@@ -426,7 +326,7 @@ mod tests {
         assert_eq!(
             Type::Union {
                 types: vec![
-                    Type::Named {
+                    Type::Identifier {
                         name: "CountryName".to_string(),
                         generics: vec![],
                     },
@@ -452,70 +352,33 @@ mod tests {
     }
 
     #[test]
-    fn test_display_interface() {
-        assert_eq!(
-            Interface {
-                name: "Image".to_string(),
-                parameters: vec![
-                    "T".to_string(),
-                ],
-                extends: vec![
-                    Extend {
-                    name: "Resource".to_string(),
-                    generics: vec![
-                        Extend {
-                            name: "T".to_string(),
-                            generics: vec![]
-                        }
-                    ]
-                }],
-                properties: vec![
-                    Property {
-                        name: "title".to_string(),
-                        r#type: Type::String,
-                        optional: false
-                    },
-                    Property {
-                        name: "countryName".to_string(),
-                        r#type: Type::Named {
-                            name: "CountryName".to_string(),
-                            generics: vec![],
-                        },
-                        optional: true
-                    },
-                    Property {
-                        name: "tags".to_string(),
-                        r#type: Type::Array {
-                            r#type: Box::new(Type::Named {
-                                name: "Tag".to_string(),
-                                generics: vec![],
-                            })
-                        },
-                        optional: false
-                    }
-                ]
-            }
-            .to_string(),
-            "interface Image<T> extends Resource<T> { title: string; countryName?: CountryName; tags: Array<Tag>; }"
-        );
+    fn test_from_ast_primitive_boolean() {
+        assert_eq!(Type::from(AstBasicType::Boolean), Type::Boolean);
     }
 
     #[test]
-    fn test_display_enum() {
+    fn test_from_ast_primitive_float() {
+        assert_eq!(Type::from(AstBasicType::Float), Type::Number);
+    }
+
+    #[test]
+    fn test_from_ast_primitive_integer() {
+        assert_eq!(Type::from(AstBasicType::Int), Type::Number);
+    }
+
+    #[test]
+    fn test_from_ast_primitive_string() {
+        assert_eq!(Type::from(AstBasicType::String), Type::String);
+    }
+
+    #[test]
+    fn test_from_ast_primitive_identifier() {
         assert_eq!(
-            Enum {
-                name: "CountryName".to_string(),
-                values: vec![
-                    "France".to_string(),
-                    "Germany".to_string(),
-                    "Italy".to_string(),
-                    "Spain".to_string(),
-                    "UnitedKingdom".to_string(),
-                    "UnitedStates".to_string(),
-                ]
+            Type::from(AstBasicType::Identifier("Image".to_string())),
+            Type::Identifier {
+                name: "Image".to_string(),
+                generics: vec![]
             }
-            .to_string(),
-            "enum CountryName { France, Germany, Italy, Spain, UnitedKingdom, UnitedStates }"
         );
     }
 }

@@ -1,6 +1,5 @@
+use crate::ast::r#type::Type;
 use crate::parser::{alphabetics, colon, spaces, ParseResult};
-
-use super::super::r#type::Type;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Field {
@@ -22,14 +21,14 @@ impl Field {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::model::field::Field;
     ///
     /// let input = "bar: String";
     ///
     /// let expected = Field {
     ///     name: "bar".to_string(),
-    ///     r#type: Type::One(Primitive::String),
+    ///     r#type: Type::One(Basic::String),
     /// };
     ///
     /// assert_eq!(Field::parse(input), Ok((expected, "".to_string())));

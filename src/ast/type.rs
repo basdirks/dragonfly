@@ -4,9 +4,9 @@ use crate::{
     tag,
 };
 
-/// Primitive types.
+/// Basic types: primitives and identifiers.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Primitive {
+pub enum Basic {
     /// A UTF-8 string.
     String,
     /// A 64-bit integer.
@@ -19,7 +19,7 @@ pub enum Primitive {
     Identifier(String),
 }
 
-impl Primitive {
+impl Basic {
     /// Parse a primitive from the given input.
     ///
     /// # Arguments
@@ -33,18 +33,18 @@ impl Primitive {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::Primitive;
+    /// use dragonfly::ast::r#type::Basic;
     ///
-    /// assert_eq!(Primitive::parse("String"), Ok((Primitive::String, "".to_string())));
-    /// assert_eq!(Primitive::parse("Int"), Ok((Primitive::Int, "".to_string())));
-    /// assert_eq!(Primitive::parse("Float"), Ok((Primitive::Float, "".to_string())));
-    /// assert_eq!(Primitive::parse("Boolean"), Ok((Primitive::Boolean, "".to_string())));
+    /// assert_eq!(Basic::parse("String"), Ok((Basic::String, "".to_string())));
+    /// assert_eq!(Basic::parse("Int"), Ok((Basic::Int, "".to_string())));
+    /// assert_eq!(Basic::parse("Float"), Ok((Basic::Float, "".to_string())));
+    /// assert_eq!(Basic::parse("Boolean"), Ok((Basic::Boolean, "".to_string())));
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::Primitive;
+    /// use dragonfly::ast::r#type::Basic;
     ///
-    /// assert_eq!(Primitive::parse("Foo"), Ok((Primitive::Identifier("Foo".to_string()), "".to_string())));
+    /// assert_eq!(Basic::parse("Foo"), Ok((Basic::Identifier("Foo".to_string()), "".to_string())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice::<Self>(
@@ -62,17 +62,17 @@ impl Primitive {
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Type {
-    Array(Primitive),
-    One(Primitive),
+    Array(Basic),
+    One(Basic),
 }
 
 impl Type {
     fn parse_one(input: &str) -> ParseResult<Self> {
-        map(input, Primitive::parse, Self::One)
+        map(input, Basic::parse, Self::One)
     }
 
     fn parse_array(input: &str) -> ParseResult<Self> {
-        let (primitive, input) = between(input, "[", Primitive::parse, "]")?;
+        let (primitive, input) = between(input, "[", Basic::parse, "]")?;
 
         Ok((Self::Array(primitive), input))
     }
@@ -91,29 +91,29 @@ impl Type {
     ///
     /// ```rust
     /// use dragonfly::parser::ParseError;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     ///
-    /// assert_eq!(Type::parse("String"), Ok((Type::One(Primitive::String), "".to_string())));
-    /// assert_eq!(Type::parse("Int"), Ok((Type::One(Primitive::Int), "".to_string())));
-    /// assert_eq!(Type::parse("Float"), Ok((Type::One(Primitive::Float), "".to_string())));
-    /// assert_eq!(Type::parse("Boolean"), Ok((Type::One(Primitive::Boolean), "".to_string())));
+    /// assert_eq!(Type::parse("String"), Ok((Type::One(Basic::String), "".to_string())));
+    /// assert_eq!(Type::parse("Int"), Ok((Type::One(Basic::Int), "".to_string())));
+    /// assert_eq!(Type::parse("Float"), Ok((Type::One(Basic::Float), "".to_string())));
+    /// assert_eq!(Type::parse("Boolean"), Ok((Type::One(Basic::Boolean), "".to_string())));
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     ///
     /// assert_eq!(
     ///     Type::parse("[String]"),
-    ///     Ok((Type::Array(Primitive::String), "".to_string())),
+    ///     Ok((Type::Array(Basic::String), "".to_string())),
     /// );
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     ///
     /// assert_eq!(
     ///     Type::parse("[Foo]"),
-    ///     Ok((Type::Array(Primitive::Identifier("Foo".to_string())), "".to_string())),
+    ///     Ok((Type::Array(Basic::Identifier("Foo".to_string())), "".to_string())),
     /// );
     /// ```
     ///

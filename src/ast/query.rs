@@ -333,14 +333,14 @@ impl Argument {
     ///
     /// ```rust
     /// use dragonfly::ast::query::Argument;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     ///
     /// assert_eq!(
     ///     Argument::parse("$name: String"),
     ///     Ok((
     ///         Argument {
     ///             name: "name".to_string(),
-    ///             r#type: Type::One(Primitive::String),
+    ///             r#type: Type::One(Basic::String),
     ///         },
     ///         "".to_string()
     ///     ))
@@ -522,7 +522,7 @@ impl Query {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::query::{Argument, Query};
     ///
     /// assert_eq!(
@@ -530,7 +530,7 @@ impl Query {
     ///     Ok((
     ///         vec![Argument {
     ///             name: "id".to_string(),
-    ///             r#type: Type::One(Primitive::Identifier("UUID".to_string()))
+    ///             r#type: Type::One(Basic::Identifier("UUID".to_string()))
     ///         }],
     ///         "".to_string()
     ///    ))
@@ -538,7 +538,7 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::query::{Argument, Query};
     ///
     /// assert_eq!(
@@ -547,11 +547,11 @@ impl Query {
     ///         vec![
     ///             Argument {
     ///                 name: "id".to_string(),
-    ///                 r#type: Type::One(Primitive::Identifier("UUID".to_string()))
+    ///                 r#type: Type::One(Basic::Identifier("UUID".to_string()))
     ///             },
     ///             Argument {
     ///                 name: "name".to_string(),
-    ///                 r#type: Type::Array(Primitive::String)
+    ///                 r#type: Type::Array(Basic::String)
     ///             }
     ///         ],
     ///         "".to_string()
@@ -624,7 +624,7 @@ impl Query {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
     ///
     /// let input = "query images: [Image] {
@@ -642,7 +642,7 @@ impl Query {
     ///             Schema::Identifier("title".to_string()),
     ///         ]
     ///     ),
-    ///     r#type: Type::Array(Primitive::Identifier("Image".to_string())),
+    ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///     r#where: None,
     /// };
     ///
@@ -650,7 +650,7 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
     ///
     /// let input = "query images($tag: String, $title: String): [Image] {
@@ -674,11 +674,11 @@ impl Query {
     ///     arguments: vec![
     ///         Argument {
     ///             name: "tag".to_string(),
-    ///             r#type: Type::One(Primitive::String),
+    ///             r#type: Type::One(Basic::String),
     ///         },   
     ///         Argument {
     ///             name: "title".to_string(),
-    ///             r#type: Type::One(Primitive::String),
+    ///             r#type: Type::One(Basic::String),
     ///         },
     ///     ],
     ///     schema: Schema::Node(
@@ -687,7 +687,7 @@ impl Query {
     ///             Schema::Identifier("title".to_string()),
     ///         ]
     ///     ),
-    ///     r#type: Type::Array(Primitive::Identifier("Image".to_string())),
+    ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///     r#where: Some(Where::Node(
     ///         "image".to_string(),
     ///         vec![
@@ -711,7 +711,7 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
     ///
     /// let input = "query imagesByCountryName($name: CountryName): [Image] {
@@ -735,7 +735,7 @@ impl Query {
     ///     arguments: vec![
     ///         Argument {
     ///             name: "name".to_string(),
-    ///             r#type: Type::One(Primitive::Identifier("CountryName".to_string())),
+    ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
     ///         },
     ///     ],
     ///     schema: Schema::Node(
@@ -745,7 +745,7 @@ impl Query {
     ///             Schema::Identifier("category".to_string()),
     ///         ],
     ///     ),
-    ///     r#type: Type::Array(Primitive::Identifier("Image".to_string())),
+    ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///     r#where: Some(Where::Node(
     ///         "image".to_string(),
     ///         vec![Where::Node(
@@ -935,7 +935,7 @@ impl Query {
     ///
     /// ```rust
     /// use dragonfly::ast::TypeError;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::query::{Argument, Query};
     ///
     /// let input = "query images($name: CountryName): [Image] {
@@ -950,7 +950,7 @@ impl Query {
     ///         query_name: "images".to_string(),
     ///         argument: Argument {
     ///             name: "name".to_string(),
-    ///             r#type: Type::One(Primitive::Identifier("CountryName".to_string())),
+    ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
     ///         },
     ///     }),
     /// );
@@ -958,7 +958,7 @@ impl Query {
     ///
     /// ```rust
     /// use dragonfly::ast::TypeError;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use dragonfly::ast::query::{Argument, Query};
     ///
     /// let input = "query images($name: CountryName, $tag: String): [Image] {
@@ -982,7 +982,7 @@ impl Query {
     ///         query_name: "images".to_string(),
     ///         argument: Argument {
     ///             name: "tag".to_string(),
-    ///             r#type: Type::One(Primitive::String),
+    ///             r#type: Type::One(Basic::String),
     ///         },
     ///     }),
     /// );

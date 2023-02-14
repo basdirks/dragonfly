@@ -30,7 +30,7 @@ impl Model {
     /// ```rust
     /// use dragonfly::ast::model::field::Field;
     /// use dragonfly::ast::model::Model;
-    /// use dragonfly::ast::r#type::{Primitive, Type};
+    /// use dragonfly::ast::r#type::{Basic, Type};
     /// use std::collections::HashMap;
     ///
     /// let input = "model Foo {
@@ -45,7 +45,7 @@ impl Model {
     ///     "bar".to_string(),
     ///     Field {
     ///         name: "bar".to_string(),
-    ///         r#type: Type::One(Primitive::String),
+    ///         r#type: Type::One(Basic::String),
     ///     }
     /// );
     ///
@@ -53,7 +53,7 @@ impl Model {
     ///     "baz".to_string(),
     ///     Field {
     ///         name: "baz".to_string(),
-    ///         r#type: Type::One(Primitive::Int),
+    ///         r#type: Type::One(Basic::Int),
     ///     }
     /// );
     ///
@@ -61,7 +61,7 @@ impl Model {
     ///     "qux".to_string(),
     ///     Field {
     ///         name: "qux".to_string(),
-    ///         r#type: Type::Array(Primitive::Identifier("Bar".to_string())),
+    ///         r#type: Type::Array(Basic::Identifier("Bar".to_string())),
     ///     }
     /// );
     ///

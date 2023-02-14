@@ -1,1 +1,3 @@
-pub mod ast;
+pub mod r#enum;
+pub mod interface;
+pub mod r#type;
