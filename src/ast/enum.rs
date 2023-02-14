@@ -1,7 +1,17 @@
-use std::collections::HashSet;
-
-use crate::parser::{
-    brace_close, brace_open, capitalized, literal, many1, spaces, ParseError, ParseResult,
+use {
+    crate::parser::{
+        case::capitalized,
+        char::{
+            brace_close,
+            brace_open,
+        },
+        char_range::spaces,
+        literal,
+        many1,
+        ParseError,
+        ParseResult,
+    },
+    std::collections::HashSet,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -24,8 +34,10 @@ impl Enum {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#enum::Enum;
-    /// use dragonfly::parser::ParseError;
+    /// use dragonfly::{
+    ///     ast::r#enum::Enum,
+    ///     parser::ParseError,
+    /// };
     ///
     /// let input = "enum Foo {
     ///     Bar
@@ -41,8 +53,10 @@ impl Enum {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::parser::ParseError;
-    /// use dragonfly::ast::r#enum::Enum;
+    /// use dragonfly::{
+    ///     ast::r#enum::Enum,
+    ///     parser::ParseError,
+    /// };
     ///
     /// let input = "enum Foo {
     ///     bar
@@ -58,8 +72,10 @@ impl Enum {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::parser::ParseError;
-    /// use dragonfly::ast::r#enum::Enum;
+    /// use dragonfly::{
+    ///     ast::r#enum::Enum,
+    ///     parser::ParseError,
+    /// };
     ///
     /// let input = "enum Foo {
     ///     Bar

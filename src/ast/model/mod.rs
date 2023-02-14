@@ -1,10 +1,18 @@
-use std::collections::HashMap;
-
-use crate::parser::{
-    brace_close, brace_open, capitalized, literal, spaces, ParseError, ParseResult,
+use {
+    self::field::Field,
+    crate::parser::{
+        case::capitalized,
+        char::{
+            brace_close,
+            brace_open,
+        },
+        char_range::spaces,
+        literal,
+        ParseError,
+        ParseResult,
+    },
+    std::collections::HashMap,
 };
-
-use self::field::Field;
 
 pub mod field;
 
@@ -28,10 +36,19 @@ impl Model {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::model::field::Field;
-    /// use dragonfly::ast::model::Model;
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use std::collections::HashMap;
+    /// use {
+    ///     dragonfly::ast::{
+    ///         model::{
+    ///             field::Field,
+    ///             Model,
+    ///         },
+    ///         r#type::{
+    ///             Basic,
+    ///             Type,
+    ///         },
+    ///     },
+    ///     std::collections::HashMap,
+    /// };
     ///
     /// let input = "model Foo {
     ///     bar: String
@@ -46,7 +63,7 @@ impl Model {
     ///     Field {
     ///         name: "bar".to_string(),
     ///         r#type: Type::One(Basic::String),
-    ///     }
+    ///     },
     /// );
     ///
     /// fields.insert(
@@ -54,7 +71,7 @@ impl Model {
     ///     Field {
     ///         name: "baz".to_string(),
     ///         r#type: Type::One(Basic::Int),
-    ///     }
+    ///     },
     /// );
     ///
     /// fields.insert(
@@ -62,7 +79,7 @@ impl Model {
     ///     Field {
     ///         name: "qux".to_string(),
     ///         r#type: Type::Array(Basic::Identifier("Bar".to_string())),
-    ///     }
+    ///     },
     /// );
     ///
     /// let expected = Model {

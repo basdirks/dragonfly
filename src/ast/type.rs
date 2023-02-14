@@ -1,6 +1,15 @@
 use crate::{
-    literal, map,
-    parser::{between, capitalized, choice, literal, map, tag, ParseResult},
+    literal,
+    map,
+    parser::{
+        between,
+        case::capitalized,
+        choice,
+        literal,
+        map,
+        tag,
+        ParseResult,
+    },
     tag,
 };
 
@@ -38,13 +47,20 @@ impl Basic {
     /// assert_eq!(Basic::parse("String"), Ok((Basic::String, "".to_string())));
     /// assert_eq!(Basic::parse("Int"), Ok((Basic::Int, "".to_string())));
     /// assert_eq!(Basic::parse("Float"), Ok((Basic::Float, "".to_string())));
-    /// assert_eq!(Basic::parse("Boolean"), Ok((Basic::Boolean, "".to_string())));
+    ///
+    /// assert_eq!(
+    ///     Basic::parse("Boolean"),
+    ///     Ok((Basic::Boolean, "".to_string()))
+    /// );
     /// ```
     ///
     /// ```rust
     /// use dragonfly::ast::r#type::Basic;
     ///
-    /// assert_eq!(Basic::parse("Foo"), Ok((Basic::Identifier("Foo".to_string()), "".to_string())));
+    /// assert_eq!(
+    ///     Basic::parse("Foo"),
+    ///     Ok((Basic::Identifier("Foo".to_string()), "".to_string()))
+    /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice::<Self>(
@@ -90,17 +106,40 @@ impl Type {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::parser::ParseError;
-    /// use dragonfly::ast::r#type::{Basic, Type};
+    /// use dragonfly::{
+    ///     ast::r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    ///     parser::ParseError,
+    /// };
     ///
-    /// assert_eq!(Type::parse("String"), Ok((Type::One(Basic::String), "".to_string())));
-    /// assert_eq!(Type::parse("Int"), Ok((Type::One(Basic::Int), "".to_string())));
-    /// assert_eq!(Type::parse("Float"), Ok((Type::One(Basic::Float), "".to_string())));
-    /// assert_eq!(Type::parse("Boolean"), Ok((Type::One(Basic::Boolean), "".to_string())));
+    /// assert_eq!(
+    ///     Type::parse("String"),
+    ///     Ok((Type::One(Basic::String), "".to_string()))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Type::parse("Int"),
+    ///     Ok((Type::One(Basic::Int), "".to_string()))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Type::parse("Float"),
+    ///     Ok((Type::One(Basic::Float), "".to_string()))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Type::parse("Boolean"),
+    ///     Ok((Type::One(Basic::Boolean), "".to_string()))
+    /// );
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
+    /// use dragonfly::ast::r#type::{
+    ///     Basic,
+    ///     Type,
+    /// };
     ///
     /// assert_eq!(
     ///     Type::parse("[String]"),
@@ -109,11 +148,17 @@ impl Type {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
+    /// use dragonfly::ast::r#type::{
+    ///     Basic,
+    ///     Type,
+    /// };
     ///
     /// assert_eq!(
     ///     Type::parse("[Foo]"),
-    ///     Ok((Type::Array(Basic::Identifier("Foo".to_string())), "".to_string())),
+    ///     Ok((
+    ///         Type::Array(Basic::Identifier("Foo".to_string())),
+    ///         "".to_string()
+    ///     )),
     /// );
     /// ```
     ///

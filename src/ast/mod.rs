@@ -1,16 +1,34 @@
-use self::{
-    component::Component,
-    model::{field::Field, Model},
-    query::{Argument, Query, Selector},
-    r#enum::Enum,
-    r#type::Type,
-    route::Route,
+use {
+    self::{
+        component::Component,
+        model::{
+            field::Field,
+            Model,
+        },
+        query::{
+            Argument,
+            Query,
+            Selector,
+        },
+        r#enum::Enum,
+        r#type::Type,
+        route::Route,
+    },
+    crate::{
+        map,
+        parser::{
+            char_range::spaces,
+            choice,
+            map,
+            ParseError,
+            ParseResult,
+        },
+    },
+    std::collections::{
+        HashMap,
+        HashSet,
+    },
 };
-use crate::{
-    map,
-    parser::{choice, map, spaces, ParseError, ParseResult},
-};
-use std::collections::{HashMap, HashSet};
 
 pub mod component;
 pub mod r#enum;
@@ -24,15 +42,15 @@ pub enum TypeError {
     /// The schema of a query is empty. This means that the query does not
     /// return any data.
     EmptyQuerySchema { query_name: String },
-    /// The structure of the schema of a query does not match the return type of
-    /// the query.
+    /// The structure of the schema of a query does not match the return type
+    /// of the query.
     IncompatibleQuerySchema {
         actual: Type,
         expected: Type,
         query_name: String,
     },
-    /// The type of a selector (as given by the corresponding argument) does not
-    /// match the type of the corresponding field.
+    /// The type of a selector (as given by the corresponding argument) does
+    /// not match the type of the corresponding field.
     IncompatibleQuerySelectorType {
         query_name: String,
         selector: Selector,
@@ -103,24 +121,28 @@ impl Statement {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::Statement;
-    /// use dragonfly::ast::component::Component;
+    /// use dragonfly::ast::{
+    ///     component::Component,
+    ///     Statement,
+    /// };
     ///
     /// let input = "component Foo {
-    ///     path: /foo
+    ///     path: Foo
     /// }";
     ///
     /// let expected = Statement::Component(Component {
     ///     name: "Foo".to_string(),
-    ///     path: "/foo".to_string(),
+    ///     path: "Foo".to_string(),
     /// });
     ///
     /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::Statement;
-    /// use dragonfly::ast::r#enum::Enum;
+    /// use dragonfly::ast::{
+    ///     r#enum::Enum,
+    ///     Statement,
+    /// };
     ///
     /// let input = "enum Foo {
     ///     Bar
@@ -136,12 +158,22 @@ impl Statement {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::Statement;
-    /// use dragonfly::ast::model::{field::Field, Model};
-    /// use dragonfly::ast::query::Query;
-    /// use dragonfly::ast::route::Route;
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use std::collections::HashMap;
+    /// use {
+    ///     dragonfly::ast::{
+    ///         model::{
+    ///             field::Field,
+    ///             Model,
+    ///         },
+    ///         query::Query,
+    ///         r#type::{
+    ///             Basic,
+    ///             Type,
+    ///         },
+    ///         route::Route,
+    ///         Statement,
+    ///     },
+    ///     std::collections::HashMap,
+    /// };
     ///
     /// let input = "model Foo {
     ///     foo: String
@@ -216,21 +248,37 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// * `ParseError`  
+    /// * `ParseError`
     /// if the input is not a valid AST.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::Ast;
-    /// use dragonfly::ast::component::Component;
-    /// use dragonfly::ast::r#enum::Enum;
-    /// use dragonfly::ast::model::{field::Field, Model};
-    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
-    /// use dragonfly::ast::route::Route;
-    /// use dragonfly::ast::Statement;
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use std::collections::HashMap;
+    /// use {
+    ///     dragonfly::ast::{
+    ///         component::Component,
+    ///         model::{
+    ///             field::Field,
+    ///             Model,
+    ///         },
+    ///         query::{
+    ///             Argument,
+    ///             Query,
+    ///             Schema,
+    ///             Selector,
+    ///             Where,
+    ///         },
+    ///         r#enum::Enum,
+    ///         r#type::{
+    ///             Basic,
+    ///             Type,
+    ///         },
+    ///         route::Route,
+    ///         Ast,
+    ///         Statement,
+    ///     },
+    ///     std::collections::HashMap,
+    /// };
     ///
     /// let input = "route / {
     ///   root: Home
@@ -434,7 +482,7 @@ impl Ast {
     ///             "Austria".to_string(),
     ///             "Yemen".to_string(),
     ///             "Zambia".to_string(),
-    ///             "Zimbabwe".to_string()
+    ///             "Zimbabwe".to_string(),
     ///         ],
     ///     },
     /// );
@@ -487,27 +535,25 @@ impl Ast {
     ///                 Schema::Identifier("category".to_string()),
     ///             ],
     ///         ),
-    ///         r#where: Some(
-    ///             Where::Node(
-    ///                 "image".to_string(),
+    ///         r#where: Some(Where::Node(
+    ///             "image".to_string(),
+    ///             vec![Where::Node(
+    ///                 "country".to_string(),
     ///                 vec![Where::Node(
-    ///                     "country".to_string(),
-    ///                     vec![Where::Node(
+    ///                     "name".to_string(),
+    ///                     vec![Where::Selector(Selector::Equals(
     ///                         "name".to_string(),
-    ///                         vec![Where::Selector(
-    ///                             Selector::Equals("name".to_string()),
-    ///                         )],
-    ///                     )],         
+    ///                     ))],
     ///                 )],
-    ///             ),
-    ///         ),
+    ///             )],
+    ///         )),
     ///         arguments: vec![Argument {
     ///             name: "name".to_string(),
     ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
     ///         }],
     ///     },
     /// );
-    ///                                 
+    ///
     /// assert_eq!(Ast::parse(&input), Ok((expected, "".to_string())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -527,7 +573,8 @@ impl Ast {
                 }
 
                 input = new_input;
-            } else if let Ok((statement, new_input)) = Model::parse(&new_input) {
+            } else if let Ok((statement, new_input)) = Model::parse(&new_input)
+            {
                 let name = statement.name.clone();
 
                 if ast.models.insert(name.clone(), statement).is_some() {
@@ -537,7 +584,8 @@ impl Ast {
                 }
 
                 input = new_input;
-            } else if let Ok((statement, new_input)) = Query::parse(&new_input) {
+            } else if let Ok((statement, new_input)) = Query::parse(&new_input)
+            {
                 let name = statement.name.clone();
 
                 if ast.queries.insert(name.clone(), statement).is_some() {
@@ -557,19 +605,23 @@ impl Ast {
                 }
 
                 input = new_input;
-            } else if let Ok((statement, new_input)) = Route::parse(&new_input) {
+            } else if let Ok((statement, new_input)) = Route::parse(&new_input)
+            {
                 let path = statement.path.clone();
 
                 if ast.routes.insert(path.clone(), statement).is_some() {
                     return Err(ParseError::CustomError {
-                        message: format!("Route with path {path} already defined"),
+                        message: format!(
+                            "Route with path {path} already defined"
+                        ),
                     });
                 }
 
                 input = new_input;
             } else {
                 return Err(ParseError::CustomError {
-                    message: "Expected a component, model, query, enum or page".to_string(),
+                    message: "Expected a component, model, query, enum or page"
+                        .to_string(),
                 });
             }
 
@@ -589,14 +641,14 @@ impl Ast {
     ///
     /// ## Query errors
     ///
-    /// * `TypeError::EmptyQuerySchema`  
+    /// * `TypeError::EmptyQuerySchema`
     /// if the schema of a query is empty.
     ///
-    /// * `TypeError::IncompatibleQuerySchema`  
+    /// * `TypeError::IncompatibleQuerySchema`
     /// if the schema of a query is incompatible with the structure of the
     /// models and their relations.
     ///
-    /// * `TypeError::IncompatibleQuerySelectorType`  
+    /// * `TypeError::IncompatibleQuerySelectorType`
     /// if the type of an argument in a selector does not match the type of the
     /// corresponding model field.
     ///
@@ -604,24 +656,24 @@ impl Ast {
     /// if the where-clause of a query is incompatible to the structure of the
     /// models and their relations.
     ///
-    /// * `TypeError::IncompatibleQueryRootNodes`  
+    /// * `TypeError::IncompatibleQueryRootNodes`
     /// if the top-level schema node name does not match the name of the root
     /// node in the where-clause.
     ///
-    /// * `TypeError::InvalidQueryArgumentType`  
+    /// * `TypeError::InvalidQueryArgumentType`
     /// if the type of a query argument is an array or a model.
     ///
-    /// * `TypeError::UnknownQueryArgumentType`  
+    /// * `TypeError::UnknownQueryArgumentType`
     /// if the type of a query argument is undefined.
     ///
-    /// * `TypeError::UnknownQueryReturnType`  
+    /// * `TypeError::UnknownQueryReturnType`
     /// if the return type of a query is does not match the (inferred) type of
     /// the schema.
     ///
-    /// * `TypeError::UnknownQuerySelectorName`  
+    /// * `TypeError::UnknownQuerySelectorName`
     /// if a selector refers to an undefined query argument.
     ///
-    /// * `TypeError::UnusedQueryArgument`  
+    /// * `TypeError::UnusedQueryArgument`
     /// if a query argument is not used at least once in the where-clause.
     ///
     /// ## Route errors
@@ -663,8 +715,10 @@ impl Ast {
     /// # Examples
     ///
     /// ```rust
-    /// use std::collections::HashSet;
-    /// use dragonfly::ast::Ast;
+    /// use {
+    ///     dragonfly::ast::Ast,
+    ///     std::collections::HashSet,
+    /// };
     ///
     /// let input = "model User {
     ///     name: String

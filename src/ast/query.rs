@@ -1,11 +1,31 @@
-use std::collections::HashSet;
-
-use crate::parser::{
-    alphabetics, brace_close, brace_open, choice, colon, comma, dollar, literal, many1, map, maybe,
-    paren_close, paren_open, spaces, ParseResult,
+use {
+    super::{
+        r#type::Type,
+        TypeError,
+    },
+    crate::parser::{
+        char::{
+            brace_close,
+            brace_open,
+            colon,
+            comma,
+            dollar,
+            paren_close,
+            paren_open,
+        },
+        char_range::{
+            alphabetics,
+            spaces,
+        },
+        choice,
+        literal,
+        many1,
+        map,
+        maybe,
+        ParseResult,
+    },
+    std::collections::HashSet,
 };
-
-use super::{r#type::Type, TypeError};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Selector {
@@ -45,26 +65,30 @@ impl Selector {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::query::{Selector, Where};
+    /// use dragonfly::ast::query::{
+    ///     Selector,
+    ///     Where,
+    /// };
     ///
     /// let input = "contains: $foo";
     ///
     /// assert_eq!(
     ///     Selector::parse(input),
-    ///     Ok((
-    ///         Selector::Contains("foo".to_string()),
-    ///         "".to_string(),
-    ///     ))
+    ///     Ok((Selector::Contains("foo".to_string()), "".to_string(),))
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::{
+    ///     Selector,
+    ///     Where,
+    /// };
     ///
     /// let input = "equals: $bar";
     ///
     /// assert_eq!(
     ///     Selector::parse(input),
-    ///     Ok((
-    ///         Selector::Equals("bar".to_string()),
-    ///         "".to_string(),
-    ///     ))
+    ///     Ok((Selector::Equals("bar".to_string()), "".to_string(),))
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -92,7 +116,10 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::query::{Selector, Where};
+    /// use dragonfly::ast::query::{
+    ///     Selector,
+    ///     Where,
+    /// };
     ///
     /// let input = "contains: $foo";
     ///
@@ -106,7 +133,10 @@ impl Where {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::query::{Selector, Where};
+    /// use dragonfly::ast::query::{
+    ///     Selector,
+    ///     Where,
+    /// };
     ///
     /// let input = "equals: $bar";
     ///
@@ -137,7 +167,10 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::query::{Selector, Where};
+    /// use dragonfly::ast::query::{
+    ///     Selector,
+    ///     Where,
+    /// };
     ///
     /// let input = "foo {
     ///     contains: $foo
@@ -148,11 +181,7 @@ impl Where {
     ///     Ok((
     ///         Where::Node(
     ///             "foo".to_string(),
-    ///             vec![
-    ///                 Where::Selector(
-    ///                     Selector::Contains("foo".to_string())
-    ///                 )
-    ///             ]
+    ///             vec![Where::Selector(Selector::Contains("foo".to_string()))]
     ///         ),
     ///         "".to_string()
     ///     ))
@@ -160,7 +189,10 @@ impl Where {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::query::{Selector, Where};
+    /// use dragonfly::ast::query::{
+    ///     Selector,
+    ///     Where,
+    /// };
     ///
     /// let input = "foo {
     ///     bar {
@@ -173,16 +205,12 @@ impl Where {
     ///     Ok((
     ///         Where::Node(
     ///             "foo".to_string(),
-    ///             vec![
-    ///                 Where::Node(
-    ///                     "bar".to_string(),
-    ///                     vec![
-    ///                         Where::Selector(
-    ///                             Selector::Contains("foo".to_string())
-    ///                         )
-    ///                     ]
-    ///                 )
-    ///             ]
+    ///             vec![Where::Node(
+    ///                 "bar".to_string(),
+    ///                 vec![Where::Selector(Selector::Contains(
+    ///                     "foo".to_string()
+    ///                 ))]
+    ///             )]
     ///         ),
     ///         "".to_string()
     ///     ))
@@ -220,7 +248,10 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::query::{Selector, Where};
+    /// use dragonfly::ast::query::{
+    ///     Selector,
+    ///     Where,
+    /// };
     ///
     /// let input = "where {
     ///     foo {
@@ -233,11 +264,7 @@ impl Where {
     ///     Ok((
     ///         Where::Node(
     ///             "foo".to_string(),
-    ///             vec![
-    ///                 Where::Selector(
-    ///                     Selector::Contains("foo".to_string())
-    ///                 )
-    ///             ]
+    ///             vec![Where::Selector(Selector::Contains("foo".to_string()))]
     ///         ),
     ///         "".to_string()
     ///     ))
@@ -248,7 +275,8 @@ impl Where {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
-        let (where_clause, input) = choice(&input, vec![Self::parse_selector, Self::parse_node])?;
+        let (where_clause, input) =
+            choice(&input, vec![Self::parse_selector, Self::parse_node])?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
@@ -260,8 +288,13 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::query::{Selector, Where};
-    /// use std::collections::HashSet;
+    /// use {
+    ///     dragonfly::ast::query::{
+    ///         Selector,
+    ///         Where,
+    ///     },
+    ///     std::collections::HashSet,
+    /// };
     ///
     /// let where_clause = Where::Node(
     ///     "foo".to_string(),
@@ -295,7 +328,9 @@ impl Where {
         let mut references = HashSet::new();
 
         match self {
-            Self::Selector(Selector::Contains(reference) | Selector::Equals(reference)) => {
+            Self::Selector(
+                Selector::Contains(reference) | Selector::Equals(reference),
+            ) => {
                 references.insert(reference.clone());
             }
             Self::Node(_, structure) => {
@@ -332,8 +367,13 @@ impl Argument {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::query::Argument;
-    /// use dragonfly::ast::r#type::{Basic, Type};
+    /// use dragonfly::ast::{
+    ///     query::Argument,
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    /// };
     ///
     /// assert_eq!(
     ///     Argument::parse("$name: String"),
@@ -406,6 +446,10 @@ impl Schema {
     ///     Schema::parse("user"),
     ///     Ok((Schema::Identifier("user".to_string()), "".to_string())),
     /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::query::Schema;
     ///
     /// let input = "user {
     ///   name
@@ -438,15 +482,13 @@ impl Schema {
     ///     Ok((
     ///         Schema::Node(
     ///             "user".to_string(),
-    ///             vec![
-    ///                 Schema::Node(
-    ///                     "name".to_string(),
-    ///                     vec![
-    ///                         Schema::Identifier("first".to_string()),
-    ///                         Schema::Identifier("last".to_string()),
-    ///                     ]
-    ///                 )
-    ///             ]
+    ///             vec![Schema::Node(
+    ///                 "name".to_string(),
+    ///                 vec![
+    ///                     Schema::Identifier("first".to_string()),
+    ///                     Schema::Identifier("last".to_string()),
+    ///                 ]
+    ///             )]
     ///         ),
     ///         "".to_string()
     ///     )),
@@ -459,8 +501,8 @@ impl Schema {
     /// let input = "user";
     ///
     /// assert_eq!(
-    ///    Schema::parse(input),
-    ///    Ok((Schema::Identifier("user".to_string()), "".to_string())),
+    ///     Schema::parse(input),
+    ///     Ok((Schema::Identifier("user".to_string()), "".to_string())),
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -522,8 +564,16 @@ impl Query {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::query::{Argument, Query};
+    /// use dragonfly::ast::{
+    ///     query::{
+    ///         Argument,
+    ///         Query,
+    ///     },
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    /// };
     ///
     /// assert_eq!(
     ///     Query::parse_arguments("($id: UUID)"),
@@ -533,13 +583,21 @@ impl Query {
     ///             r#type: Type::One(Basic::Identifier("UUID".to_string()))
     ///         }],
     ///         "".to_string()
-    ///    ))
+    ///     ))
     /// );
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::query::{Argument, Query};
+    /// use dragonfly::ast::{
+    ///     query::{
+    ///         Argument,
+    ///         Query,
+    ///     },
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    /// };
     ///
     /// assert_eq!(
     ///     Query::parse_arguments("($id: UUID, $name: [String])"),
@@ -555,7 +613,7 @@ impl Query {
     ///             }
     ///         ],
     ///         "".to_string()
-    ///    ))
+    ///     ))
     /// );
     /// ```
     pub fn parse_arguments(input: &str) -> ParseResult<Vec<Argument>> {
@@ -595,8 +653,8 @@ impl Query {
     /// use dragonfly::ast::query::Query;
     ///
     /// assert_eq!(
-    ///    Query::parse_reference("$name"),
-    ///    Ok(("name".to_string(), "".to_string()))
+    ///     Query::parse_reference("$name"),
+    ///     Ok(("name".to_string(), "".to_string()))
     /// );
     /// ```
     ///
@@ -624,8 +682,19 @@ impl Query {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    /// use dragonfly::ast::{
+    ///     query::{
+    ///         Argument,
+    ///         Query,
+    ///         Schema,
+    ///         Selector,
+    ///         Where,
+    ///     },
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    /// };
     ///
     /// let input = "query images: [Image] {
     ///   image {
@@ -638,9 +707,7 @@ impl Query {
     ///     arguments: vec![],
     ///     schema: Schema::Node(
     ///         "image".to_string(),
-    ///         vec![
-    ///             Schema::Identifier("title".to_string()),
-    ///         ]
+    ///         vec![Schema::Identifier("title".to_string())],
     ///     ),
     ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///     r#where: None,
@@ -650,8 +717,19 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    /// use dragonfly::ast::{
+    ///     query::{
+    ///         Argument,
+    ///         Query,
+    ///         Schema,
+    ///         Selector,
+    ///         Where,
+    ///     },
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    /// };
     ///
     /// let input = "query images($tag: String, $title: String): [Image] {
     ///   image {
@@ -675,7 +753,7 @@ impl Query {
     ///         Argument {
     ///             name: "tag".to_string(),
     ///             r#type: Type::One(Basic::String),
-    ///         },   
+    ///         },
     ///         Argument {
     ///             name: "title".to_string(),
     ///             r#type: Type::One(Basic::String),
@@ -683,27 +761,23 @@ impl Query {
     ///     ],
     ///     schema: Schema::Node(
     ///         "image".to_string(),
-    ///         vec![
-    ///             Schema::Identifier("title".to_string()),
-    ///         ]
+    ///         vec![Schema::Identifier("title".to_string())],
     ///     ),
     ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///     r#where: Some(Where::Node(
     ///         "image".to_string(),
-    ///         vec![
-    ///             Where::Node(
-    ///                 "title".to_string(),
-    ///                 vec![
-    ///                     Where::Selector(Selector::Equals("title".to_string())),
-    ///                     Where::Node(
-    ///                         "tags".to_string(),
-    ///                         vec![
-    ///                             Where::Selector(Selector::Contains("tag".to_string())),
-    ///                         ]
-    ///                     ),
-    ///                 ],
-    ///             ),
-    ///         ],
+    ///         vec![Where::Node(
+    ///             "title".to_string(),
+    ///             vec![
+    ///                 Where::Selector(Selector::Equals("title".to_string())),
+    ///                 Where::Node(
+    ///                     "tags".to_string(),
+    ///                     vec![Where::Selector(Selector::Contains(
+    ///                         "tag".to_string(),
+    ///                     ))],
+    ///                 ),
+    ///             ],
+    ///         )],
     ///     )),
     /// };
     ///
@@ -711,8 +785,19 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::query::{Argument, Query, Schema, Selector, Where};
+    /// use dragonfly::ast::{
+    ///     query::{
+    ///         Argument,
+    ///         Query,
+    ///         Schema,
+    ///         Selector,
+    ///         Where,
+    ///     },
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    /// };
     ///
     /// let input = "query imagesByCountryName($name: CountryName): [Image] {
     ///   image {
@@ -732,12 +817,10 @@ impl Query {
     ///
     /// let expected = Query {
     ///     name: "imagesByCountryName".to_string(),
-    ///     arguments: vec![
-    ///         Argument {
-    ///             name: "name".to_string(),
-    ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
-    ///         },
-    ///     ],
+    ///     arguments: vec![Argument {
+    ///         name: "name".to_string(),
+    ///         r#type: Type::One(Basic::Identifier("CountryName".to_string())),
+    ///     }],
     ///     schema: Schema::Node(
     ///         "image".to_string(),
     ///         vec![
@@ -799,7 +882,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * `TypeError::IncompatibleQueryRootNodes`  
+    /// * `TypeError::IncompatibleQueryRootNodes`
     /// if the root nodes of the schema and the where-clause are not the same.
     ///
     /// # Examples
@@ -824,8 +907,10 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::TypeError;
-    /// use dragonfly::ast::query::Query;
+    /// use dragonfly::ast::{
+    ///     query::Query,
+    ///     TypeError,
+    /// };
     ///
     /// let input = "query images: [Image] {
     ///     image {
@@ -869,7 +954,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * `TypeError::EmptyQuerySchema`  
+    /// * `TypeError::EmptyQuerySchema`
     /// if the schema is empty.
     ///
     /// # Examples
@@ -907,7 +992,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * `TypeError::UnusedQueryArgument`  
+    /// * `TypeError::UnusedQueryArgument`
     /// if any argument is not used in the where-clause.
     ///
     /// # Examples
@@ -930,13 +1015,25 @@ impl Query {
     ///     }
     /// }";
     ///
-    /// assert!(Query::parse(input).unwrap().0.check_unused_arguments().is_ok());
+    /// assert!(Query::parse(input)
+    ///     .unwrap()
+    ///     .0
+    ///     .check_unused_arguments()
+    ///     .is_ok());
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::TypeError;
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::query::{Argument, Query};
+    /// use dragonfly::ast::{
+    ///     query::{
+    ///         Argument,
+    ///         Query,
+    ///     },
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    ///     TypeError,
+    /// };
     ///
     /// let input = "query images($name: CountryName): [Image] {
     ///     image {
@@ -957,9 +1054,17 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::TypeError;
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::query::{Argument, Query};
+    /// use dragonfly::ast::{
+    ///     query::{
+    ///         Argument,
+    ///         Query,
+    ///     },
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    ///     TypeError,
+    /// };
     ///
     /// let input = "query images($name: CountryName, $tag: String): [Image] {
     ///     image {

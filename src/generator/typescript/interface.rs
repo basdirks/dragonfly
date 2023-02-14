@@ -1,5 +1,7 @@
-use super::r#type::Type;
-use std::fmt::Display;
+use {
+    super::r#type::Type,
+    std::fmt::Display,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Property {
@@ -10,7 +12,10 @@ pub struct Property {
 
 // TODO: Replace with pretty printer.
 impl Display for Property {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         let Self {
             name,
             r#type,
@@ -32,7 +37,10 @@ pub struct Extend {
 }
 
 impl Display for Extend {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         let Self { name, generics } = self;
 
         let generics = generics
@@ -60,7 +68,10 @@ pub struct Interface {
 
 // TODO: Replace with pretty printer.
 impl Display for Interface {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         let Self {
             name,
             extends,
@@ -109,26 +120,23 @@ impl Display for Interface {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::generator::typescript::r#type::Type;
+    use {
+        super::*,
+        crate::generator::typescript::r#type::Type,
+    };
 
     #[test]
     fn test_display_interface() {
         assert_eq!(
             Interface {
                 name: "Image".to_string(),
-                parameters: vec![
-                    "T".to_string(),
-                ],
-                extends: vec![
-                    Extend {
+                parameters: vec!["T".to_string(),],
+                extends: vec![Extend {
                     name: "Resource".to_string(),
-                    generics: vec![
-                        Extend {
-                            name: "T".to_string(),
-                            generics: vec![]
-                        }
-                    ]
+                    generics: vec![Extend {
+                        name: "T".to_string(),
+                        generics: vec![]
+                    }]
                 }],
                 properties: vec![
                     Property {
@@ -157,7 +165,8 @@ mod tests {
                 ]
             }
             .to_string(),
-            "interface Image<T> extends Resource<T> { title: string; countryName?: CountryName; tags: Array<Tag>; }"
+            "interface Image<T> extends Resource<T> { title: string; \
+             countryName?: CountryName; tags: Array<Tag>; }"
         );
     }
 }

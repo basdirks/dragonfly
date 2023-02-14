@@ -1,5 +1,14 @@
-use crate::ast::r#type::Type;
-use crate::parser::{alphabetics, colon, spaces, ParseResult};
+use crate::{
+    ast::r#type::Type,
+    parser::{
+        char::colon,
+        char_range::{
+            alphabetics,
+            spaces,
+        },
+        ParseResult,
+    },
+};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Field {
@@ -21,8 +30,13 @@ impl Field {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{Basic, Type};
-    /// use dragonfly::ast::model::field::Field;
+    /// use dragonfly::ast::{
+    ///     model::field::Field,
+    ///     r#type::{
+    ///         Basic,
+    ///         Type,
+    ///     },
+    /// };
     ///
     /// let input = "bar: String";
     ///

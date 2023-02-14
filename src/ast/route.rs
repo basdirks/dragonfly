@@ -1,5 +1,18 @@
 use crate::parser::{
-    alphabetics, brace_close, brace_open, chars_if, choice, colon, literal, spaces, ParseResult,
+    case::pascal,
+    char::{
+        brace_close,
+        brace_open,
+        colon,
+    },
+    char_range::{
+        alphabetics,
+        chars_if,
+        spaces,
+    },
+    choice,
+    literal,
+    ParseResult,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -23,7 +36,7 @@ impl Route {
         let (_, input) = literal(input, "root")?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
-        let (root, input) = alphabetics(&input)?;
+        let (root, input) = pascal(&input)?;
 
         Ok((root, input))
     }
@@ -66,11 +79,17 @@ impl Route {
     ///    title: Foobar
     /// }";
     ///
-    /// assert_eq!(Route::parse(input), Ok((Route {
-    ///     path: "/foo".to_string(),
-    ///     root: "Foo".to_string(),
-    ///     title: "Foobar".to_string(),
-    /// }, "".to_string())));
+    /// assert_eq!(
+    ///     Route::parse(input),
+    ///     Ok((
+    ///         Route {
+    ///             path: "/foo".to_string(),
+    ///             root: "Foo".to_string(),
+    ///             title: "Foobar".to_string(),
+    ///         },
+    ///         "".to_string()
+    ///     ))
+    /// );
     /// ```
     ///
     /// ```rust
@@ -81,11 +100,17 @@ impl Route {
     ///   title: Home
     /// }";
     ///
-    /// assert_eq!(Route::parse(input), Ok((Route {
-    ///     path: "/".to_string(),
-    ///     root: "Index".to_string(),
-    ///     title: "Home".to_string(),
-    /// }, "".to_string())));
+    /// assert_eq!(
+    ///     Route::parse(input),
+    ///     Ok((
+    ///         Route {
+    ///             path: "/".to_string(),
+    ///             root: "Index".to_string(),
+    ///             title: "Home".to_string(),
+    ///         },
+    ///         "".to_string()
+    ///     ))
+    /// );
     /// ```
     ///
     /// ```rust
@@ -96,11 +121,17 @@ impl Route {
     ///   root: Index
     /// }";
     ///
-    /// assert_eq!(Route::parse(input), Ok((Route {
-    ///     path: "/".to_string(),
-    ///     root: "Index".to_string(),
-    ///     title: "Home".to_string(),
-    /// }, "".to_string())));
+    /// assert_eq!(
+    ///     Route::parse(input),
+    ///     Ok((
+    ///         Route {
+    ///             path: "/".to_string(),
+    ///             root: "Index".to_string(),
+    ///             title: "Home".to_string(),
+    ///         },
+    ///         "".to_string()
+    ///     ))
+    /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "route")?;

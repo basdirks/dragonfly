@@ -1,5 +1,7 @@
-use crate::ast::r#enum::Enum as AstEnum;
-use std::fmt::Display;
+use {
+    crate::ast::r#enum::Enum as AstEnum,
+    std::fmt::Display,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Variant {
@@ -15,7 +17,10 @@ pub struct Enum {
 
 // TODO: Replace with pretty printer.
 impl Display for Enum {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         let Self { name, variants } = self;
 
         let variants = variants
@@ -29,16 +34,18 @@ impl Display for Enum {
 }
 
 impl From<AstEnum> for Enum {
-    fn from(ast_enum: AstEnum) -> Self {
-        let AstEnum { name, variants } = ast_enum;
+    fn from(value: AstEnum) -> Self {
+        let AstEnum { name, variants } = value;
 
         Self {
             name,
             variants: variants
                 .iter()
-                .map(|variant| Variant {
-                    name: variant.clone(),
-                    value: variant.clone(),
+                .map(|variant| {
+                    Variant {
+                        name: variant.clone(),
+                        value: variant.clone(),
+                    }
                 })
                 .collect::<Vec<_>>(),
         }

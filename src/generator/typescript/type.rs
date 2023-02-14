@@ -1,5 +1,10 @@
-use crate::ast::r#type::{Basic as AstBasicType, Type as AstType};
-use std::fmt::Display;
+use {
+    crate::ast::r#type::{
+        Basic as AstBasicType,
+        Type as AstType,
+    },
+    std::fmt::Display,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Type {
@@ -39,7 +44,10 @@ pub enum Type {
 
 // TODO: Replace with pretty printer.
 impl Display for Type {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         match self {
             Self::Any => write!(f, "any"),
             Self::Array { r#type } => write!(f, "Array<{type}>"),
@@ -130,10 +138,12 @@ impl From<AstBasicType> for Type {
             AstBasicType::Boolean => Self::Boolean,
             AstBasicType::Float | AstBasicType::Int => Self::Number,
             AstBasicType::String => Self::String,
-            AstBasicType::Identifier(name) => Self::Identifier {
-                name,
-                generics: Vec::new(),
-            },
+            AstBasicType::Identifier(name) => {
+                Self::Identifier {
+                    name,
+                    generics: Vec::new(),
+                }
+            }
         }
     }
 }
@@ -142,9 +152,11 @@ impl From<AstType> for Type {
     fn from(r#type: AstType) -> Self {
         match r#type {
             AstType::One(r#type) => r#type.into(),
-            AstType::Array(r#type) => Self::Array {
-                r#type: Box::new(r#type.into()),
-            },
+            AstType::Array(r#type) => {
+                Self::Array {
+                    r#type: Box::new(r#type.into()),
+                }
+            }
         }
     }
 }
@@ -282,7 +294,8 @@ mod tests {
                 .collect(),
             }
             .to_string(),
-            "{ country: { name: CountryName, languages: Array<string> }, tags: Array<Tag> }"
+            "{ country: { name: CountryName, languages: Array<string> }, \
+             tags: Array<Tag> }"
         );
     }
 
