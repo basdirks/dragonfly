@@ -146,8 +146,6 @@ argument_name = "$" camel_case
 (* enum_name  = see Enums *)
 ```
 
-````
-
 ## Routes
 
 A route connects a URL to a component. It consists of:
@@ -170,7 +168,7 @@ path              = "/" | path_segment+
 path_segment      = "/" kebab_case
 
 (* component_name = see Components *)
-````
+```
 
 ### Example
 
