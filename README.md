@@ -160,8 +160,8 @@ A route connects a URL to a component. It consists of:
 ```ebnf
 route          = "route" path "{" "root" ":" component_name "title" ":" string "}"
 path           = path_segment+
-path_segment   = "/" [ alphanumeric ]+
-component_name = upper [ alpha ]*
+path_segment   = "/" kebab_case
+component_name = pascal_case
 ```
 
 ### Example
@@ -184,7 +184,11 @@ A component is a Javascript function that renders a user interface.
 ### EBNF
 
 ```ebnf
-component = "component" component_name "{" "path" ":" path "}"
+component    = "component" component_name "{" "path" ":" path "}"
+path         = path_segment+ file_name
+path_segment = "/" kebab_case
+segment_char = lower | "-"
+file_name    = pascal_case+
 ```
 
 ### Example
