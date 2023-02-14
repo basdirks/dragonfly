@@ -74,7 +74,7 @@ impl Route {
     /// ```rust
     /// use dragonfly::ast::route::Route;
     ///
-    /// let input = "route /foo {
+    /// let input = "route /foo/bar {
     ///    root: Foo
     ///    title: Foobar
     /// }";
@@ -83,7 +83,7 @@ impl Route {
     ///     Route::parse(input),
     ///     Ok((
     ///         Route {
-    ///             path: "/foo".to_string(),
+    ///             path: "/foo/bar".to_string(),
     ///             root: "Foo".to_string(),
     ///             title: "Foobar".to_string(),
     ///         },

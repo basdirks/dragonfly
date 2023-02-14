@@ -42,13 +42,14 @@ Primitive types are:
 ```ebnf
 model          = "model" model_name "{" field+ "}"
 field          = field_name ":" type
-type           = "[" type "]" | single_type
-single_type    = primitive_type | enum_name | model_name
+type           = "[" basic_type "]" | basic_type
+basic_type     = primitive_type | enum_name | model_name
 primitive_type = "String" | "Int" | "Float" | "Boolean"
 
-model_name     = upper [ alpha ]*
-field_name     = lower [ alpha ]*
-enum_name      = upper [ alpha ]*
+model_name     = pascal_case
+field_name     = camel_case
+
+(* enum_name: see Enums section. *)
 ```
 
 ### Example
@@ -76,8 +77,8 @@ An enum is a predefined list of one or more string values.
 
 ```ebnf
 enum         = "enum" enum_name "{" enum_variant+ "}"
-enum_name    = upper [ alpha ]*
-enum_variant = upper [ alpha ]*
+enum_name    = pascal_case
+enum_variant = pascal_case
 ```
 
 ### Example
@@ -124,7 +125,7 @@ A query is a subset of data. It consists of:
 ```ebnf
 query         = "query" query_name [ "(" argument+ ")" ] ":" return_type schema [ where_clause ]
 argument      = argument_name ":" type
-return_type   = model_name | "[" model_name "]"
+return_type   = model_name | "[" model_name "]" (* model_name is defined in the Models section. *)
 
 schema        = root_name "{" schema_node+ "}"
 schema_node   = node_name [ "{" schema_node+ "}" ]
@@ -136,10 +137,16 @@ selector      = contains | equals
 contains      = "contains" ":" argument_name
 equals        = "equals" ":" argument_name
 
-query_name    = lower [ alpha ]*
-argument_name = "$" lower [ alpha ]*
-node_name     = lower [ alpha ]*
+query_name    = camel_case
+node_name     = camel_case
+argument_name = "$" camel_case
+
+(* type:      = see Models *)
+(* model_name = see Models *)
+(* enum_name  = see Enums *)
 ```
+
+````
 
 ## Routes
 
@@ -158,11 +165,12 @@ A route connects a URL to a component. It consists of:
 ### EBNF
 
 ```ebnf
-route          = "route" path "{" "root" ":" component_name "title" ":" string "}"
-path           = path_segment+
-path_segment   = "/" kebab_case
-component_name = pascal_case
-```
+route             = "route" path "{" "root" ":" component_name "title" ":" string "}"
+path              = "/" | path_segment+
+path_segment      = "/" kebab_case
+
+(* component_name = see Components *)
+````
 
 ### Example
 
@@ -184,11 +192,12 @@ A component is a Javascript function that renders a user interface.
 ### EBNF
 
 ```ebnf
-component    = "component" component_name "{" "path" ":" path "}"
-path         = path_segment+ file_name
-path_segment = "/" kebab_case
-segment_char = lower | "-"
-file_name    = pascal_case+
+component      = "component" component_name "{" "path" ":" path "}"
+path           = path_segment* file_name
+path_segment   = "/" kebab_case
+
+component_name = pascal_case
+file_name      = pascal_case
 ```
 
 ### Example
