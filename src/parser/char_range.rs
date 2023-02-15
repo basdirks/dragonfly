@@ -199,7 +199,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(alphabetics("abc"), Ok(("abc".to_string(), "".to_string())),);
+/// assert_eq!(alphabetics("abc"), Ok(("abc".to_string(), "".to_string())));
 ///
 /// assert_eq!(
 ///     alphabetics("123"),

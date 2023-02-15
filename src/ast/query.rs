@@ -78,7 +78,7 @@ impl Condition {
     ///
     /// assert_eq!(
     ///     Condition::parse(input),
-    ///     Ok((Condition::Contains("foo".to_string()), "".to_string(),))
+    ///     Ok((Condition::Contains("foo".to_string()), "".to_string()))
     /// );
     /// ```
     ///
@@ -92,7 +92,7 @@ impl Condition {
     ///
     /// assert_eq!(
     ///     Condition::parse(input),
-    ///     Ok((Condition::Equals("bar".to_string()), "".to_string(),))
+    ///     Ok((Condition::Equals("bar".to_string()), "".to_string()))
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {

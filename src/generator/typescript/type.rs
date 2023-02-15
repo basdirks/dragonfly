@@ -261,7 +261,7 @@ mod tests {
                     identifier: "Image".to_string(),
                     type_references: vec![],
                 }]
-            }),)
+            }))
             .to_string(),
             "Array<Partial<Image>>"
         );

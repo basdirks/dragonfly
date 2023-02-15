@@ -422,7 +422,7 @@ pub fn many1<T>(
 /// );
 ///
 /// assert_eq!(
-///     choice(input, vec![tag!(literal!("def"), Choice::A)],),
+///     choice(input, vec![tag!(literal!("def"), Choice::A)]),
 ///     Err(ParseError::UnmatchedChoice {
 ///         errors: vec![ParseError::UnmatchedLiteral {
 ///             expected: "def".to_string(),
@@ -466,12 +466,12 @@ pub fn choice<T>(
 /// };
 ///
 /// assert_eq!(
-///     maybe("abc", |input| literal(input, "abc"),),
+///     maybe("abc", |input| literal(input, "abc")),
 ///     Ok((Some("abc".to_string()), "".to_string())),
 /// );
 ///
 /// assert_eq!(
-///     maybe("def", |input| literal(input, "abc"),),
+///     maybe("def", |input| literal(input, "abc")),
 ///     Ok((None, "def".to_string())),
 /// );
 /// ```
