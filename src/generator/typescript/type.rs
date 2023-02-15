@@ -7,11 +7,49 @@ use {
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Type {
+pub enum Keyword {
     Any,
-    Array(Box<Type>),
     BigInt,
     Boolean,
+    Intrinsic,
+    Never,
+    Null,
+    Number,
+    Object,
+    String,
+    Symbol,
+    Undefined,
+    Unknown,
+    Void,
+}
+
+impl Display for Keyword {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            Self::Any => write!(f, "any"),
+            Self::BigInt => write!(f, "bigint"),
+            Self::Boolean => write!(f, "boolean"),
+            Self::Intrinsic => write!(f, "intrinsic"),
+            Self::Never => write!(f, "never"),
+            Self::Null => write!(f, "null"),
+            Self::Number => write!(f, "number"),
+            Self::Object => write!(f, "object"),
+            Self::String => write!(f, "string"),
+            Self::Symbol => write!(f, "symbol"),
+            Self::Undefined => write!(f, "undefined"),
+            Self::Unknown => write!(f, "unknown"),
+            Self::Void => write!(f, "void"),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Type {
+    Array(Box<Type>),
+    Keyword(Keyword),
     Function {
         arguments: Vec<(String, Type)>,
         return_type: Box<Type>,
@@ -21,17 +59,9 @@ pub enum Type {
         type_references: Vec<Type>,
     },
     Intersection(Vec<Type>),
-    Never,
-    Null,
-    Number,
     ObjectLiteral(Vec<(String, Type)>),
-    String,
-    Symbol,
     Tuple(Vec<Type>),
-    Undefined,
     Union(Vec<Type>),
-    Unknown,
-    Void,
 }
 
 // TODO: Replace with pretty printer.
@@ -41,10 +71,8 @@ impl Display for Type {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         match self {
-            Self::Any => write!(f, "any"),
+            Self::Keyword(keyword) => write!(f, "{keyword}"),
             Self::Array(r#type) => write!(f, "Array<{type}>"),
-            Self::BigInt => write!(f, "bigint"),
-            Self::Boolean => write!(f, "boolean"),
             Self::Function {
                 arguments,
                 return_type,
@@ -93,9 +121,6 @@ impl Display for Type {
                         .join(" & ")
                 )
             }
-            Self::Never => write!(f, "never"),
-            Self::Null => write!(f, "null"),
-            Self::Number => write!(f, "number"),
             Self::ObjectLiteral(properties) => {
                 write!(
                     f,
@@ -107,8 +132,6 @@ impl Display for Type {
                         .join(", ")
                 )
             }
-            Self::String => write!(f, "string"),
-            Self::Symbol => write!(f, "symbol"),
             Self::Tuple(types) => {
                 write!(
                     f,
@@ -120,7 +143,6 @@ impl Display for Type {
                         .join(", ")
                 )
             }
-            Self::Undefined => write!(f, "undefined"),
             Self::Union(types) => {
                 write!(
                     f,
@@ -132,8 +154,6 @@ impl Display for Type {
                         .join(" | ")
                 )
             }
-            Self::Unknown => write!(f, "unknown"),
-            Self::Void => write!(f, "void"),
         }
     }
 }
@@ -141,9 +161,12 @@ impl Display for Type {
 impl From<AstBasicType> for Type {
     fn from(value: AstBasicType) -> Self {
         match value {
-            AstBasicType::Boolean => Self::Boolean,
-            AstBasicType::Float | AstBasicType::Int => Self::Number,
-            AstBasicType::String => Self::String,
+            AstBasicType::Boolean => Self::Keyword(Keyword::Boolean),
+            // This is quite tragic.
+            AstBasicType::Float | AstBasicType::Int => {
+                Self::Keyword(Keyword::Number)
+            }
+            AstBasicType::String => Self::Keyword(Keyword::String),
             AstBasicType::Identifier(identifier) => {
                 Self::TypeReference {
                     identifier,
@@ -169,7 +192,7 @@ mod tests {
 
     #[test]
     fn test_display_any() {
-        assert_eq!(Type::Any.to_string(), "any");
+        assert_eq!(Type::Keyword(Keyword::Any).to_string(), "any");
     }
 
     #[test]
@@ -189,12 +212,12 @@ mod tests {
 
     #[test]
     fn test_display_bigint() {
-        assert_eq!(Type::BigInt.to_string(), "bigint");
+        assert_eq!(Type::Keyword(Keyword::BigInt).to_string(), "bigint");
     }
 
     #[test]
     fn test_display_boolean() {
-        assert_eq!(Type::Boolean.to_string(), "boolean");
+        assert_eq!(Type::Keyword(Keyword::Boolean).to_string(), "boolean");
     }
 
     #[test]
@@ -249,17 +272,17 @@ mod tests {
 
     #[test]
     fn test_display_never() {
-        assert_eq!(Type::Never.to_string(), "never");
+        assert_eq!(Type::Keyword(Keyword::Never).to_string(), "never");
     }
 
     #[test]
     fn test_display_null() {
-        assert_eq!(Type::Null.to_string(), "null");
+        assert_eq!(Type::Keyword(Keyword::Null).to_string(), "null");
     }
 
     #[test]
     fn test_display_number() {
-        assert_eq!(Type::Number.to_string(), "number");
+        assert_eq!(Type::Keyword(Keyword::Number).to_string(), "number");
     }
 
     #[test]
@@ -280,7 +303,9 @@ mod tests {
                                 ),
                                 (
                                     "languages".to_string(),
-                                    Type::Array(Box::new(Type::String))
+                                    Type::Array(Box::new(Type::Keyword(
+                                        Keyword::String
+                                    )))
                                 )
                             ]
                             .into_iter()
@@ -306,12 +331,12 @@ mod tests {
 
     #[test]
     fn test_display_string() {
-        assert_eq!(Type::String.to_string(), "string");
+        assert_eq!(Type::Keyword(Keyword::String).to_string(), "string");
     }
 
     #[test]
     fn test_display_symbol() {
-        assert_eq!(Type::Symbol.to_string(), "symbol");
+        assert_eq!(Type::Keyword(Keyword::Symbol).to_string(), "symbol");
     }
 
     #[test]
@@ -322,8 +347,11 @@ mod tests {
                     identifier: "CountryName".to_string(),
                     type_references: vec![],
                 },
-                Type::String,
-                Type::Tuple(vec![Type::Number, Type::String,])
+                Type::Keyword(Keyword::String),
+                Type::Tuple(vec![
+                    Type::Keyword(Keyword::Number),
+                    Type::Keyword(Keyword::String)
+                ])
             ])
             .to_string(),
             "[CountryName, string, [number, string]]"
@@ -332,7 +360,7 @@ mod tests {
 
     #[test]
     fn test_display_undefined() {
-        assert_eq!(Type::Undefined.to_string(), "undefined");
+        assert_eq!(Type::Keyword(Keyword::Undefined).to_string(), "undefined");
     }
 
     #[test]
@@ -343,8 +371,11 @@ mod tests {
                     identifier: "CountryName".to_string(),
                     type_references: vec![],
                 },
-                Type::String,
-                Type::Tuple(vec![Type::Number, Type::String])
+                Type::Keyword(Keyword::String),
+                Type::Tuple(vec![
+                    Type::Keyword(Keyword::Number),
+                    Type::Keyword(Keyword::String)
+                ])
             ])
             .to_string(),
             "CountryName | string | [number, string]"
@@ -353,32 +384,44 @@ mod tests {
 
     #[test]
     fn test_display_unknown() {
-        assert_eq!(Type::Unknown.to_string(), "unknown");
+        assert_eq!(Type::Keyword(Keyword::Unknown).to_string(), "unknown");
     }
 
     #[test]
     fn test_display_void() {
-        assert_eq!(Type::Void.to_string(), "void");
+        assert_eq!(Type::Keyword(Keyword::Void).to_string(), "void");
     }
 
     #[test]
     fn test_from_ast_primitive_boolean() {
-        assert_eq!(Type::from(AstBasicType::Boolean), Type::Boolean);
+        assert_eq!(
+            Type::from(AstBasicType::Boolean),
+            Type::Keyword(Keyword::Boolean)
+        );
     }
 
     #[test]
     fn test_from_ast_primitive_float() {
-        assert_eq!(Type::from(AstBasicType::Float), Type::Number);
+        assert_eq!(
+            Type::from(AstBasicType::Float),
+            Type::Keyword(Keyword::Number)
+        );
     }
 
     #[test]
     fn test_from_ast_primitive_integer() {
-        assert_eq!(Type::from(AstBasicType::Int), Type::Number);
+        assert_eq!(
+            Type::from(AstBasicType::Int),
+            Type::Keyword(Keyword::Number)
+        );
     }
 
     #[test]
     fn test_from_ast_primitive_string() {
-        assert_eq!(Type::from(AstBasicType::String), Type::String);
+        assert_eq!(
+            Type::from(AstBasicType::String),
+            Type::Keyword(Keyword::String)
+        );
     }
 
     #[test]

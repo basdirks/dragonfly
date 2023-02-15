@@ -148,7 +148,10 @@ impl Display for Interface {
 mod tests {
     use {
         super::*,
-        crate::generator::typescript::r#type::Type,
+        crate::generator::typescript::r#type::{
+            Keyword,
+            Type,
+        },
     };
 
     #[test]
@@ -170,7 +173,7 @@ mod tests {
                 properties: vec![
                     Property {
                         identifier: "title".to_string(),
-                        r#type: Type::String,
+                        r#type: Type::Keyword(Keyword::String),
                         optional: false,
                     },
                     Property {
