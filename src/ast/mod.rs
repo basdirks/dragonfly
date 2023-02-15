@@ -7,8 +7,8 @@ use {
         },
         query::{
             Argument,
+            Condition,
             Query,
-            Selector,
         },
         r#enum::Enum,
         r#type::Type,
@@ -40,81 +40,122 @@ pub mod model;
 pub mod query;
 /// A route.
 pub mod route;
-/// Types used inside components, models, and queries.
+/// Types used inside models and queries.
 pub mod r#type;
 
+/// A type check error.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TypeError {
-    /// The schema of a query is empty. This means that the query does not
+    /// The schema of a query is empty. This means that this query would not
     /// return any data.
-    EmptyQuerySchema { query_name: String },
+    EmptyQuerySchema {
+        /// The name of the empty query.
+        query_name: String,
+    },
     /// The structure of the schema of a query does not match the return type
     /// of the query.
     IncompatibleQuerySchema {
+        /// The actual, inferred return type of the query.
         actual: Type,
+        /// The expected return type of the query.
         expected: Type,
+        /// The name of the query.
         query_name: String,
     },
-    /// The type of a selector (as given by the corresponding argument) does
-    /// not match the type of the corresponding field.
-    IncompatibleQuerySelectorType {
+    /// The type of a condition (as given by the corresponding argument) does
+    /// not match the type of the field.
+    IncompatibleQueryConditionType {
+        /// The name of the query.
         query_name: String,
-        selector: Selector,
+        /// The condition that was not satisfied.
+        condition: Condition,
+        /// The type of the condition as given by the argument.
         expected: Type,
     },
-    /// The structure of a where-clause of a query does not match the structure
+    /// The structure of a where clause of a query does not match the structure
     /// of the model and its relations.
-    IncompatibleQueryWhere { query_name: String },
-    /// The name of the root node of the where-clause of a query does not match
+    IncompatibleQueryWhere {
+        /// The name of the query.
+        query_name: String,
+    },
+    /// The name of the root node of the where clause of a query does not match
     /// the name of the root node of the schema.
     IncompatibleQueryRootNodes {
+        /// The name of the schema root node.
         schema_root: String,
+        /// The name of the query root node.
         where_root: String,
+        /// The name of the query.
         query_name: String,
     },
     /// The type of an argument may not be an array or a model.
     InvalidQueryArgumentType {
+        /// The argument that has an invalid type.
         argument: Argument,
+        /// The name of the query.
         query_name: String,
     },
     /// The type of a field of a model is undefined.
     UnknownModelFieldType {
+        /// The field whose type is undefined.
         field: Field,
+        /// The name of the model.
         model_name: String,
-        r#type: Type,
     },
     /// The type of a query argument is undefined.
     UnknownQueryArgumentType {
+        /// The argument whose type is undefined.
         argument: Argument,
+        /// The name of the query.
         query_name: String,
     },
     /// The return type of a query is undefined.
-    UnknownQueryReturnType { query_name: String, r#type: Type },
-    /// A selector mentions an undefined argument.
-    UnknownQuerySelectorName {
-        selector: Selector,
+    UnknownQueryReturnType {
+        /// The name of the query.
+        query_name: String,
+        /// The return type of the query.
+        r#type: Type,
+    },
+    /// A condition mentions an undefined argument.
+    UnknownQueryConditionName {
+        /// The condition that mentions an undefined argument.
+        condition: Condition,
+        /// The name of the query.
         query_name: String,
     },
-    /// The root of a route is undefined.
-    UnknownRouteRoot { route_name: String, root: String },
-    /// An argument of a query is not used in the where-clause.
+    /// The root component of a route is undefined.
+    UnknownRouteRoot {
+        /// The name of the route.
+        route_name: String,
+        /// The name of the component.
+        root: String,
+    },
+    /// An argument of a query is not used in the where clause.
     UnusedQueryArgument {
+        /// The argument that is not used.
         argument: Argument,
+        /// The name of the query.
         query_name: String,
     },
 }
 
+/// A declaration of a component, enum, model, query, or route.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Statement {
+pub enum Declaration {
+    /// The declaration of a JSX component.
     Component(Component),
+    /// The declaration of an enumerated type.
     Enum(Enum),
+    /// The declaration of a data model.
     Model(Model),
+    /// The declaration of a data query.
     Query(Query),
+    /// The declaration of a route.
     Route(Route),
 }
 
-impl Statement {
-    /// Parse a statement from the given input.
+impl Declaration {
+    /// Parse a declaration from the given input.
     ///
     /// # Arguments
     ///
@@ -122,32 +163,33 @@ impl Statement {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid statement.
+    /// Returns a `ParseError` if the input does not start with a valid
+    /// declaration.
     ///
     /// # Examples
     ///
     /// ```rust
     /// use dragonfly::ast::{
     ///     component::Component,
-    ///     Statement,
+    ///     Declaration,
     /// };
     ///
     /// let input = "component Foo {
     ///     path: Foo
     /// }";
     ///
-    /// let expected = Statement::Component(Component {
+    /// let expected = Declaration::Component(Component {
     ///     name: "Foo".to_string(),
     ///     path: "Foo".to_string(),
     /// });
     ///
-    /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_string())));
     /// ```
     ///
     /// ```rust
     /// use dragonfly::ast::{
     ///     r#enum::Enum,
-    ///     Statement,
+    ///     Declaration,
     /// };
     ///
     /// let input = "enum Foo {
@@ -155,12 +197,12 @@ impl Statement {
     ///     Baz
     /// }";
     ///
-    /// let expected = Statement::Enum(Enum {
+    /// let expected = Declaration::Enum(Enum {
     ///     name: "Foo".to_string(),
     ///     variants: vec!["Bar".to_string(), "Baz".to_string()],
     /// });
     ///
-    /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_string())));
     /// ```
     ///
     /// ```rust
@@ -176,7 +218,7 @@ impl Statement {
     ///             Type,
     ///         },
     ///         route::Route,
-    ///         Statement,
+    ///         Declaration,
     ///     },
     ///     std::collections::HashMap,
     /// };
@@ -204,37 +246,44 @@ impl Statement {
     ///     },
     /// );
     ///
-    /// let expected = Statement::Model(Model {
+    /// let expected = Declaration::Model(Model {
     ///     name: "Foo".to_string(),
     ///     fields,
     /// });
     ///
-    /// assert_eq!(Statement::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_string())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice(
             input,
             vec![
-                map!(Component::parse, Statement::Component),
-                map!(Enum::parse, Statement::Enum),
-                map!(Model::parse, Statement::Model),
-                map!(Query::parse, Statement::Query),
-                map!(Route::parse, Statement::Route),
+                map!(Component::parse, Declaration::Component),
+                map!(Enum::parse, Declaration::Enum),
+                map!(Model::parse, Declaration::Model),
+                map!(Query::parse, Declaration::Query),
+                map!(Route::parse, Declaration::Route),
             ],
         )
     }
 }
 
+/// The root of an AST.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Ast {
+    /// Component declarations.
     pub components: HashMap<String, Component>,
+    /// Enum declarations.
     pub enums: HashMap<String, Enum>,
+    /// Model declarations.
     pub models: HashMap<String, Model>,
+    /// Query declarations.
     pub queries: HashMap<String, Query>,
+    /// Route declarations.
     pub routes: HashMap<String, Route>,
 }
 
 impl Ast {
+    /// Create a new AST.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -254,8 +303,7 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// * `ParseError`
-    /// if the input is not a valid AST.
+    /// Returns a `ParseError` if the input is not a valid AST.
     ///
     /// # Examples
     ///
@@ -269,9 +317,9 @@ impl Ast {
     ///         },
     ///         query::{
     ///             Argument,
+    ///             Condition,
     ///             Query,
     ///             Schema,
-    ///             Selector,
     ///             Where,
     ///         },
     ///         r#enum::Enum,
@@ -281,7 +329,7 @@ impl Ast {
     ///         },
     ///         route::Route,
     ///         Ast,
-    ///         Statement,
+    ///         Declaration,
     ///     },
     ///     std::collections::HashMap,
     /// };
@@ -513,17 +561,17 @@ impl Ast {
     ///     Query {
     ///         name: "images".to_string(),
     ///         r#type: Type::Array(Basic::Identifier("Image".to_string())),
-    ///         schema: Schema::Node(
-    ///             "image".to_string(),
-    ///             vec![
-    ///                 Schema::Identifier("title".to_string()),
-    ///                 Schema::Node(
-    ///                     "country".to_string(),
-    ///                     vec![Schema::Identifier("name".to_string())],
-    ///                 ),
-    ///                 Schema::Identifier("category".to_string()),
+    ///         schema: Schema::Model {
+    ///             name: "image".to_string(),
+    ///             nodes: vec![
+    ///                 Schema::Field("title".to_string()),
+    ///                 Schema::Model {
+    ///                     name: "country".to_string(),
+    ///                     nodes: vec![Schema::Field("name".to_string())],
+    ///                 },
+    ///                 Schema::Field("category".to_string()),
     ///             ],
-    ///         ),
+    ///         },
     ///         r#where: None,
     ///         arguments: vec![],
     ///     },
@@ -534,25 +582,25 @@ impl Ast {
     ///     Query {
     ///         name: "imagesByCountryName".to_string(),
     ///         r#type: Type::Array(Basic::Identifier("Image".to_string())),
-    ///         schema: Schema::Node(
-    ///             "image".to_string(),
-    ///             vec![
-    ///                 Schema::Identifier("title".to_string()),
-    ///                 Schema::Identifier("category".to_string()),
+    ///         schema: Schema::Model {
+    ///             name: "image".to_string(),
+    ///             nodes: vec![
+    ///                 Schema::Field("title".to_string()),
+    ///                 Schema::Field("category".to_string()),
     ///             ],
-    ///         ),
-    ///         r#where: Some(Where::Node(
-    ///             "image".to_string(),
-    ///             vec![Where::Node(
-    ///                 "country".to_string(),
-    ///                 vec![Where::Node(
-    ///                     "name".to_string(),
-    ///                     vec![Where::Selector(Selector::Equals(
+    ///         },
+    ///         r#where: Some(Where::Node {
+    ///             name: "image".to_string(),
+    ///             nodes: vec![Where::Node {
+    ///                 name: "country".to_string(),
+    ///                 nodes: vec![Where::Node {
+    ///                     name: "name".to_string(),
+    ///                     nodes: vec![Where::Condition(Condition::Equals(
     ///                         "name".to_string(),
     ///                     ))],
-    ///                 )],
-    ///             )],
-    ///         )),
+    ///                 }],
+    ///             }],
+    ///         }),
     ///         arguments: vec![Argument {
     ///             name: "name".to_string(),
     ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
@@ -569,53 +617,57 @@ impl Ast {
         while !input.is_empty() {
             let (_, new_input) = spaces(&input)?;
 
-            if let Ok((statement, new_input)) = Component::parse(&new_input) {
-                let name = statement.name.clone();
+            if let Ok((declaration, new_input)) = Component::parse(&new_input) {
+                let name = declaration.name.clone();
 
-                if ast.components.insert(name.clone(), statement).is_some() {
+                if ast.components.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Component {name} already defined"),
                     });
                 }
 
                 input = new_input;
-            } else if let Ok((statement, new_input)) = Model::parse(&new_input)
+            } else if let Ok((declaration, new_input)) =
+                Model::parse(&new_input)
             {
-                let name = statement.name.clone();
+                let name = declaration.name.clone();
 
-                if ast.models.insert(name.clone(), statement).is_some() {
+                if ast.models.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Model {name} already defined"),
                     });
                 }
 
                 input = new_input;
-            } else if let Ok((statement, new_input)) = Query::parse(&new_input)
+            } else if let Ok((declaration, new_input)) =
+                Query::parse(&new_input)
             {
-                let name = statement.name.clone();
+                let name = declaration.name.clone();
 
-                if ast.queries.insert(name.clone(), statement).is_some() {
+                if ast.queries.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Query {name} already defined"),
                     });
                 }
 
                 input = new_input;
-            } else if let Ok((statement, new_input)) = Enum::parse(&new_input) {
-                let name = statement.name.clone();
+            } else if let Ok((declaration, new_input)) = Enum::parse(&new_input)
+            {
+                let name = declaration.name.clone();
 
-                if ast.enums.insert(name.clone(), statement).is_some() {
+                if ast.enums.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Enum {name} already defined"),
                     });
                 }
 
                 input = new_input;
-            } else if let Ok((statement, new_input)) = Route::parse(&new_input)
+            } else if let Ok((declaration, new_input)) =
+                Route::parse(&new_input)
             {
-                let path = statement.path.clone();
+                let path = declaration.path.clone();
 
-                if ast.routes.insert(path.clone(), statement).is_some() {
+                if ast.routes.insert(path.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!(
                             "Route with path {path} already defined"
@@ -654,17 +706,17 @@ impl Ast {
     /// if the schema of a query is incompatible with the structure of the
     /// models and their relations.
     ///
-    /// * `TypeError::IncompatibleQuerySelectorType`
-    /// if the type of an argument in a selector does not match the type of the
+    /// * `TypeError::IncompatibleQueryConditionType`
+    /// if the type of an argument in a condition does not match the type of the
     /// corresponding model field.
     ///
     /// * `TypeError::IncompatibleQueryWhere`
-    /// if the where-clause of a query is incompatible to the structure of the
+    /// if the where clause of a query is incompatible to the structure of the
     /// models and their relations.
     ///
     /// * `TypeError::IncompatibleQueryRootNodes`
     /// if the top-level schema node name does not match the name of the root
-    /// node in the where-clause.
+    /// node in the where clause.
     ///
     /// * `TypeError::InvalidQueryArgumentType`
     /// if the type of a query argument is an array or a model.
@@ -676,11 +728,11 @@ impl Ast {
     /// if the return type of a query is does not match the (inferred) type of
     /// the schema.
     ///
-    /// * `TypeError::UnknownQuerySelectorName`
-    /// if a selector refers to an undefined query argument.
+    /// * `TypeError::UnknownQueryConditionName`
+    /// if a condition refers to an undefined query argument.
     ///
     /// * `TypeError::UnusedQueryArgument`
-    /// if a query argument is not used at least once in the where-clause.
+    /// if a query argument is not used at least once in the where clause.
     ///
     /// ## Route errors
     ///
@@ -695,8 +747,8 @@ impl Ast {
         for query in self.queries.values() {
             // Self::check_query_schema(query, self)?;
             // Self::check_query_where(query, self)?;
-            // Self::check_query_selector_types(query, self)?;
-            // Self::check_query_selector_names(query, self)?;
+            // Self::check_query_condition_types(query, self)?;
+            // Self::check_query_condition_names(query, self)?;
             // Self::check_query_argument_types(query, self)?;
             // Self::check_query_return_type(query, self)?;
             // query.check_argument_types(self)?;

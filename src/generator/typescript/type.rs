@@ -6,11 +6,16 @@ use {
     std::fmt::Display,
 };
 
+/// A JavaScript literal.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
+    /// A BigInt literal: a number followed by `n`.
     BigInt(String),
+    /// A boolean literal: `true` or `false`.
     Boolean(bool),
+    /// A number literal.
     Number(f64),
+    /// A string literal: characters surrounded by double quotes.
     String(String),
 }
 
@@ -28,20 +33,34 @@ impl Display for Literal {
     }
 }
 
+/// A TypeScript type keyword.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Keyword {
+    /// The `any` type.
     Any,
+    /// The `bigint` type.
     BigInt,
+    /// The `boolean` type.
     Boolean,
+    /// The `intrinsic` type.
     Intrinsic,
+    /// The `never` type.
     Never,
+    /// The `null` type.
     Null,
+    /// The `number` type.
     Number,
+    /// The `object` type.
     Object,
+    /// The `string` type.
     String,
+    /// The `symbol` type.
     Symbol,
+    /// An `undefined` type.
     Undefined,
+    /// An `unknown` type.
     Unknown,
+    /// The `void` type.
     Void,
 }
 
@@ -68,22 +87,36 @@ impl Display for Keyword {
     }
 }
 
+/// A TypeScript type.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Type {
+    /// An array type.
     Array(Box<Type>),
+    /// A function type.
     Function {
+        /// The function arguments.
         arguments: Vec<(String, Type)>,
+        /// The return type.
         return_type: Box<Type>,
     },
+    /// An intersection of types.
     Intersection(Vec<Type>),
+    /// A keyword type.
     Keyword(Keyword),
+    /// A type literal.
     Literal(Literal),
+    /// An object literal.
     ObjectLiteral(Vec<(String, Type)>),
+    /// A tuple of types.
     Tuple(Vec<Type>),
+    /// A type reference.
     TypeReference {
+        /// The name of the type.
         identifier: String,
+        /// The type arguments.
         type_references: Vec<Type>,
     },
+    /// A union of types.
     Union(Vec<Type>),
 }
 

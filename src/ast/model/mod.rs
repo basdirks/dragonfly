@@ -14,11 +14,16 @@ use {
     std::collections::HashMap,
 };
 
+/// A field belonging to a model.
 pub mod field;
 
+/// A model describes an entity. It has a name and one or more fields.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Model {
+    /// The name of the model. Used as query return type and inside other
+    /// models to reference the model.
     pub name: String,
+    /// The fields of the model.
     pub fields: HashMap<String, Field>,
 }
 
@@ -31,7 +36,7 @@ impl Model {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid model.
+    /// Returns a `ParseError` if the input does not start with a valid model.
     ///
     /// # Examples
     ///

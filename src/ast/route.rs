@@ -15,10 +15,14 @@ use crate::parser::{
     ParseResult,
 };
 
+/// A route describes access to a component.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Route {
+    /// The path of the route.
     pub path: String,
+    /// The root component of the route.
     pub root: String,
+    /// The title of the page that is rendered.
     pub title: String,
 }
 
@@ -31,7 +35,7 @@ impl Route {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid root.
+    /// Returns a `ParseError` if the input does not start with a valid root.
     pub fn parse_root(input: &str) -> ParseResult<String> {
         let (_, input) = literal(input, "root")?;
         let (_, input) = colon(&input)?;
@@ -49,7 +53,7 @@ impl Route {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid title.
+    /// Returns a `ParseError` if the input does not start with a valid title.
     pub fn parse_title(input: &str) -> ParseResult<String> {
         let (_, input) = literal(input, "title")?;
         let (_, input) = colon(&input)?;
@@ -67,7 +71,7 @@ impl Route {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid route.
+    /// Returns a `ParseError` if the input does not start with a valid route.
     ///
     /// # Examples
     ///
@@ -75,8 +79,8 @@ impl Route {
     /// use dragonfly::ast::route::Route;
     ///
     /// let input = "route /foo/bar {
-    ///    root: Foo
-    ///    title: Foobar
+    ///   root: Foo
+    ///   title: Foobar
     /// }";
     ///
     /// assert_eq!(
@@ -92,46 +96,22 @@ impl Route {
     /// );
     /// ```
     ///
-    /// ```rust
-    /// use dragonfly::ast::route::Route;
-    ///
-    /// let input = "route / {
-    ///   root: Index
-    ///   title: Home
-    /// }";
-    ///
-    /// assert_eq!(
-    ///     Route::parse(input),
-    ///     Ok((
-    ///         Route {
-    ///             path: "/".to_string(),
-    ///             root: "Index".to_string(),
-    ///             title: "Home".to_string(),
-    ///         },
-    ///         "".to_string()
-    ///     ))
-    /// );
-    /// ```
+    /// Order of `root` and `title` does not matter.
     ///
     /// ```rust
     /// use dragonfly::ast::route::Route;
     ///
-    /// let input = "route / {
+    /// let input1 = "route / {
+    ///   root: Index
+    ///   title: Home
+    /// }";
+    ///
+    /// let input2 = "route / {
     ///   title: Home
     ///   root: Index
     /// }";
     ///
-    /// assert_eq!(
-    ///     Route::parse(input),
-    ///     Ok((
-    ///         Route {
-    ///             path: "/".to_string(),
-    ///             root: "Index".to_string(),
-    ///             title: "Home".to_string(),
-    ///         },
-    ///         "".to_string()
-    ///     ))
-    /// );
+    /// assert_eq!(Route::parse(input1), Route::parse(input2));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "route")?;

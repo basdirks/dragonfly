@@ -104,7 +104,9 @@ impl Display for Property {
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpressionWithTypeArguments {
+    /// The name of the expression. Usually PascalCase.
     pub identifier: String,
+    /// The type arguments of the expression.
     pub type_arguments: Vec<Type>,
 }
 
@@ -169,7 +171,9 @@ impl Display for ExpressionWithTypeArguments {
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypeParameter {
+    /// The name of the type parameter.
     pub identifier: String,
+    /// The types that the type parameter extends.
     pub type_references: Vec<Type>,
 }
 
@@ -272,6 +276,9 @@ impl Display for TypeParameter {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Interface {
     /// The types that the interface extends.
+    ///
+    /// Note: An interface can only extend an object type or intersection of
+    /// object types with statically known members.
     ///
     /// # Examples
     ///

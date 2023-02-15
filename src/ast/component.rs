@@ -15,9 +15,12 @@ use crate::parser::{
     ParseResult,
 };
 
+/// A JSX component.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Component {
+    /// The name of the component.
     pub name: String,
+    /// The path to the file that exports the component.
     pub path: String,
 }
 
@@ -30,7 +33,8 @@ impl Component {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid component.
+    /// Returns a `ParseError` if the input does not start with a valid
+    /// component.
     ///
     /// # Examples
     ///

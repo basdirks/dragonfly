@@ -1,14 +1,15 @@
 //! # Dragonfly
 //!
-//! Dragonfly is a toy DSL that explores ways to describe the structure of
-//! full-stack web applications. It is not meant to be used in production.
+//! Dragonfly is a toy DSL that explores ways to describe full-stack web
+//! applications. You should not use it in production.
 #![deny(
+    missing_docs,
     clippy::all,
     clippy::pedantic,
     clippy::nursery,
     clippy::if_then_some_else_none
 )]
-/// The Abstract Syntax Tree of the Dragonfly DSL.
+/// The Abstract Syntax Tree.
 pub mod ast;
 /// Source code generators.
 pub mod generator;

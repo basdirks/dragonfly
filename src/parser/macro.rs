@@ -1,3 +1,4 @@
+/// Parse a literal from the given input.
 #[macro_export]
 macro_rules! literal {
     ($literal:expr) => {
@@ -5,6 +6,7 @@ macro_rules! literal {
     };
 }
 
+/// Replace the result of a successful parser with a constant.
 #[macro_export]
 macro_rules! tag {
     ($parser:expr, $f:expr) => {
@@ -12,6 +14,7 @@ macro_rules! tag {
     };
 }
 
+/// Apply a function to the result of a parser.
 #[macro_export]
 macro_rules! map {
     ($parser:expr, $f:expr) => {

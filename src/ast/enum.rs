@@ -14,9 +14,12 @@ use {
     std::collections::HashSet,
 };
 
+/// An enumerated type.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Enum {
+    /// The name of the enum. Used inside models to reference the enum.
     pub name: String,
+    /// The variants of the enum.
     pub variants: Vec<String>,
 }
 
@@ -29,7 +32,7 @@ impl Enum {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid enum.
+    /// Returns a `ParseError` if the input does not start with a valid enum.
     ///
     /// # Examples
     ///

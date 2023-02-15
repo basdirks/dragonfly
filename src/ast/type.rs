@@ -37,7 +37,8 @@ impl Basic {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid primitive.
+    /// Returns a `ParseError` if the input does not start with a valid
+    /// primitive.
     ///
     /// # Examples
     ///
@@ -76,9 +77,12 @@ impl Basic {
     }
 }
 
+/// A type: either a basic type or an array.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Type {
+    /// An array of a basic type.
     Array(Basic),
+    /// A basic type.
     One(Basic),
 }
 
@@ -101,7 +105,7 @@ impl Type {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid type.
+    /// Returns a `ParseError` if the input does not start with a valid type.
     ///
     /// # Examples
     ///

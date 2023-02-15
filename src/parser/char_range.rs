@@ -1,4 +1,4 @@
-//! Parse characters in different ranges.
+//! Parse ASCII characters in different ranges.
 use super::{
     many,
     ParseError,
@@ -430,7 +430,7 @@ pub fn whitespace(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// None. This parser always succeeds.
+/// This parser always succeeds.
 ///
 /// # Examples
 ///

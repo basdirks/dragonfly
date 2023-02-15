@@ -27,13 +27,16 @@ use {
     std::collections::HashSet,
 };
 
+/// A condition that must be met for a query to return a result.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Selector {
+pub enum Condition {
+    /// The value of the given field must contain the given value.
     Contains(String),
+    /// The value of the given field must equal the given value.
     Equals(String),
 }
 
-impl Selector {
+impl Condition {
     fn parse_contains(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "contains")?;
         let (_, input) = colon(&input)?;
@@ -52,7 +55,7 @@ impl Selector {
         Ok((Self::Equals(value), input))
     }
 
-    /// Parse a selector from the given input.
+    /// Parse a condition from the given input.
     ///
     /// # Arguments
     ///
@@ -60,35 +63,36 @@ impl Selector {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid selector.
+    /// Returns a `ParseError` if the input does not start with a valid
+    /// condition.
     ///
     /// # Examples
     ///
     /// ```rust
     /// use dragonfly::ast::query::{
-    ///     Selector,
+    ///     Condition,
     ///     Where,
     /// };
     ///
     /// let input = "contains: $foo";
     ///
     /// assert_eq!(
-    ///     Selector::parse(input),
-    ///     Ok((Selector::Contains("foo".to_string()), "".to_string(),))
+    ///     Condition::parse(input),
+    ///     Ok((Condition::Contains("foo".to_string()), "".to_string(),))
     /// );
     /// ```
     ///
     /// ```rust
     /// use dragonfly::ast::query::{
-    ///     Selector,
+    ///     Condition,
     ///     Where,
     /// };
     ///
     /// let input = "equals: $bar";
     ///
     /// assert_eq!(
-    ///     Selector::parse(input),
-    ///     Ok((Selector::Equals("bar".to_string()), "".to_string(),))
+    ///     Condition::parse(input),
+    ///     Ok((Condition::Equals("bar".to_string()), "".to_string(),))
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -96,14 +100,23 @@ impl Selector {
     }
 }
 
+/// The conditions that queried data must meet.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Where {
-    Selector(Selector),
-    Node(String, Vec<Where>),
+    /// A condition that must be met for a query to return a result.
+    Condition(Condition),
+    /// A field.
+    Node {
+        /// The name of the field.
+        name: String,
+        /// In the case of a relation, the fields and their conditions. This is
+        /// empty if the field does not refer to another model.
+        nodes: Vec<Where>,
+    },
 }
 
 impl Where {
-    /// Parse a selector from the given input.
+    /// Parse a condition from the given input.
     ///
     /// # Arguments
     ///
@@ -111,22 +124,23 @@ impl Where {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid selector.
+    /// Returns a `ParseError` if the input does not start with a valid
+    /// condition.
     ///
     /// # Examples
     ///
     /// ```rust
     /// use dragonfly::ast::query::{
-    ///     Selector,
+    ///     Condition,
     ///     Where,
     /// };
     ///
     /// let input = "contains: $foo";
     ///
     /// assert_eq!(
-    ///     Where::parse_selector(input),
+    ///     Where::parse_condition(input),
     ///     Ok((
-    ///         Where::Selector(Selector::Contains("foo".to_string())),
+    ///         Where::Condition(Condition::Contains("foo".to_string())),
     ///         "".to_string(),
     ///     ))
     /// );
@@ -134,24 +148,24 @@ impl Where {
     ///
     /// ```rust
     /// use dragonfly::ast::query::{
-    ///     Selector,
+    ///     Condition,
     ///     Where,
     /// };
     ///
     /// let input = "equals: $bar";
     ///
     /// assert_eq!(
-    ///     Where::parse_selector(input),
+    ///     Where::parse_condition(input),
     ///     Ok((
-    ///         Where::Selector(Selector::Equals("bar".to_string())),
+    ///         Where::Condition(Condition::Equals("bar".to_string())),
     ///         "".to_string(),
     ///     ))
     /// );
     /// ```
-    pub fn parse_selector(input: &str) -> ParseResult<Self> {
-        let (selector, input) = Selector::parse(input)?;
+    pub fn parse_condition(input: &str) -> ParseResult<Self> {
+        let (condition, input) = Condition::parse(input)?;
 
-        Ok((Self::Selector(selector), input))
+        Ok((Self::Condition(condition), input))
     }
 
     /// Parse a node from the given input.
@@ -162,13 +176,13 @@ impl Where {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid node.
+    /// Returns a `ParseError` if the input does not start with a valid node.
     ///
     /// # Examples
     ///
     /// ```rust
     /// use dragonfly::ast::query::{
-    ///     Selector,
+    ///     Condition,
     ///     Where,
     /// };
     ///
@@ -179,10 +193,12 @@ impl Where {
     /// assert_eq!(
     ///     Where::parse_node(input),
     ///     Ok((
-    ///         Where::Node(
-    ///             "foo".to_string(),
-    ///             vec![Where::Selector(Selector::Contains("foo".to_string()))]
-    ///         ),
+    ///         Where::Node {
+    ///             name: "foo".to_string(),
+    ///             nodes: vec![Where::Condition(Condition::Contains(
+    ///                 "foo".to_string()
+    ///             ))]
+    ///         },
     ///         "".to_string()
     ///     ))
     /// );
@@ -190,7 +206,7 @@ impl Where {
     ///
     /// ```rust
     /// use dragonfly::ast::query::{
-    ///     Selector,
+    ///     Condition,
     ///     Where,
     /// };
     ///
@@ -203,15 +219,15 @@ impl Where {
     /// assert_eq!(
     ///     Where::parse_node(input),
     ///     Ok((
-    ///         Where::Node(
-    ///             "foo".to_string(),
-    ///             vec![Where::Node(
-    ///                 "bar".to_string(),
-    ///                 vec![Where::Selector(Selector::Contains(
+    ///         Where::Node {
+    ///             name: "foo".to_string(),
+    ///             nodes: vec![Where::Node {
+    ///                 name: "bar".to_string(),
+    ///                 nodes: vec![Where::Condition(Condition::Contains(
     ///                     "foo".to_string()
     ///                 ))]
-    ///             )]
-    ///         ),
+    ///             }]
+    ///         },
     ///         "".to_string()
     ///     ))
     /// );
@@ -221,18 +237,26 @@ impl Where {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
+
         let (structure, input) = many1(&input, |input| {
             let (_, input) = spaces(input)?;
             let (where_clause, input) =
-                choice(&input, vec![Self::parse_selector, Self::parse_node])?;
+                choice(&input, vec![Self::parse_condition, Self::parse_node])?;
             let (_, input) = spaces(&input)?;
 
             Ok((where_clause, input))
         })?;
+
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
-        Ok((Self::Node(name, structure), input))
+        Ok((
+            Self::Node {
+                name,
+                nodes: structure,
+            },
+            input,
+        ))
     }
 
     /// Parse a where clause from the given input.
@@ -243,13 +267,14 @@ impl Where {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid where clause.
+    /// Returns a `ParseError` if the input does not start with a valid where
+    /// clause.
     ///
     /// # Examples
     ///
     /// ```rust
     /// use dragonfly::ast::query::{
-    ///     Selector,
+    ///     Condition,
     ///     Where,
     /// };
     ///
@@ -262,10 +287,12 @@ impl Where {
     /// assert_eq!(
     ///     Where::parse(input),
     ///     Ok((
-    ///         Where::Node(
-    ///             "foo".to_string(),
-    ///             vec![Where::Selector(Selector::Contains("foo".to_string()))]
-    ///         ),
+    ///         Where::Node {
+    ///             name: "foo".to_string(),
+    ///             nodes: vec![Where::Condition(Condition::Contains(
+    ///                 "foo".to_string()
+    ///             ))]
+    ///         },
     ///         "".to_string()
     ///     ))
     /// );
@@ -276,45 +303,45 @@ impl Where {
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
         let (where_clause, input) =
-            choice(&input, vec![Self::parse_selector, Self::parse_node])?;
+            choice(&input, vec![Self::parse_condition, Self::parse_node])?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
         Ok((where_clause, input))
     }
 
-    /// Return all references used in the selectors of this where clause.
+    /// Return all references used in the conditions of this where clause.
     ///
     /// # Examples
     ///
     /// ```rust
     /// use {
     ///     dragonfly::ast::query::{
-    ///         Selector,
+    ///         Condition,
     ///         Where,
     ///     },
     ///     std::collections::HashSet,
     /// };
     ///
-    /// let where_clause = Where::Node(
-    ///     "foo".to_string(),
-    ///     vec![
-    ///         Where::Node(
-    ///             "bar".to_string(),
-    ///             vec![
-    ///                 Where::Selector(Selector::Contains("bar".to_string())),
-    ///                 Where::Selector(Selector::Contains("baz".to_string())),
+    /// let where_clause = Where::Node {
+    ///     name: "foo".to_string(),
+    ///     nodes: vec![
+    ///         Where::Node {
+    ///             name: "bar".to_string(),
+    ///             nodes: vec![
+    ///                 Where::Condition(Condition::Contains("bar".to_string())),
+    ///                 Where::Condition(Condition::Contains("baz".to_string())),
     ///             ],
-    ///         ),
-    ///         Where::Node(
-    ///             "baz".to_string(),
-    ///             vec![
-    ///                 Where::Selector(Selector::Contains("bar".to_string())),
-    ///                 Where::Selector(Selector::Contains("foo".to_string())),
+    ///         },
+    ///         Where::Node {
+    ///             name: "baz".to_string(),
+    ///             nodes: vec![
+    ///                 Where::Condition(Condition::Contains("bar".to_string())),
+    ///                 Where::Condition(Condition::Contains("foo".to_string())),
     ///             ],
-    ///         ),
+    ///         },
     ///     ],
-    /// );
+    /// };
     ///
     /// let mut expected = HashSet::new();
     ///
@@ -328,14 +355,14 @@ impl Where {
         let mut references = HashSet::new();
 
         match self {
-            Self::Selector(
-                Selector::Contains(reference) | Selector::Equals(reference),
+            Self::Condition(
+                Condition::Contains(reference) | Condition::Equals(reference),
             ) => {
                 references.insert(reference.clone());
             }
-            Self::Node(_, structure) => {
+            Self::Node { nodes, .. } => {
                 references.extend(
-                    structure
+                    nodes
                         .iter()
                         .flat_map(Self::references)
                         .collect::<HashSet<String>>(),
@@ -347,9 +374,13 @@ impl Where {
     }
 }
 
+/// A query argument.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Argument {
+    /// The name of the argument. Used inside the conditions of
+    /// the where clause.
     pub name: String,
+    /// The type of the argument.
     pub r#type: Type,
 }
 
@@ -362,7 +393,8 @@ impl Argument {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid argument.
+    /// Returns a `ParseError` if the input does not start with a valid
+    /// argument.
     ///
     /// # Examples
     ///
@@ -396,10 +428,18 @@ impl Argument {
     }
 }
 
+/// The structure of the data that the query should return.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Schema {
-    Identifier(String),
-    Node(String, Vec<Schema>),
+    /// A leaf node: a field.
+    Field(String),
+    /// A node with children. Either the root node or a relation.
+    Model {
+        /// The name of the node.
+        name: String,
+        /// The children of the node; fields or relations.
+        nodes: Vec<Self>,
+    },
 }
 
 impl Schema {
@@ -420,11 +460,17 @@ impl Schema {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
-        Ok((Self::Node(name, structure), input))
+        Ok((
+            Self::Model {
+                name,
+                nodes: structure,
+            },
+            input,
+        ))
     }
 
     fn parse_identifier(input: &str) -> ParseResult<Self> {
-        map(input, alphabetics, Self::Identifier)
+        map(input, alphabetics, Self::Field)
     }
 
     /// Parse a schema from the given input.
@@ -435,7 +481,7 @@ impl Schema {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid schema.
+    /// Returns a `ParseError` if the input does not start with a valid schema.
     ///
     /// # Examples
     ///
@@ -444,7 +490,7 @@ impl Schema {
     ///
     /// assert_eq!(
     ///     Schema::parse("user"),
-    ///     Ok((Schema::Identifier("user".to_string()), "".to_string())),
+    ///     Ok((Schema::Field("user".to_string()), "".to_string())),
     /// );
     /// ```
     ///
@@ -458,10 +504,10 @@ impl Schema {
     /// assert_eq!(
     ///     Schema::parse(input),
     ///     Ok((
-    ///         Schema::Node(
-    ///             "user".to_string(),
-    ///             vec![Schema::Identifier("name".to_string())],
-    ///         ),
+    ///         Schema::Model {
+    ///             name: "user".to_string(),
+    ///             nodes: vec![Schema::Field("name".to_string())],
+    ///         },
     ///         "".to_string()
     ///     )),
     /// );
@@ -480,16 +526,16 @@ impl Schema {
     /// assert_eq!(
     ///     Schema::parse(input),
     ///     Ok((
-    ///         Schema::Node(
-    ///             "user".to_string(),
-    ///             vec![Schema::Node(
-    ///                 "name".to_string(),
-    ///                 vec![
-    ///                     Schema::Identifier("first".to_string()),
-    ///                     Schema::Identifier("last".to_string()),
+    ///         Schema::Model {
+    ///             name: "user".to_string(),
+    ///             nodes: vec![Schema::Model {
+    ///                 name: "name".to_string(),
+    ///                 nodes: vec![
+    ///                     Schema::Field("first".to_string()),
+    ///                     Schema::Field("last".to_string()),
     ///                 ]
-    ///             )]
-    ///         ),
+    ///             }]
+    ///         },
     ///         "".to_string()
     ///     )),
     /// );
@@ -502,7 +548,7 @@ impl Schema {
     ///
     /// assert_eq!(
     ///     Schema::parse(input),
-    ///     Ok((Schema::Identifier("user".to_string()), "".to_string())),
+    ///     Ok((Schema::Field("user".to_string()), "".to_string())),
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -517,7 +563,7 @@ impl Schema {
     /// ```rust
     /// use dragonfly::ast::query::Schema;
     ///
-    /// let schema = Schema::Identifier("user".to_string());
+    /// let schema = Schema::Field("user".to_string());
     ///
     /// assert_eq!(schema.is_empty(), true);
     /// ```
@@ -525,28 +571,34 @@ impl Schema {
     /// ```rust
     /// use dragonfly::ast::query::Schema;
     ///
-    /// let schema = Schema::Node(
-    ///     "user".to_string(),
-    ///     vec![Schema::Identifier("name".to_string())],
-    /// );
+    /// let schema = Schema::Model {
+    ///     name: "user".to_string(),
+    ///     nodes: vec![Schema::Field("name".to_string())],
+    /// };
     ///
     /// assert_eq!(schema.is_empty(), false);
     /// ```
     #[must_use]
     pub fn is_empty(&self) -> bool {
         match self {
-            Self::Identifier(_) => true,
-            Self::Node(_, structure) => structure.is_empty(),
+            Self::Field(_) => true,
+            Self::Model { nodes: schema, .. } => schema.is_empty(),
         }
     }
 }
 
+/// A query.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Query {
+    /// The name of the query. Used as the name of the generated function.
     pub name: String,
+    /// The arguments of the query.
     pub arguments: Vec<Argument>,
+    /// The schema of the query.
     pub schema: Schema,
+    /// The return type of the query.
     pub r#type: Type,
+    /// The where clause of the query.
     pub r#where: Option<Where>,
 }
 
@@ -559,7 +611,8 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid query argument.
+    /// Returns a `ParseError` if the input does not start with a valid query
+    /// argument.
     ///
     /// # Examples
     ///
@@ -645,7 +698,8 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid reference.
+    /// Returns a `ParseError` if the input does not start with a valid
+    /// reference.
     ///
     /// # Examples
     ///
@@ -677,7 +731,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid query.
+    /// Returns a `ParseError` if the input does not start with a valid query.
     ///
     /// # Examples
     ///
@@ -685,9 +739,9 @@ impl Query {
     /// use dragonfly::ast::{
     ///     query::{
     ///         Argument,
+    ///         Condition,
     ///         Query,
     ///         Schema,
-    ///         Selector,
     ///         Where,
     ///     },
     ///     r#type::{
@@ -705,10 +759,10 @@ impl Query {
     /// let expected = Query {
     ///     name: "images".to_string(),
     ///     arguments: vec![],
-    ///     schema: Schema::Node(
-    ///         "image".to_string(),
-    ///         vec![Schema::Identifier("title".to_string())],
-    ///     ),
+    ///     schema: Schema::Model {
+    ///         name: "image".to_string(),
+    ///         nodes: vec![Schema::Field("title".to_string())],
+    ///     },
     ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
     ///     r#where: None,
     /// };
@@ -720,9 +774,9 @@ impl Query {
     /// use dragonfly::ast::{
     ///     query::{
     ///         Argument,
+    ///         Condition,
     ///         Query,
     ///         Schema,
-    ///         Selector,
     ///         Where,
     ///     },
     ///     r#type::{
@@ -759,26 +813,26 @@ impl Query {
     ///             r#type: Type::One(Basic::String),
     ///         },
     ///     ],
-    ///     schema: Schema::Node(
-    ///         "image".to_string(),
-    ///         vec![Schema::Identifier("title".to_string())],
-    ///     ),
+    ///     schema: Schema::Model {
+    ///         name: "image".to_string(),
+    ///         nodes: vec![Schema::Field("title".to_string())],
+    ///     },
     ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
-    ///     r#where: Some(Where::Node(
-    ///         "image".to_string(),
-    ///         vec![Where::Node(
-    ///             "title".to_string(),
-    ///             vec![
-    ///                 Where::Selector(Selector::Equals("title".to_string())),
-    ///                 Where::Node(
-    ///                     "tags".to_string(),
-    ///                     vec![Where::Selector(Selector::Contains(
+    ///     r#where: Some(Where::Node {
+    ///         name: "image".to_string(),
+    ///         nodes: vec![Where::Node {
+    ///             name: "title".to_string(),
+    ///             nodes: vec![
+    ///                 Where::Condition(Condition::Equals("title".to_string())),
+    ///                 Where::Node {
+    ///                     name: "tags".to_string(),
+    ///                     nodes: vec![Where::Condition(Condition::Contains(
     ///                         "tag".to_string(),
     ///                     ))],
-    ///                 ),
+    ///                 },
     ///             ],
-    ///         )],
-    ///     )),
+    ///         }],
+    ///     }),
     /// };
     ///
     /// assert_eq!(Query::parse(input), Ok((expected, "".to_string())));
@@ -788,9 +842,9 @@ impl Query {
     /// use dragonfly::ast::{
     ///     query::{
     ///         Argument,
+    ///         Condition,
     ///         Query,
     ///         Schema,
-    ///         Selector,
     ///         Where,
     ///     },
     ///     r#type::{
@@ -821,24 +875,26 @@ impl Query {
     ///         name: "name".to_string(),
     ///         r#type: Type::One(Basic::Identifier("CountryName".to_string())),
     ///     }],
-    ///     schema: Schema::Node(
-    ///         "image".to_string(),
-    ///         vec![
-    ///             Schema::Identifier("title".to_string()),
-    ///             Schema::Identifier("category".to_string()),
+    ///     schema: Schema::Model {
+    ///         name: "image".to_string(),
+    ///         nodes: vec![
+    ///             Schema::Field("title".to_string()),
+    ///             Schema::Field("category".to_string()),
     ///         ],
-    ///     ),
+    ///     },
     ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
-    ///     r#where: Some(Where::Node(
-    ///         "image".to_string(),
-    ///         vec![Where::Node(
-    ///             "country".to_string(),
-    ///             vec![Where::Node(
-    ///                 "name".to_string(),
-    ///                 vec![Where::Selector(Selector::Equals("name".to_string()))],
-    ///             )],
-    ///         )],
-    ///     )),
+    ///     r#where: Some(Where::Node {
+    ///         name: "image".to_string(),
+    ///         nodes: vec![Where::Node {
+    ///             name: "country".to_string(),
+    ///             nodes: vec![Where::Node {
+    ///                 name: "name".to_string(),
+    ///                 nodes: vec![Where::Condition(Condition::Equals(
+    ///                     "name".to_string(),
+    ///                 ))],
+    ///             }],
+    ///         }],
+    ///     }),
     /// };
     ///
     /// assert_eq!(Query::parse(input), Ok((expected, "".to_string())));
@@ -878,12 +934,12 @@ impl Query {
     }
 
     /// Check whether the root node of the schema has the same name as the root
-    /// node of the where-clause.
+    /// node of the where clause.
     ///
     /// # Errors
     ///
-    /// * `TypeError::IncompatibleQueryRootNodes`
-    /// if the root nodes of the schema and the where-clause are not the same.
+    /// Returns a `TypeError::IncompatibleQueryRootNodes` if the names of the
+    /// root nodes of the schema and the where clause are not the same.
     ///
     /// # Examples
     ///
@@ -935,8 +991,14 @@ impl Query {
     /// );
     /// ```
     pub fn check_root_nodes(&self) -> Result<(), TypeError> {
-        if let Some(Where::Node(where_root, _)) = &self.r#where {
-            if let Schema::Node(schema_root, _) = &self.schema {
+        if let Some(Where::Node {
+            name: where_root, ..
+        }) = &self.r#where
+        {
+            if let Schema::Model {
+                name: schema_root, ..
+            } = &self.schema
+            {
                 if where_root != schema_root {
                     return Err(TypeError::IncompatibleQueryRootNodes {
                         query_name: self.name.clone(),
@@ -954,8 +1016,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// * `TypeError::EmptyQuerySchema`
-    /// if the schema is empty.
+    /// Returns a `TypeError::EmptyQuerySchema` if the schema is empty.
     ///
     /// # Examples
     ///
@@ -988,12 +1049,12 @@ impl Query {
         }
     }
 
-    /// Check whether all arguments are used in the where-clause.
+    /// Check whether all arguments are used in the where clause.
     ///
     /// # Errors
     ///
-    /// * `TypeError::UnusedQueryArgument`
-    /// if any argument is not used in the where-clause.
+    /// Returns a `TypeError::UnusedQueryArgument` if any argument is not used
+    /// in the where clause.
     ///
     /// # Examples
     ///
@@ -1093,14 +1154,14 @@ impl Query {
     /// );
     /// ```
     pub fn check_unused_arguments(&self) -> Result<(), TypeError> {
-        let selector_references = self
+        let condition_references = self
             .r#where
             .as_ref()
             .map(Where::references)
             .unwrap_or_default();
 
         for argument in &self.arguments {
-            if !selector_references.contains(&argument.name) {
+            if !condition_references.contains(&argument.name) {
                 return Err(TypeError::UnusedQueryArgument {
                     query_name: self.name.clone(),
                     argument: argument.clone(),

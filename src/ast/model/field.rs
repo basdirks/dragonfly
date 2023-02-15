@@ -10,9 +10,12 @@ use crate::{
     },
 };
 
+/// A field belonging to a model.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Field {
+    /// The name of the field. Used inside query schemas and where clauses.
     pub name: String,
+    /// The type of the field.
     pub r#type: Type,
 }
 
@@ -25,7 +28,7 @@ impl Field {
     ///
     /// # Errors
     ///
-    /// * If the input is not a valid field.
+    /// Returns a `ParseError` if the input does not start with a valid field.
     ///
     /// # Examples
     ///

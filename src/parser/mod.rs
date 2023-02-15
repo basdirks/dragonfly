@@ -1,7 +1,12 @@
 //! Parser combinators used to parse the AST.
+
+/// Parse ASCII identifiers with different case styles.
 pub mod case;
+/// Parse common ASCII characters.
 pub mod char;
+/// Parse ASCII characters in different ranges.
 pub mod char_range;
+/// Macro utilities.
 pub mod r#macro;
 
 /// Low-level parsing errors.
@@ -42,8 +47,10 @@ pub enum ParseError {
     },
 }
 
+/// The result of applying a parser to an input string.
 pub type ParseResult<T, E = ParseError> = Result<(T, String), E>;
 
+/// A function that parses a string.
 pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
 
 /// Apply a parser and map the result.
@@ -56,8 +63,7 @@ pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
 ///
 /// # Errors
 ///
-/// * `ParseError`
-/// if the parser fails.
+/// Returns a `ParseError` if the parser fails.
 pub fn map<T, U>(
     input: &str,
     parser: ParseFn<T>,
@@ -76,8 +82,7 @@ pub fn map<T, U>(
 ///
 /// # Errors
 ///
-/// * `ParseError`
-/// if the parser fails.
+/// Returns a `ParseError` if the parser fails.
 pub fn tag<T, U>(
     input: &str,
     parser: ParseFn<T>,
@@ -269,7 +274,7 @@ pub fn literal(
 ///
 /// # Errors
 ///
-/// None. This parser always succeeds.
+/// This parser always succeeds.
 ///
 /// # Examples
 ///
@@ -318,8 +323,7 @@ pub fn many<T>(
 ///
 /// # Errors
 ///
-/// * `ParseError`
-/// if the parser fails to match at least once.
+/// Returns a `ParseError` if the parser fails to match at least once.
 ///
 /// # Examples
 ///
@@ -371,8 +375,7 @@ pub fn many1<T>(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChoice`
-/// if none of the parsers match.
+/// Returns a `ParseError::UnmatchedChoice` if none of the parsers match.
 ///
 /// # Examples
 ///
@@ -451,7 +454,7 @@ pub fn choice<T>(
 ///
 /// # Errors
 ///
-/// None. This parser always succeeds.
+/// This parser always succeeds.
 ///
 /// # Examples
 ///
