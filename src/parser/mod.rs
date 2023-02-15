@@ -53,13 +53,13 @@ pub type ParseResult<T, E = ParseError> = Result<(T, String), E>;
 /// A function that parses a string.
 pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
 
-/// Apply a parser and map the result.
+/// Apply a parser and map over the result.
 ///
 /// # Arguments
 ///
 /// * `input` - The input string to parse.
 /// * `parser` - The parser to apply.
-/// * `f` - The function to map the result with.
+/// * `f` - The function to map over the result.
 ///
 /// # Errors
 ///
