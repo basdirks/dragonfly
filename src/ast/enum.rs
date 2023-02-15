@@ -64,8 +64,8 @@ impl Enum {
     ///
     /// assert_eq!(
     ///     Enum::parse(input),
-    ///     Err(ParseError::UnmatchedCharPredicate {
-    ///         description: "should be uppercase".to_string(),
+    ///     Err(ParseError::UnmetPredicate {
+    ///         message: "character is not uppercase".to_string(),
     ///         actual: 'b'
     ///     })
     /// );

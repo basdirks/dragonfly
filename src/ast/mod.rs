@@ -30,11 +30,17 @@ use {
     },
 };
 
+/// A JSX component.
 pub mod component;
+/// An enumerated type.
 pub mod r#enum;
+/// A data model.
 pub mod model;
+/// A data query.
 pub mod query;
+/// A route.
 pub mod route;
+/// Types used inside components, models, and queries.
 pub mod r#type;
 
 #[derive(Clone, Debug, Eq, PartialEq)]

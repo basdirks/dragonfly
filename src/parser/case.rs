@@ -24,7 +24,7 @@ use super::{
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the first character is not uppercase.
 ///
 /// * `ParseError`
@@ -53,9 +53,9 @@ use super::{
 ///
 /// assert_eq!(
 ///     capitalized("foo"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'f',
-///         description: "should be uppercase".to_string(),
+///         message: "character is not uppercase".to_string(),
 ///     })
 /// );
 /// ```
@@ -80,7 +80,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 /// * `ParseError::UnexpectedEof`
 /// if the input is empty.
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the identifier does not start with an uppercase character.
 ///
 /// # Examples
@@ -95,25 +95,25 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///
 /// assert_eq!(
 ///     pascal("foobar"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'f',
-///         description: "should be uppercase".to_string(),
+///         message: "character is not uppercase".to_string(),
 ///     })
 /// );
 ///
 /// assert_eq!(
 ///     pascal("foo_bar"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'f',
-///         description: "should be uppercase".to_string(),
+///         message: "character is not uppercase".to_string(),
 ///     })
 /// );
 ///
 /// assert_eq!(
 ///     pascal("foo-bar"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'f',
-///         description: "should be uppercase".to_string(),
+///         message: "character is not uppercase".to_string(),
 ///     })
 /// );
 /// ```
@@ -132,10 +132,10 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 /// * `ParseError::UnexpectedEof`
 /// if the input is empty.
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if an identifier segment does not start with a lowercase character.
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if an identifier does not end with a lowercase character.
 ///
 /// * `ParseError::UnmatchedChar`
@@ -173,10 +173,10 @@ pub fn kebab(input: &str) -> ParseResult<String> {
     })?;
 
     if choice(&input, vec![hyphen, uppercase, digit, underscore]).is_ok() {
-        return Err(ParseError::UnmatchedCharPredicate {
+        return Err(ParseError::UnmetPredicate {
             actual: input.chars().next().map_or('\0', |c| c),
-            description: "should not be uppercase, digit, hyphen, or \
-                          underscore"
+            message: "unexpected uppercase character, digit, hyphen, or \
+                      underscore"
                 .to_string(),
         });
     }

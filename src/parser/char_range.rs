@@ -14,7 +14,7 @@ use super::{
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the character does not fulfill the predicate.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -29,20 +29,28 @@ use super::{
 /// };
 ///
 /// assert_eq!(
-///     char_if("a", |c| c.is_ascii_lowercase(), "should be lowercase"),
+///     char_if(
+///         "a",
+///         |c| c.is_ascii_lowercase(),
+///         "character is not lowercase"
+///     ),
 ///     Ok(('a', "".to_string())),
 /// );
 ///
 /// assert_eq!(
-///     char_if("A", |c| c.is_ascii_lowercase(), "should be lowercase"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     char_if(
+///         "A",
+///         |c| c.is_ascii_lowercase(),
+///         "character is not lowercase"
+///     ),
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'A',
-///         description: "should be lowercase".to_string(),
+///         message: "character is not lowercase".to_string(),
 ///     }),
 /// );
 ///
 /// assert_eq!(
-///     char_if("", |c| c.is_ascii_lowercase(), "should be lowercase"),
+///     char_if("", |c| c.is_ascii_lowercase(), "character is not lowercase"),
 ///     Err(ParseError::UnexpectedEof),
 /// );
 /// ```
@@ -56,9 +64,9 @@ pub fn char_if(
             return Ok((char, input[1..].to_string()));
         }
 
-        return Err(ParseError::UnmatchedCharPredicate {
+        return Err(ParseError::UnmetPredicate {
             actual: char,
-            description: description.to_string(),
+            message: description.to_string(),
         });
     }
 
@@ -76,7 +84,7 @@ pub fn char_if(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the first character does not fulfill the predicate.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -91,15 +99,23 @@ pub fn char_if(
 /// };
 ///
 /// assert_eq!(
-///     chars_if("abc", |c| c.is_ascii_alphabetic(), "should be alphabetic"),
+///     chars_if(
+///         "abc",
+///         |c| c.is_ascii_alphabetic(),
+///         "character is not alphabetic"
+///     ),
 ///     Ok(("abc".to_string(), "".to_string())),
 /// );
 ///
 /// assert_eq!(
-///     chars_if("123", |c| c.is_ascii_alphabetic(), "should be alphabetic"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     chars_if(
+///         "123",
+///         |c| c.is_ascii_alphabetic(),
+///         "character is not alphabetic"
+///     ),
+///     Err(ParseError::UnmetPredicate {
 ///         actual: '1',
-///         description: "should be alphabetic".to_string(),
+///         message: "character is not alphabetic".to_string(),
 ///     }),
 /// );
 /// ```
@@ -127,7 +143,7 @@ pub fn chars_if(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the character is not alphabetic.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -146,9 +162,9 @@ pub fn chars_if(
 ///
 /// assert_eq!(
 ///     alphabetic("1"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: '1',
-///         description: "should be alphabetic".to_string(),
+///         message: "character is not alphabetic".to_string(),
 ///     })
 /// );
 /// ```
@@ -156,7 +172,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_alphabetic(),
-        "should be alphabetic",
+        "character is not alphabetic",
     )
 }
 
@@ -168,7 +184,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the first character is not alphabetic.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -186,9 +202,9 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     alphabetics("123"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: '1',
-///         description: "should be alphabetic".to_string(),
+///         message: "character is not alphabetic".to_string(),
 ///     }),
 /// );
 /// ```
@@ -196,7 +212,7 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
     chars_if(
         input,
         |char| char.is_ascii_alphabetic(),
-        "should be alphabetic",
+        "character is not alphabetic",
     )
 }
 
@@ -208,7 +224,7 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the character is not alphanumeric.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -228,9 +244,9 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///
 /// assert_eq!(
 ///     alphanumeric(" "),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: ' ',
-///         description: "should be alphanumeric".to_string(),
+///         message: "character is not alphanumeric".to_string(),
 ///     }),
 /// );
 /// ```
@@ -238,7 +254,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_alphanumeric(),
-        "should be alphanumeric",
+        "character is not alphanumeric",
     )
 }
 
@@ -250,7 +266,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the character is not a digit.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -268,9 +284,9 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     digit("a"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'a',
-///         description: "should be a decimal digit".to_string(),
+///         message: "character is not a decimal digit".to_string(),
 ///     }),
 /// );
 /// ```
@@ -278,7 +294,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_digit(),
-        "should be a decimal digit",
+        "character is not a decimal digit",
     )
 }
 
@@ -290,7 +306,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the character is not lowercase.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -308,9 +324,9 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     lowercase("A"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'A',
-///         description: "should be lowercase".to_string(),
+///         message: "character is not lowercase".to_string(),
 ///     })
 /// );
 /// ```
@@ -318,7 +334,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_lowercase(),
-        "should be lowercase",
+        "character is not lowercase",
     )
 }
 
@@ -330,7 +346,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the character is not uppercase.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -348,9 +364,9 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     uppercase("a"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'a',
-///         description: "should be uppercase".to_string(),
+///         message: "character is not uppercase".to_string(),
 ///     })
 /// );
 /// ```
@@ -358,7 +374,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_uppercase(),
-        "should be uppercase",
+        "character is not uppercase",
     )
 }
 
@@ -370,7 +386,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedCharPredicate`
+/// * `ParseError::UnmetPredicate`
 /// if the character is not whitespace.
 ///
 /// * `ParseError::UnexpectedEof`
@@ -391,9 +407,9 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     whitespace("a"),
-///     Err(ParseError::UnmatchedCharPredicate {
+///     Err(ParseError::UnmetPredicate {
 ///         actual: 'a',
-///         description: "should be whitespace".to_string(),
+///         message: "character is not whitespace".to_string(),
 ///     })
 /// );
 /// ```
@@ -401,7 +417,7 @@ pub fn whitespace(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_whitespace(),
-        "should be whitespace",
+        "character is not whitespace",
     )
 }
 
