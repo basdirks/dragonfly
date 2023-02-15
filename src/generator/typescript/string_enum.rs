@@ -3,25 +3,69 @@ use {
     std::fmt::Display,
 };
 
+/// A TypeScript enum variant, usually called `member` in TypeScript ASTs. A
+/// variant's value may differ from its name.
+///
+/// # Examples
+///
+/// `France` and `Germany` are variants:
+///
+/// ```typescript
+/// enum CountryName {
+///     France = "France",
+///     Germany = "Germany",
+/// }
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Variant {
+    /// The name of the variant. Must be unique within the enum. Usually
+    /// PascalCase.
     name: String,
+    /// The value of the variant. May differ from the name.
     value: String,
 }
 
+/// A TypeScript enum declaration.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Enum {
-    name: String,
+pub struct StringEnum {
+    /// The name of the enum.
+    ///
+    /// # Examples
+    ///
+    /// `CountryName` is the identifier:
+    ///
+    /// ```typescript
+    /// enum CountryName {
+    ///     France = "France",
+    ///     Germany = "Germany",
+    /// }
+    /// ```
+    identifier: String,
+    /// Enum variants, usually called `members` in TypeScript ASTs.
+    ///
+    /// # Examples
+    ///
+    /// `France` and `Germany` are variants:
+    ///
+    /// ```typescript
+    /// enum CountryName {
+    ///     France = "France",
+    ///     Germany = "Germany",
+    /// }
+    /// ```
     variants: Vec<Variant>,
 }
 
 // TODO: Replace with pretty printer.
-impl Display for Enum {
+impl Display for StringEnum {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
-        let Self { name, variants } = self;
+        let Self {
+            identifier: name,
+            variants,
+        } = self;
 
         let variants = variants
             .iter()
@@ -33,12 +77,12 @@ impl Display for Enum {
     }
 }
 
-impl From<AstEnum> for Enum {
+impl From<AstEnum> for StringEnum {
     fn from(value: AstEnum) -> Self {
         let AstEnum { name, variants } = value;
 
         Self {
-            name,
+            identifier: name,
             variants: variants
                 .iter()
                 .map(|variant| {
@@ -59,7 +103,7 @@ mod tests {
     #[test]
     fn test_from_ast_enum() {
         assert_eq!(
-            Enum::from(AstEnum {
+            StringEnum::from(AstEnum {
                 name: "CountryName".to_string(),
                 variants: vec![
                     "France".to_string(),
@@ -70,8 +114,8 @@ mod tests {
                     "UnitedStates".to_string(),
                 ]
             }),
-            Enum {
-                name: "CountryName".to_string(),
+            StringEnum {
+                identifier: "CountryName".to_string(),
                 variants: vec![
                     Variant {
                         name: "France".to_string(),
@@ -105,8 +149,8 @@ mod tests {
     #[test]
     fn test_display_enum() {
         assert_eq!(
-            Enum {
-                name: "CountryName".to_string(),
+            StringEnum {
+                identifier: "CountryName".to_string(),
                 variants: vec![
                     Variant {
                         name: "France".to_string(),

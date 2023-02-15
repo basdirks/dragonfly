@@ -1,3 +1,4 @@
+//! Parse characters in different ranges.
 use super::{
     many,
     ParseError,

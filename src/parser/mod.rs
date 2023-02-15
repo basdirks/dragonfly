@@ -1,4 +1,4 @@
-///! Parser combinators used to parse the AST.
+//! Parser combinators used to parse the AST.
 pub mod case;
 pub mod char;
 pub mod char_range;

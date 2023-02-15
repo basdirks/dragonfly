@@ -1,3 +1,4 @@
+//! Parse common characters.
 use super::{
     char,
     ParseResult,

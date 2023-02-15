@@ -3,11 +3,48 @@ use {
     std::fmt::Display,
 };
 
+/// An interface property.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::{
+///     ast::r#type::Basic,
+///     generator::typescript::{
+///         interface::Property,
+///         r#type::{
+///             Keyword,
+///             Type,
+///         },
+///     },
+/// };
+///
+/// let code = Property {
+///     identifier: "foo".to_string(),
+///     r#type: Type::Keyword(Keyword::String),
+///     optional: false,
+/// }
+/// .to_string();
+///
+/// assert_eq!(code, "foo: string;");
+///
+/// let code = Property {
+///     identifier: "bar".to_string(),
+///     r#type: Type::Array(Box::new(Type::Keyword(Keyword::String))),
+///     optional: true,
+/// }
+/// .to_string();
+///
+/// assert_eq!(code, "bar?: Array<string>;");
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Property {
-    identifier: String,
-    r#type: Type,
-    optional: bool,
+    /// The name of the property. Usually camelCase.
+    pub identifier: String,
+    /// The type of the property.
+    pub r#type: Type,
+    /// Whether the property is optional.
+    pub optional: bool,
 }
 
 // TODO: Replace with pretty printer.
@@ -30,10 +67,45 @@ impl Display for Property {
     }
 }
 
+/// An expression with type arguments.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::{
+///     ast::r#type::Basic,
+///     generator::typescript::{
+///         interface::ExpressionWithTypeArguments,
+///         r#type::{
+///             Keyword,
+///             Type,
+///         },
+///     },
+/// };
+///
+/// let code = ExpressionWithTypeArguments {
+///     identifier: "Foo".to_string(),
+///     type_arguments: vec![],
+/// }
+/// .to_string();
+///
+/// assert_eq!(code, "Foo");
+///
+/// let code = ExpressionWithTypeArguments {
+///     identifier: "Bar".to_string(),
+///     type_arguments: vec![
+///         Type::Keyword(Keyword::String),
+///         Type::Keyword(Keyword::Number),
+///     ],
+/// }
+/// .to_string();
+///
+/// assert_eq!(code, "Bar<string, number>");
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpressionWithTypeArguments {
-    identifier: String,
-    type_arguments: Vec<Type>,
+    pub identifier: String,
+    pub type_arguments: Vec<Type>,
 }
 
 impl Display for ExpressionWithTypeArguments {
@@ -60,10 +132,45 @@ impl Display for ExpressionWithTypeArguments {
     }
 }
 
+/// A type parameter.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::{
+///     ast::r#type::Basic,
+///     generator::typescript::{
+///         interface::TypeParameter,
+///         r#type::{
+///             Keyword,
+///             Type,
+///         },
+///     },
+/// };
+///
+/// let code = TypeParameter {
+///     identifier: "T".to_string(),
+///     type_references: vec![],
+/// }
+/// .to_string();
+///
+/// assert_eq!(code, "T");
+///
+/// let code = TypeParameter {
+///     identifier: "U".to_string(),
+///     type_references: vec![
+///         Type::Keyword(Keyword::String),
+///         Type::Keyword(Keyword::Number),
+///     ],
+/// }
+/// .to_string();
+///
+/// assert_eq!(code, "U extends string, number");
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypeParameter {
-    identifier: String,
-    type_reference: Option<Type>,
+    pub identifier: String,
+    pub type_references: Vec<Type>,
 }
 
 impl Display for TypeParameter {
@@ -73,21 +180,95 @@ impl Display for TypeParameter {
     ) -> std::fmt::Result {
         let Self {
             identifier,
-            type_reference,
+            type_references,
         } = self;
 
-        if let Some(type_reference) = type_reference {
-            write!(f, "{identifier} extends {type_reference}")
-        } else {
+        if type_references.is_empty() {
             write!(f, "{identifier}")
+        } else {
+            write!(
+                f,
+                "{identifier} extends {}",
+                type_references
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
         }
     }
 }
 
 /// An interface declaration.
 ///
-/// For now, we do not support methods, getters, setters, call signatures,
-/// construct signatures, or index signatures.
+/// Only supports properties, so does *not* support methods, getters, setters,
+/// call signatures, construct signatures, or index signatures.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::{
+///     ast::r#type::Basic,
+///     generator::typescript::{
+///         interface::{
+///             ExpressionWithTypeArguments,
+///             Interface,
+///             Property,
+///             TypeParameter,
+///         },
+///         r#type::{
+///             Keyword,
+///             Type,
+///         },
+///     },
+/// };
+///
+/// let code = Interface {
+///     extends: vec![ExpressionWithTypeArguments {
+///         identifier: "Bar".to_string(),
+///         type_arguments: vec![
+///             Type::Keyword(Keyword::String),
+///             Type::Keyword(Keyword::Number),
+///         ],
+///     }],
+///     identifier: "Foo".to_string(),
+///     type_parameters: vec![
+///         TypeParameter {
+///             identifier: "T".to_string(),
+///             type_references: vec![],
+///         },
+///         TypeParameter {
+///             identifier: "U".to_string(),
+///             type_references: vec![Type::Keyword(Keyword::String)],
+///         },
+///     ],
+///     properties: vec![
+///         Property {
+///             identifier: "bar".to_string(),
+///             r#type: Type::Array(Box::new(Type::TypeReference {
+///                 identifier: "Bar".to_string(),
+///                 type_references: vec![],
+///             })),
+///             optional: true,
+///         },
+///         Property {
+///             identifier: "baz".to_string(),
+///             r#type: Type::Keyword(Keyword::Number),
+///             optional: false,
+///         },
+///     ],
+/// }
+/// .to_string();
+///
+/// assert_eq!(
+///     code,
+///     "\
+/// interface Foo<T, U extends string> extends Bar<string, number> {
+///   bar?: Array<Bar>;
+///   baz: number;
+/// }"
+/// );
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Interface {
     /// The types that the interface extends.
@@ -99,17 +280,17 @@ pub struct Interface {
     /// ```typescript
     /// interface Foo extends Bar, Baz {}
     /// ```
-    extends: Vec<ExpressionWithTypeArguments>,
+    pub extends: Vec<ExpressionWithTypeArguments>,
     /// The name of the interface.
     ///
     /// # Examples
     ///
-    /// `Foo` is the name:
+    /// `Foo` is the identifier:
     ///
     /// ```typescript
     /// interface Foo {}
     /// ```
-    identifier: String,
+    pub identifier: String,
     /// The type parameters of the interface.
     ///
     /// # Examples
@@ -119,7 +300,7 @@ pub struct Interface {
     /// ```typescript
     /// interface Foo<T, U> {}
     /// ```
-    type_parameters: Vec<TypeParameter>,
+    pub type_parameters: Vec<TypeParameter>,
     /// The properties of the interface.
     ///
     /// # Examples
@@ -132,7 +313,7 @@ pub struct Interface {
     ///     baz: Int;
     /// }
     /// ```
-    properties: Vec<Property>,
+    pub properties: Vec<Property>,
 }
 
 // TODO: Replace with pretty printer.
@@ -211,7 +392,7 @@ mod tests {
                 identifier: "Image".to_string(),
                 type_parameters: vec![TypeParameter {
                     identifier: "T".to_string(),
-                    type_reference: None,
+                    type_references: vec![],
                 }],
                 properties: vec![
                     Property {
