@@ -3,7 +3,7 @@ use {
     std::fmt::Display,
 };
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Property {
     identifier: String,
     r#type: Type,
@@ -30,7 +30,7 @@ impl Display for Property {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ExpressionWithTypeArguments {
     identifier: String,
     type_arguments: Vec<Type>,
@@ -60,7 +60,7 @@ impl Display for ExpressionWithTypeArguments {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TypeParameter {
     identifier: String,
     type_reference: Option<Type>,
@@ -84,11 +84,54 @@ impl Display for TypeParameter {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+/// An interface declaration.
+///
+/// For now, we do not support methods, getters, setters, call signatures,
+/// construct signatures, or index signatures.
+#[derive(Clone, Debug, PartialEq)]
 pub struct Interface {
-    heritage_clause: Vec<ExpressionWithTypeArguments>,
+    /// The types that the interface extends.
+    ///
+    /// # Examples
+    ///
+    /// `Bar` and `Baz` are types that the interface extends:
+    ///
+    /// ```typescript
+    /// interface Foo extends Bar, Baz {}
+    /// ```
+    extends: Vec<ExpressionWithTypeArguments>,
+    /// The name of the interface.
+    ///
+    /// # Examples
+    ///
+    /// `Foo` is the name:
+    ///
+    /// ```typescript
+    /// interface Foo {}
+    /// ```
     identifier: String,
+    /// The type parameters of the interface.
+    ///
+    /// # Examples
+    ///
+    /// `T` and `U` are type parameters:
+    ///
+    /// ```typescript
+    /// interface Foo<T, U> {}
+    /// ```
     type_parameters: Vec<TypeParameter>,
+    /// The properties of the interface.
+    ///
+    /// # Examples
+    ///
+    /// `bar` and `baz` are properties:
+    ///
+    /// ```typescript
+    /// interface Foo {
+    ///     bar: String;
+    ///     baz: Int;
+    /// }
+    /// ```
     properties: Vec<Property>,
 }
 
@@ -100,7 +143,7 @@ impl Display for Interface {
     ) -> std::fmt::Result {
         let Self {
             identifier: name,
-            heritage_clause: extends,
+            extends,
             type_parameters: parameters,
             properties,
         } = self;
@@ -135,11 +178,11 @@ impl Display for Interface {
             .iter()
             .map(ToString::to_string)
             .collect::<Vec<_>>()
-            .join(" ");
+            .join("\n  ");
 
         write!(
             f,
-            "interface {name}{parameters}{extends} {{ {properties} }}"
+            "interface {name}{parameters}{extends} {{\n  {properties}\n}}"
         )
     }
 }
@@ -158,7 +201,7 @@ mod tests {
     fn test_display_interface() {
         assert_eq!(
             Interface {
-                heritage_clause: vec![ExpressionWithTypeArguments {
+                extends: vec![ExpressionWithTypeArguments {
                     identifier: "Resource".to_string(),
                     type_arguments: vec![Type::TypeReference {
                         identifier: "T".to_string(),
@@ -195,8 +238,12 @@ mod tests {
                 ],
             }
             .to_string(),
-            "interface Image<T> extends Resource<T> { title: string; \
-             countryName?: CountryName; tags: Array<Tag>; }"
+            "\
+interface Image<T> extends Resource<T> {
+  title: string;
+  countryName?: CountryName;
+  tags: Array<Tag>;
+}"
         );
     }
 }

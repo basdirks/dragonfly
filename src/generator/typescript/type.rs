@@ -6,6 +6,28 @@ use {
     std::fmt::Display,
 };
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum Literal {
+    BigInt(String),
+    Boolean(bool),
+    Number(f64),
+    String(String),
+}
+
+impl Display for Literal {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            Self::BigInt(value) => write!(f, "{value}n"),
+            Self::Boolean(value) => write!(f, "{value}"),
+            Self::Number(value) => write!(f, "{value}"),
+            Self::String(value) => write!(f, "\"{value}\""),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Keyword {
     Any,
@@ -46,21 +68,22 @@ impl Display for Keyword {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Type {
     Array(Box<Type>),
-    Keyword(Keyword),
     Function {
         arguments: Vec<(String, Type)>,
         return_type: Box<Type>,
     },
+    Intersection(Vec<Type>),
+    Keyword(Keyword),
+    Literal(Literal),
+    ObjectLiteral(Vec<(String, Type)>),
+    Tuple(Vec<Type>),
     TypeReference {
         identifier: String,
         type_references: Vec<Type>,
     },
-    Intersection(Vec<Type>),
-    ObjectLiteral(Vec<(String, Type)>),
-    Tuple(Vec<Type>),
     Union(Vec<Type>),
 }
 
@@ -71,7 +94,6 @@ impl Display for Type {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         match self {
-            Self::Keyword(keyword) => write!(f, "{keyword}"),
             Self::Array(r#type) => write!(f, "Array<{type}>"),
             Self::Function {
                 arguments,
@@ -88,6 +110,7 @@ impl Display for Type {
                     return_type
                 )
             }
+            Self::Keyword(keyword) => write!(f, "{keyword}"),
             Self::TypeReference {
                 identifier,
                 type_references,
@@ -121,6 +144,7 @@ impl Display for Type {
                         .join(" & ")
                 )
             }
+            Self::Literal(literal) => write!(f, "{literal}"),
             Self::ObjectLiteral(properties) => {
                 write!(
                     f,
@@ -192,7 +216,7 @@ mod tests {
 
     #[test]
     fn test_display_any() {
-        assert_eq!(Type::Keyword(Keyword::Any).to_string(), "any");
+        assert_eq!(Keyword::Any.to_string(), "any");
     }
 
     #[test]
@@ -212,12 +236,12 @@ mod tests {
 
     #[test]
     fn test_display_bigint() {
-        assert_eq!(Type::Keyword(Keyword::BigInt).to_string(), "bigint");
+        assert_eq!(Keyword::BigInt.to_string(), "bigint");
     }
 
     #[test]
     fn test_display_boolean() {
-        assert_eq!(Type::Keyword(Keyword::Boolean).to_string(), "boolean");
+        assert_eq!(Keyword::Boolean.to_string(), "boolean");
     }
 
     #[test]
@@ -256,33 +280,82 @@ mod tests {
     }
 
     #[test]
-    fn test_display_named() {
+    fn test_display_keyword() {
+        assert_eq!(Type::Keyword(Keyword::Any).to_string(), "any");
+        assert_eq!(Type::Keyword(Keyword::BigInt).to_string(), "bigint");
+        assert_eq!(Type::Keyword(Keyword::Boolean).to_string(), "boolean");
+        assert_eq!(Type::Keyword(Keyword::Intrinsic).to_string(), "intrinsic");
+        assert_eq!(Type::Keyword(Keyword::Never).to_string(), "never");
+        assert_eq!(Type::Keyword(Keyword::Null).to_string(), "null");
+        assert_eq!(Type::Keyword(Keyword::Number).to_string(), "number");
+        assert_eq!(Type::Keyword(Keyword::Object).to_string(), "object");
+        assert_eq!(Type::Keyword(Keyword::String).to_string(), "string");
+        assert_eq!(Type::Keyword(Keyword::Symbol).to_string(), "symbol");
+        assert_eq!(Type::Keyword(Keyword::Undefined).to_string(), "undefined");
+        assert_eq!(Type::Keyword(Keyword::Unknown).to_string(), "unknown");
+        assert_eq!(Type::Keyword(Keyword::Void).to_string(), "void");
+    }
+
+    #[test]
+    fn test_display_literal() {
         assert_eq!(
-            Type::TypeReference {
-                identifier: "Partial".to_string(),
-                type_references: vec![Type::TypeReference {
-                    identifier: "Image".to_string(),
-                    type_references: vec![],
-                }]
-            }
-            .to_string(),
-            "Partial<Image>"
+            Type::Literal(Literal::BigInt("1".to_string())).to_string(),
+            "1n"
+        );
+
+        assert_eq!(Type::Literal(Literal::Boolean(true)).to_string(), "true");
+        assert_eq!(Type::Literal(Literal::Boolean(false)).to_string(), "false");
+        assert_eq!(Type::Literal(Literal::Number(1.0)).to_string(), "1");
+        assert_eq!(Type::Literal(Literal::Number(1.5)).to_string(), "1.5");
+
+        assert_eq!(
+            Type::Literal(Literal::String("hello".to_string())).to_string(),
+            "\"hello\""
         );
     }
 
     #[test]
+    fn test_display_intersection() {
+        assert_eq!(
+            Type::Intersection(vec![
+                Type::TypeReference {
+                    identifier: "Partial".to_string(),
+                    type_references: vec![Type::TypeReference {
+                        identifier: "T".to_string(),
+                        type_references: vec![],
+                    }]
+                },
+                Type::TypeReference {
+                    identifier: "Partial".to_string(),
+                    type_references: vec![Type::TypeReference {
+                        identifier: "U".to_string(),
+                        type_references: vec![],
+                    }]
+                },
+            ])
+            .to_string(),
+            "Partial<T> & Partial<U>"
+        );
+    }
+
+    #[test]
+    fn test_display_intrinsic() {
+        assert_eq!(Keyword::Intrinsic.to_string(), "intrinsic");
+    }
+
+    #[test]
     fn test_display_never() {
-        assert_eq!(Type::Keyword(Keyword::Never).to_string(), "never");
+        assert_eq!(Keyword::Never.to_string(), "never");
     }
 
     #[test]
     fn test_display_null() {
-        assert_eq!(Type::Keyword(Keyword::Null).to_string(), "null");
+        assert_eq!(Keyword::Null.to_string(), "null");
     }
 
     #[test]
     fn test_display_number() {
-        assert_eq!(Type::Keyword(Keyword::Number).to_string(), "number");
+        assert_eq!(Keyword::Number.to_string(), "number");
     }
 
     #[test]
@@ -331,12 +404,12 @@ mod tests {
 
     #[test]
     fn test_display_string() {
-        assert_eq!(Type::Keyword(Keyword::String).to_string(), "string");
+        assert_eq!(Keyword::String.to_string(), "string");
     }
 
     #[test]
     fn test_display_symbol() {
-        assert_eq!(Type::Keyword(Keyword::Symbol).to_string(), "symbol");
+        assert_eq!(Keyword::Symbol.to_string(), "symbol");
     }
 
     #[test]
@@ -359,8 +432,23 @@ mod tests {
     }
 
     #[test]
+    fn test_display_type_reference() {
+        assert_eq!(
+            Type::TypeReference {
+                identifier: "Partial".to_string(),
+                type_references: vec![Type::TypeReference {
+                    identifier: "Image".to_string(),
+                    type_references: vec![],
+                }]
+            }
+            .to_string(),
+            "Partial<Image>"
+        );
+    }
+
+    #[test]
     fn test_display_undefined() {
-        assert_eq!(Type::Keyword(Keyword::Undefined).to_string(), "undefined");
+        assert_eq!(Keyword::Undefined.to_string(), "undefined");
     }
 
     #[test]
@@ -384,12 +472,40 @@ mod tests {
 
     #[test]
     fn test_display_unknown() {
-        assert_eq!(Type::Keyword(Keyword::Unknown).to_string(), "unknown");
+        assert_eq!(Keyword::Unknown.to_string(), "unknown");
+    }
+
+    #[test]
+    fn test_display_literal_bigint() {
+        assert_eq!(
+            Type::Literal(Literal::BigInt("1".to_string())).to_string(),
+            "1n"
+        );
+    }
+
+    #[test]
+    fn test_display_literal_boolean() {
+        assert_eq!(Type::Literal(Literal::Boolean(true)).to_string(), "true");
+        assert_eq!(Type::Literal(Literal::Boolean(false)).to_string(), "false");
+    }
+
+    #[test]
+    fn test_display_literal_number() {
+        assert_eq!(Type::Literal(Literal::Number(1.0)).to_string(), "1");
+        assert_eq!(Type::Literal(Literal::Number(1.1)).to_string(), "1.1");
+    }
+
+    #[test]
+    fn test_display_literal_string() {
+        assert_eq!(
+            Type::Literal(Literal::String("foo".to_string())).to_string(),
+            "\"foo\""
+        );
     }
 
     #[test]
     fn test_display_void() {
-        assert_eq!(Type::Keyword(Keyword::Void).to_string(), "void");
+        assert_eq!(Keyword::Void.to_string(), "void");
     }
 
     #[test]
