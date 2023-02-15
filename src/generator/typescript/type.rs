@@ -9,35 +9,27 @@ use {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Type {
     Any,
-    Array {
-        r#type: Box<Type>,
-    },
+    Array(Box<Type>),
     BigInt,
     Boolean,
     Function {
         arguments: Vec<(String, Type)>,
         return_type: Box<Type>,
     },
-    Identifier {
-        name: String,
-        generics: Vec<String>,
+    TypeReference {
+        identifier: String,
+        type_references: Vec<Type>,
     },
+    Intersection(Vec<Type>),
     Never,
     Null,
     Number,
-    ObjectLiteral {
-        // Order matters.
-        properties: Vec<(String, Type)>,
-    },
+    ObjectLiteral(Vec<(String, Type)>),
     String,
     Symbol,
-    Tuple {
-        types: Vec<Type>,
-    },
+    Tuple(Vec<Type>),
     Undefined,
-    Union {
-        types: Vec<Type>,
-    },
+    Union(Vec<Type>),
     Unknown,
     Void,
 }
@@ -50,7 +42,7 @@ impl Display for Type {
     ) -> std::fmt::Result {
         match self {
             Self::Any => write!(f, "any"),
-            Self::Array { r#type } => write!(f, "Array<{type}>"),
+            Self::Array(r#type) => write!(f, "Array<{type}>"),
             Self::BigInt => write!(f, "bigint"),
             Self::Boolean => write!(f, "boolean"),
             Self::Function {
@@ -68,17 +60,20 @@ impl Display for Type {
                     return_type
                 )
             }
-            Self::Identifier { name, generics } => {
+            Self::TypeReference {
+                identifier,
+                type_references,
+            } => {
                 write!(
                     f,
                     "{}{}",
-                    name,
-                    if generics.is_empty() {
+                    identifier,
+                    if type_references.is_empty() {
                         String::new()
                     } else {
                         format!(
                             "<{}>",
-                            generics
+                            type_references
                                 .iter()
                                 .map(ToString::to_string)
                                 .collect::<Vec<_>>()
@@ -87,10 +82,21 @@ impl Display for Type {
                     }
                 )
             }
+            Self::Intersection(types) => {
+                write!(
+                    f,
+                    "{}",
+                    types
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join(" & ")
+                )
+            }
             Self::Never => write!(f, "never"),
             Self::Null => write!(f, "null"),
             Self::Number => write!(f, "number"),
-            Self::ObjectLiteral { properties } => {
+            Self::ObjectLiteral(properties) => {
                 write!(
                     f,
                     "{{ {} }}",
@@ -103,7 +109,7 @@ impl Display for Type {
             }
             Self::String => write!(f, "string"),
             Self::Symbol => write!(f, "symbol"),
-            Self::Tuple { types } => {
+            Self::Tuple(types) => {
                 write!(
                     f,
                     "[{}]",
@@ -115,7 +121,7 @@ impl Display for Type {
                 )
             }
             Self::Undefined => write!(f, "undefined"),
-            Self::Union { types } => {
+            Self::Union(types) => {
                 write!(
                     f,
                     "{}",
@@ -138,10 +144,10 @@ impl From<AstBasicType> for Type {
             AstBasicType::Boolean => Self::Boolean,
             AstBasicType::Float | AstBasicType::Int => Self::Number,
             AstBasicType::String => Self::String,
-            AstBasicType::Identifier(name) => {
-                Self::Identifier {
-                    name,
-                    generics: Vec::new(),
+            AstBasicType::Identifier(identifier) => {
+                Self::TypeReference {
+                    identifier,
+                    type_references: vec![],
                 }
             }
         }
@@ -152,11 +158,7 @@ impl From<AstType> for Type {
     fn from(r#type: AstType) -> Self {
         match r#type {
             AstType::One(r#type) => r#type.into(),
-            AstType::Array(r#type) => {
-                Self::Array {
-                    r#type: Box::new(r#type.into()),
-                }
-            }
+            AstType::Array(r#type) => Self::Array(Box::new(r#type.into())),
         }
     }
 }
@@ -173,12 +175,13 @@ mod tests {
     #[test]
     fn test_display_array() {
         assert_eq!(
-            Type::Array {
-                r#type: Box::new(Type::Identifier {
-                    name: "Partial".to_string(),
-                    generics: vec!["Image".to_string()]
-                }),
-            }
+            Type::Array(Box::new(Type::TypeReference {
+                identifier: "Partial".to_string(),
+                type_references: vec![Type::TypeReference {
+                    identifier: "Image".to_string(),
+                    type_references: vec![],
+                }]
+            }),)
             .to_string(),
             "Array<Partial<Image>>"
         );
@@ -201,24 +204,27 @@ mod tests {
                 arguments: vec![
                     (
                         "name".to_string(),
-                        Type::Identifier {
-                            name: "Partial".to_string(),
-                            generics: vec!["Image".to_string(),]
+                        Type::TypeReference {
+                            identifier: "Partial".to_string(),
+                            type_references: vec![Type::TypeReference {
+                                identifier: "Image".to_string(),
+                                type_references: vec![],
+                            }]
                         }
                     ),
                     (
                         "countryName".to_string(),
-                        Type::Identifier {
-                            name: "CountryName".to_string(),
-                            generics: vec![],
+                        Type::TypeReference {
+                            identifier: "CountryName".to_string(),
+                            type_references: vec![],
                         }
                     )
                 ]
                 .into_iter()
                 .collect(),
-                return_type: Box::new(Type::Identifier {
-                    name: "String".to_string(),
-                    generics: vec![]
+                return_type: Box::new(Type::TypeReference {
+                    identifier: "String".to_string(),
+                    type_references: vec![]
                 }),
             }
             .to_string(),
@@ -229,9 +235,12 @@ mod tests {
     #[test]
     fn test_display_named() {
         assert_eq!(
-            Type::Identifier {
-                name: "Partial".to_string(),
-                generics: vec!["Image".to_string()]
+            Type::TypeReference {
+                identifier: "Partial".to_string(),
+                type_references: vec![Type::TypeReference {
+                    identifier: "Image".to_string(),
+                    type_references: vec![],
+                }]
             }
             .to_string(),
             "Partial<Image>"
@@ -256,43 +265,39 @@ mod tests {
     #[test]
     fn test_display_object_literal() {
         assert_eq!(
-            Type::ObjectLiteral {
-                properties: vec![
+            Type::ObjectLiteral(
+                vec![
                     (
                         "country".to_string(),
-                        Type::ObjectLiteral {
-                            properties: vec![
+                        Type::ObjectLiteral(
+                            vec![
                                 (
                                     "name".to_string(),
-                                    Type::Identifier {
-                                        name: "CountryName".to_string(),
-                                        generics: vec![],
+                                    Type::TypeReference {
+                                        identifier: "CountryName".to_string(),
+                                        type_references: vec![],
                                     }
                                 ),
                                 (
                                     "languages".to_string(),
-                                    Type::Array {
-                                        r#type: Box::new(Type::String)
-                                    }
+                                    Type::Array(Box::new(Type::String))
                                 )
                             ]
                             .into_iter()
                             .collect(),
-                        }
+                        )
                     ),
                     (
                         "tags".to_string(),
-                        Type::Array {
-                            r#type: Box::new(Type::Identifier {
-                                name: "Tag".to_string(),
-                                generics: vec![],
-                            })
-                        }
+                        Type::Array(Box::new(Type::TypeReference {
+                            identifier: "Tag".to_string(),
+                            type_references: vec![],
+                        }))
                     )
                 ]
                 .into_iter()
                 .collect(),
-            }
+            )
             .to_string(),
             "{ country: { name: CountryName, languages: Array<string> }, \
              tags: Array<Tag> }"
@@ -312,18 +317,14 @@ mod tests {
     #[test]
     fn test_display_tuple() {
         assert_eq!(
-            Type::Tuple {
-                types: vec![
-                    Type::Identifier {
-                        name: "CountryName".to_string(),
-                        generics: vec![],
-                    },
-                    Type::String,
-                    Type::Tuple {
-                        types: vec![Type::Number, Type::String,]
-                    }
-                ]
-            }
+            Type::Tuple(vec![
+                Type::TypeReference {
+                    identifier: "CountryName".to_string(),
+                    type_references: vec![],
+                },
+                Type::String,
+                Type::Tuple(vec![Type::Number, Type::String,])
+            ])
             .to_string(),
             "[CountryName, string, [number, string]]"
         );
@@ -337,18 +338,14 @@ mod tests {
     #[test]
     fn test_display_union() {
         assert_eq!(
-            Type::Union {
-                types: vec![
-                    Type::Identifier {
-                        name: "CountryName".to_string(),
-                        generics: vec![],
-                    },
-                    Type::String,
-                    Type::Tuple {
-                        types: vec![Type::Number, Type::String,]
-                    }
-                ]
-            }
+            Type::Union(vec![
+                Type::TypeReference {
+                    identifier: "CountryName".to_string(),
+                    type_references: vec![],
+                },
+                Type::String,
+                Type::Tuple(vec![Type::Number, Type::String])
+            ])
             .to_string(),
             "CountryName | string | [number, string]"
         );
@@ -388,9 +385,9 @@ mod tests {
     fn test_from_ast_primitive_identifier() {
         assert_eq!(
             Type::from(AstBasicType::Identifier("Image".to_string())),
-            Type::Identifier {
-                name: "Image".to_string(),
-                generics: vec![]
+            Type::TypeReference {
+                identifier: "Image".to_string(),
+                type_references: vec![]
             }
         );
     }

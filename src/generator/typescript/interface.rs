@@ -5,7 +5,7 @@ use {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Property {
-    name: String,
+    identifier: String,
     r#type: Type,
     optional: bool,
 }
@@ -17,52 +17,78 @@ impl Display for Property {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         let Self {
-            name,
-            r#type,
+            identifier,
+            r#type: type_reference,
             optional,
         } = self;
 
         if *optional {
-            write!(f, "{name}?: {type};")
+            write!(f, "{identifier}?: {type_reference};")
         } else {
-            write!(f, "{name}: {type};")
+            write!(f, "{identifier}: {type_reference};")
         }
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Extend {
-    name: String,
-    generics: Vec<Extend>,
+pub struct ExpressionWithTypeArguments {
+    identifier: String,
+    type_arguments: Vec<Type>,
 }
 
-impl Display for Extend {
+impl Display for ExpressionWithTypeArguments {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
-        let Self { name, generics } = self;
+        let Self {
+            identifier,
+            type_arguments,
+        } = self;
 
-        let generics = generics
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        if generics.is_empty() {
-            write!(f, "{name}")
+        if type_arguments.is_empty() {
+            write!(f, "{identifier}")
         } else {
-            write!(f, "{name}<{generics}>")
+            let type_arguments = type_arguments
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            write!(f, "{identifier}<{type_arguments}>")
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TypeParameter {
+    identifier: String,
+    type_reference: Option<Type>,
+}
+
+impl Display for TypeParameter {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        let Self {
+            identifier,
+            type_reference,
+        } = self;
+
+        if let Some(type_reference) = type_reference {
+            write!(f, "{identifier} extends {type_reference}")
+        } else {
+            write!(f, "{identifier}")
         }
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Interface {
-    name: String,
-    extends: Vec<Extend>,
-    // TODO: Support extending of parameters.
-    parameters: Vec<String>,
+    heritage_clause: Vec<ExpressionWithTypeArguments>,
+    identifier: String,
+    type_parameters: Vec<TypeParameter>,
     properties: Vec<Property>,
 }
 
@@ -73,9 +99,9 @@ impl Display for Interface {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         let Self {
-            name,
-            extends,
-            parameters,
+            identifier: name,
+            heritage_clause: extends,
+            type_parameters: parameters,
             properties,
         } = self;
 
@@ -129,40 +155,41 @@ mod tests {
     fn test_display_interface() {
         assert_eq!(
             Interface {
-                name: "Image".to_string(),
-                parameters: vec!["T".to_string(),],
-                extends: vec![Extend {
-                    name: "Resource".to_string(),
-                    generics: vec![Extend {
-                        name: "T".to_string(),
-                        generics: vec![]
-                    }]
+                heritage_clause: vec![ExpressionWithTypeArguments {
+                    identifier: "Resource".to_string(),
+                    type_arguments: vec![Type::TypeReference {
+                        identifier: "T".to_string(),
+                        type_references: vec![],
+                    }],
+                }],
+                identifier: "Image".to_string(),
+                type_parameters: vec![TypeParameter {
+                    identifier: "T".to_string(),
+                    type_reference: None,
                 }],
                 properties: vec![
                     Property {
-                        name: "title".to_string(),
+                        identifier: "title".to_string(),
                         r#type: Type::String,
-                        optional: false
+                        optional: false,
                     },
                     Property {
-                        name: "countryName".to_string(),
-                        r#type: Type::Identifier {
-                            name: "CountryName".to_string(),
-                            generics: vec![],
+                        identifier: "countryName".to_string(),
+                        r#type: Type::TypeReference {
+                            identifier: "CountryName".to_string(),
+                            type_references: vec![],
                         },
-                        optional: true
+                        optional: true,
                     },
                     Property {
-                        name: "tags".to_string(),
-                        r#type: Type::Array {
-                            r#type: Box::new(Type::Identifier {
-                                name: "Tag".to_string(),
-                                generics: vec![],
-                            })
-                        },
-                        optional: false
-                    }
-                ]
+                        identifier: "tags".to_string(),
+                        r#type: Type::Array(Box::new(Type::TypeReference {
+                            identifier: "Tag".to_string(),
+                            type_references: vec![],
+                        })),
+                        optional: false,
+                    },
+                ],
             }
             .to_string(),
             "interface Image<T> extends Resource<T> { title: string; \
