@@ -1,4 +1,3 @@
-//! Parse ASCII identifiers with different case styles.
 use super::{
     char::{
         hyphen,

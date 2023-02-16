@@ -1,5 +1,9 @@
 use {
     super::r#type::Type,
+    crate::ast::model::{
+        field::Field,
+        Model,
+    },
     std::fmt::Display,
 };
 
@@ -9,7 +13,7 @@ use {
 ///
 /// ```rust
 /// use dragonfly::{
-///     ast::r#type::Basic,
+///     ast::r#type::Scalar,
 ///     generator::typescript::{
 ///         interface::Property,
 ///         r#type::{
@@ -73,7 +77,7 @@ impl Display for Property {
 ///
 /// ```rust
 /// use dragonfly::{
-///     ast::r#type::Basic,
+///     ast::r#type::Scalar,
 ///     generator::typescript::{
 ///         interface::ExpressionWithTypeArguments,
 ///         r#type::{
@@ -140,7 +144,7 @@ impl Display for ExpressionWithTypeArguments {
 ///
 /// ```rust
 /// use dragonfly::{
-///     ast::r#type::Basic,
+///     ast::r#type::Scalar,
 ///     generator::typescript::{
 ///         interface::TypeParameter,
 ///         r#type::{
@@ -212,7 +216,7 @@ impl Display for TypeParameter {
 ///
 /// ```rust
 /// use dragonfly::{
-///     ast::r#type::Basic,
+///     ast::r#type::Scalar,
 ///     generator::typescript::{
 ///         interface::{
 ///             ExpressionWithTypeArguments,
@@ -268,8 +272,8 @@ impl Display for TypeParameter {
 ///     code,
 ///     "\
 /// interface Foo<T, U extends string> extends Bar<string, number> {
-///   bar?: Array<Bar>;
-///   baz: number;
+///     bar?: Array<Bar>;
+///     baz: number;
 /// }"
 /// );
 /// ```
@@ -366,12 +370,39 @@ impl Display for Interface {
             .iter()
             .map(ToString::to_string)
             .collect::<Vec<_>>()
-            .join("\n  ");
+            .join("\n    ");
 
         write!(
             f,
-            "interface {name}{parameters}{extends} {{\n  {properties}\n}}"
+            "interface {name}{parameters}{extends} {{\n    {properties}\n}}"
         )
+    }
+}
+
+impl From<Model> for Interface {
+    fn from(value: Model) -> Self {
+        let Model { name, fields } = value;
+        let mut properties = fields.into_iter().collect::<Vec<_>>();
+
+        properties.sort_by_key(|(identifier, _)| identifier.clone());
+
+        let properties = properties
+            .into_iter()
+            .map(|(identifier, Field { r#type, .. })| {
+                Property {
+                    identifier,
+                    r#type: r#type.into(),
+                    optional: false,
+                }
+            })
+            .collect();
+
+        Self {
+            extends: vec![],
+            identifier: name,
+            type_parameters: vec![],
+            properties,
+        }
     }
 }
 
@@ -428,9 +459,33 @@ mod tests {
             .to_string(),
             "\
 interface Image<T> extends Resource<T> {
-  title: string;
-  countryName?: CountryName;
-  tags: Array<Tag>;
+    title: string;
+    countryName?: CountryName;
+    tags: Array<Tag>;
+}"
+        );
+    }
+
+    #[test]
+    fn test_from_model() {
+        let input = "\
+model Image {
+  tags: [Tag]
+  title: String    
+  country: Country
+}";
+
+        let (model, _) = Model::parse(input).unwrap();
+        let interface = Interface::from(model);
+        let code = interface.to_string();
+
+        assert_eq!(
+            code,
+            "\
+interface Image {
+    country: Country;
+    tags: Array<Tag>;
+    title: string;
 }"
         );
     }

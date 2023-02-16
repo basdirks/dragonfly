@@ -214,7 +214,7 @@ impl Declaration {
     ///         },
     ///         query::Query,
     ///         r#type::{
-    ///             Basic,
+    ///             Scalar,
     ///             Type,
     ///         },
     ///         route::Route,
@@ -234,7 +234,7 @@ impl Declaration {
     ///     "foo".to_string(),
     ///     Field {
     ///         name: "foo".to_string(),
-    ///         r#type: Type::One(Basic::String),
+    ///         r#type: Type::Scalar(Scalar::String),
     ///     },
     /// );
     ///
@@ -242,7 +242,7 @@ impl Declaration {
     ///     "bar".to_string(),
     ///     Field {
     ///         name: "bar".to_string(),
-    ///         r#type: Type::Array(Basic::Identifier("Bar".to_string())),
+    ///         r#type: Type::Array(Scalar::Reference("Bar".to_string())),
     ///     },
     /// );
     ///
@@ -324,7 +324,7 @@ impl Ast {
     ///         },
     ///         r#enum::Enum,
     ///         r#type::{
-    ///             Basic,
+    ///             Scalar,
     ///             Type,
     ///         },
     ///         route::Route,
@@ -432,7 +432,7 @@ impl Ast {
     ///     "id".to_string(),
     ///     Field {
     ///         name: "id".to_string(),
-    ///         r#type: Type::One(Basic::Identifier("ID".to_string())),
+    ///         r#type: Type::Scalar(Scalar::Reference("ID".to_string())),
     ///     },
     /// );
     ///
@@ -440,7 +440,7 @@ impl Ast {
     ///     "title".to_string(),
     ///     Field {
     ///         name: "title".to_string(),
-    ///         r#type: Type::One(Basic::String),
+    ///         r#type: Type::Scalar(Scalar::String),
     ///     },
     /// );
     ///
@@ -448,7 +448,7 @@ impl Ast {
     ///     "country".to_string(),
     ///     Field {
     ///         name: "country".to_string(),
-    ///         r#type: Type::One(Basic::Identifier("Country".to_string())),
+    ///         r#type: Type::Scalar(Scalar::Reference("Country".to_string())),
     ///     },
     /// );
     ///
@@ -456,7 +456,7 @@ impl Ast {
     ///     "category".to_string(),
     ///     Field {
     ///         name: "category".to_string(),
-    ///         r#type: Type::Array(Basic::Identifier("Category".to_string())),
+    ///         r#type: Type::Array(Scalar::Reference("Category".to_string())),
     ///     },
     /// );
     ///
@@ -474,7 +474,7 @@ impl Ast {
     ///     "id".to_string(),
     ///     Field {
     ///         name: "id".to_string(),
-    ///         r#type: Type::One(Basic::Identifier("ID".to_string())),
+    ///         r#type: Type::Scalar(Scalar::Reference("ID".to_string())),
     ///     },
     /// );
     ///
@@ -482,7 +482,7 @@ impl Ast {
     ///     "domain".to_string(),
     ///     Field {
     ///         name: "domain".to_string(),
-    ///         r#type: Type::One(Basic::String),
+    ///         r#type: Type::Scalar(Scalar::String),
     ///     },
     /// );
     ///
@@ -490,7 +490,7 @@ impl Ast {
     ///     "drivingSide".to_string(),
     ///     Field {
     ///         name: "drivingSide".to_string(),
-    ///         r#type: Type::One(Basic::Identifier("DrivingSide".to_string())),
+    ///         r#type: Type::Scalar(Scalar::Reference("DrivingSide".to_string())),
     ///     },
     /// );
     ///
@@ -498,7 +498,7 @@ impl Ast {
     ///     "flag".to_string(),
     ///     Field {
     ///         name: "flag".to_string(),
-    ///         r#type: Type::One(Basic::String),
+    ///         r#type: Type::Scalar(Scalar::String),
     ///     },
     /// );
     ///
@@ -506,7 +506,7 @@ impl Ast {
     ///     "name".to_string(),
     ///     Field {
     ///         name: "name".to_string(),
-    ///         r#type: Type::One(Basic::Identifier("CountryName".to_string())),
+    ///         r#type: Type::Scalar(Scalar::Reference("CountryName".to_string())),
     ///     },
     /// );
     ///
@@ -560,7 +560,7 @@ impl Ast {
     ///     "images".to_string(),
     ///     Query {
     ///         name: "images".to_string(),
-    ///         r#type: Type::Array(Basic::Identifier("Image".to_string())),
+    ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
     ///         schema: Schema::Model {
     ///             name: "image".to_string(),
     ///             nodes: vec![
@@ -581,7 +581,7 @@ impl Ast {
     ///     "imagesByCountryName".to_string(),
     ///     Query {
     ///         name: "imagesByCountryName".to_string(),
-    ///         r#type: Type::Array(Basic::Identifier("Image".to_string())),
+    ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
     ///         schema: Schema::Model {
     ///             name: "image".to_string(),
     ///             nodes: vec![
@@ -603,7 +603,9 @@ impl Ast {
     ///         }),
     ///         arguments: vec![Argument {
     ///             name: "name".to_string(),
-    ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
+    ///             r#type: Type::Scalar(Scalar::Reference(
+    ///                 "CountryName".to_string(),
+    ///             )),
     ///         }],
     ///     },
     /// );

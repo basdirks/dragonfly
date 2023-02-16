@@ -1,6 +1,6 @@
 use {
     crate::ast::r#type::{
-        Basic as AstBasicType,
+        Scalar as AstScalarType,
         Type as AstType,
     },
     std::fmt::Display,
@@ -215,16 +215,21 @@ impl Display for Type {
     }
 }
 
-impl From<AstBasicType> for Type {
-    fn from(value: AstBasicType) -> Self {
+impl From<AstScalarType> for Type {
+    fn from(value: AstScalarType) -> Self {
         match value {
-            AstBasicType::Boolean => Self::Keyword(Keyword::Boolean),
-            // This is quite tragic.
-            AstBasicType::Float | AstBasicType::Int => {
-                Self::Keyword(Keyword::Number)
+            AstScalarType::Boolean => Self::Keyword(Keyword::Boolean),
+            AstScalarType::DateTime => {
+                Self::TypeReference {
+                    identifier: "Date".to_string(),
+                    type_references: vec![],
+                }
             }
-            AstBasicType::String => Self::Keyword(Keyword::String),
-            AstBasicType::Identifier(identifier) => {
+            AstScalarType::Float => Self::Keyword(Keyword::Number),
+            // This is not ideal, but an integer is an integer.
+            AstScalarType::Int => Self::Keyword(Keyword::BigInt),
+            AstScalarType::String => Self::Keyword(Keyword::String),
+            AstScalarType::Reference(identifier) => {
                 Self::TypeReference {
                     identifier,
                     type_references: vec![],
@@ -237,7 +242,7 @@ impl From<AstBasicType> for Type {
 impl From<AstType> for Type {
     fn from(r#type: AstType) -> Self {
         match r#type {
-            AstType::One(r#type) => r#type.into(),
+            AstType::Scalar(r#type) => r#type.into(),
             AstType::Array(r#type) => Self::Array(Box::new(r#type.into())),
         }
     }
@@ -542,41 +547,52 @@ mod tests {
     }
 
     #[test]
-    fn test_from_ast_primitive_boolean() {
+    fn test_from_ast_scalar_boolean() {
         assert_eq!(
-            Type::from(AstBasicType::Boolean),
+            Type::from(AstScalarType::Boolean),
             Type::Keyword(Keyword::Boolean)
         );
     }
 
     #[test]
-    fn test_from_ast_primitive_float() {
+    fn test_from_ast_scalar_date_time() {
         assert_eq!(
-            Type::from(AstBasicType::Float),
+            Type::from(AstScalarType::DateTime),
+            Type::TypeReference {
+                identifier: "Date".to_string(),
+                type_references: vec![]
+            }
+        );
+    }
+
+    #[test]
+    fn test_from_ast_scalar_float() {
+        assert_eq!(
+            Type::from(AstScalarType::Float),
             Type::Keyword(Keyword::Number)
         );
     }
 
     #[test]
-    fn test_from_ast_primitive_integer() {
+    fn test_from_ast_scalar_integer() {
         assert_eq!(
-            Type::from(AstBasicType::Int),
-            Type::Keyword(Keyword::Number)
+            Type::from(AstScalarType::Int),
+            Type::Keyword(Keyword::BigInt)
         );
     }
 
     #[test]
-    fn test_from_ast_primitive_string() {
+    fn test_from_ast_scalar_string() {
         assert_eq!(
-            Type::from(AstBasicType::String),
+            Type::from(AstScalarType::String),
             Type::Keyword(Keyword::String)
         );
     }
 
     #[test]
-    fn test_from_ast_primitive_identifier() {
+    fn test_from_ast_scalar_identifier() {
         assert_eq!(
-            Type::from(AstBasicType::Identifier("Image".to_string())),
+            Type::from(AstScalarType::Reference("Image".to_string())),
             Type::TypeReference {
                 identifier: "Image".to_string(),
                 type_references: vec![]

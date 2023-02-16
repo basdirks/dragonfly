@@ -1,3 +1,5 @@
+/// JavaScript import declaration.
+pub mod import;
 /// TypeScript interface declaration.
 pub mod interface;
 /// TypeScript string enum declaration.

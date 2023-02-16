@@ -402,7 +402,7 @@ impl Argument {
     /// use dragonfly::ast::{
     ///     query::Argument,
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     /// };
@@ -412,7 +412,7 @@ impl Argument {
     ///     Ok((
     ///         Argument {
     ///             name: "name".to_string(),
-    ///             r#type: Type::One(Basic::String),
+    ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///         "".to_string()
     ///     ))
@@ -623,7 +623,7 @@ impl Query {
     ///         Query,
     ///     },
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     /// };
@@ -633,7 +633,7 @@ impl Query {
     ///     Ok((
     ///         vec![Argument {
     ///             name: "id".to_string(),
-    ///             r#type: Type::One(Basic::Identifier("UUID".to_string()))
+    ///             r#type: Type::Scalar(Scalar::Reference("UUID".to_string()))
     ///         }],
     ///         "".to_string()
     ///     ))
@@ -647,7 +647,7 @@ impl Query {
     ///         Query,
     ///     },
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     /// };
@@ -658,11 +658,11 @@ impl Query {
     ///         vec![
     ///             Argument {
     ///                 name: "id".to_string(),
-    ///                 r#type: Type::One(Basic::Identifier("UUID".to_string()))
+    ///                 r#type: Type::Scalar(Scalar::Reference("UUID".to_string()))
     ///             },
     ///             Argument {
     ///                 name: "name".to_string(),
-    ///                 r#type: Type::Array(Basic::String)
+    ///                 r#type: Type::Array(Scalar::String)
     ///             }
     ///         ],
     ///         "".to_string()
@@ -745,7 +745,7 @@ impl Query {
     ///         Where,
     ///     },
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     /// };
@@ -763,7 +763,7 @@ impl Query {
     ///         name: "image".to_string(),
     ///         nodes: vec![Schema::Field("title".to_string())],
     ///     },
-    ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
+    ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
     ///     r#where: None,
     /// };
     ///
@@ -780,7 +780,7 @@ impl Query {
     ///         Where,
     ///     },
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     /// };
@@ -806,18 +806,18 @@ impl Query {
     ///     arguments: vec![
     ///         Argument {
     ///             name: "tag".to_string(),
-    ///             r#type: Type::One(Basic::String),
+    ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///         Argument {
     ///             name: "title".to_string(),
-    ///             r#type: Type::One(Basic::String),
+    ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///     ],
     ///     schema: Schema::Model {
     ///         name: "image".to_string(),
     ///         nodes: vec![Schema::Field("title".to_string())],
     ///     },
-    ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
+    ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
     ///     r#where: Some(Where::Node {
     ///         name: "image".to_string(),
     ///         nodes: vec![Where::Node {
@@ -848,7 +848,7 @@ impl Query {
     ///         Where,
     ///     },
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     /// };
@@ -873,7 +873,7 @@ impl Query {
     ///     name: "imagesByCountryName".to_string(),
     ///     arguments: vec![Argument {
     ///         name: "name".to_string(),
-    ///         r#type: Type::One(Basic::Identifier("CountryName".to_string())),
+    ///         r#type: Type::Scalar(Scalar::Reference("CountryName".to_string())),
     ///     }],
     ///     schema: Schema::Model {
     ///         name: "image".to_string(),
@@ -882,7 +882,7 @@ impl Query {
     ///             Schema::Field("category".to_string()),
     ///         ],
     ///     },
-    ///     r#type: Type::Array(Basic::Identifier("Image".to_string())),
+    ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
     ///     r#where: Some(Where::Node {
     ///         name: "image".to_string(),
     ///         nodes: vec![Where::Node {
@@ -1090,7 +1090,7 @@ impl Query {
     ///         Query,
     ///     },
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     ///     TypeError,
@@ -1108,7 +1108,9 @@ impl Query {
     ///         query_name: "images".to_string(),
     ///         argument: Argument {
     ///             name: "name".to_string(),
-    ///             r#type: Type::One(Basic::Identifier("CountryName".to_string())),
+    ///             r#type: Type::Scalar(Scalar::Reference(
+    ///                 "CountryName".to_string()
+    ///             )),
     ///         },
     ///     }),
     /// );
@@ -1121,7 +1123,7 @@ impl Query {
     ///         Query,
     ///     },
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     ///     TypeError,
@@ -1148,7 +1150,7 @@ impl Query {
     ///         query_name: "images".to_string(),
     ///         argument: Argument {
     ///             name: "tag".to_string(),
-    ///             r#type: Type::One(Basic::String),
+    ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///     }),
     /// );

@@ -48,7 +48,7 @@ impl Model {
     ///             Model,
     ///         },
     ///         r#type::{
-    ///             Basic,
+    ///             Scalar,
     ///             Type,
     ///         },
     ///     },
@@ -67,7 +67,7 @@ impl Model {
     ///     "bar".to_string(),
     ///     Field {
     ///         name: "bar".to_string(),
-    ///         r#type: Type::One(Basic::String),
+    ///         r#type: Type::Scalar(Scalar::String),
     ///     },
     /// );
     ///
@@ -75,7 +75,7 @@ impl Model {
     ///     "baz".to_string(),
     ///     Field {
     ///         name: "baz".to_string(),
-    ///         r#type: Type::One(Basic::Int),
+    ///         r#type: Type::Scalar(Scalar::Int),
     ///     },
     /// );
     ///
@@ -83,7 +83,7 @@ impl Model {
     ///     "qux".to_string(),
     ///     Field {
     ///         name: "qux".to_string(),
-    ///         r#type: Type::Array(Basic::Identifier("Bar".to_string())),
+    ///         r#type: Type::Array(Scalar::Reference("Bar".to_string())),
     ///     },
     /// );
     ///

@@ -1,5 +1,3 @@
-//! Parser combinators used to parse the AST.
-
 /// Parse ASCII identifiers with different case styles.
 pub mod case;
 /// Parse common ASCII characters.

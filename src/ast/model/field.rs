@@ -36,7 +36,7 @@ impl Field {
     /// use dragonfly::ast::{
     ///     model::field::Field,
     ///     r#type::{
-    ///         Basic,
+    ///         Scalar,
     ///         Type,
     ///     },
     /// };
@@ -45,7 +45,7 @@ impl Field {
     ///
     /// let expected = Field {
     ///     name: "bar".to_string(),
-    ///     r#type: Type::One(Basic::String),
+    ///     r#type: Type::Scalar(Scalar::String),
     /// };
     ///
     /// assert_eq!(Field::parse(input), Ok((expected, "".to_string())));

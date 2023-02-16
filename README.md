@@ -7,8 +7,8 @@ full-stack web applications. You should not use it in production.
 
 An application consists of:
 
-- types: the structure of data,
-- models: the structure of an entity,
+- types: sets of values,
+- models: the structure of entities,
 - enums: predefined string values,
 - queries: subsets of data,
 - routes: the logical structure,
@@ -22,15 +22,16 @@ Unimplemented:
 
 ## Models
 
-A model describes an entity. It has a name and one or more fields. A field has
-a name and a type. A type can be an array, a primitive type, or a reference to
-an enum or a model.
+A model describes entities in your application by giving names to groups of
+fields. A field has a name and a type. A type can be an array or a scalar type.
 
-Primitive types are:
+Scalar types are:
 
 - `Boolean`: `true` or `false`,
+- `DateTime`: a date and time,
 - `Float`: a 64-bit floating point number,
 - `Int`: a 64-bit integer,
+- `Reference`: a reference to another enum or model,
 - `String`: a sequence of UTF-8 characters.
 
 ### Validation
@@ -39,7 +40,7 @@ Primitive types are:
 - The name of a model must be unique.
 - The name of a field must be unique within a model.
 - Arrays may not be nested.
-- Non-primitive types must refer to an existing enum or model.
+- Referenced types must be defined inside the application.
 
 ### EBNF
 
@@ -47,8 +48,9 @@ Primitive types are:
 model          = "model" model_name "{" field+ "}";
 field          = field_name ":" type;
 type           = "[" basic_type "]" | basic_type;
-basic_type     = primitive_type | enum_name | model_name;
-primitive_type = "String" | "Int" | "Float" | "Boolean";
+basic_type     = primitive_type | reference;
+primitive_type = "Boolean" | "DateTime" | "Float" | "Int" | "String";
+reference      = model_name | enum_name;
 
 model_name     = pascal_case;
 field_name     = camel_case;
@@ -129,8 +131,9 @@ condition is applied.
 - The type of the condition (inferred by the argument) must be compatible with  
 the type of the field to which it is applied.
 - The name of each argument must be unique.
-- The type of each argument must be a primitive type or a model or enum that is
-defined elsewhere. 
+- The type of each argument must be a scalar type.
+- If the return type is a reference, there must exist an enum or model with that  
+name inside the application.
 - Each argument must be used at least once in the where clause.
 - An argument may not be an array or a model.
 

@@ -14,7 +14,7 @@ macro_rules! tag {
     };
 }
 
-/// Apply a function to the result of a parser.
+/// Apply a function to the result of a successful parser.
 #[macro_export]
 macro_rules! map {
     ($parser:expr, $f:expr) => {
