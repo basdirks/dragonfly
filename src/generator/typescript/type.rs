@@ -212,6 +212,7 @@ impl From<AstScalarType> for Type {
     fn from(value: AstScalarType) -> Self {
         match value {
             AstScalarType::Boolean => Self::Keyword(Keyword::Boolean),
+            // This should be fine in combination with https://date-fns.org/.
             AstScalarType::DateTime => {
                 Self::TypeReference {
                     identifier: "Date".to_string(),
@@ -219,7 +220,8 @@ impl From<AstScalarType> for Type {
                 }
             }
             AstScalarType::Float => Self::Keyword(Keyword::Number),
-            // This is not ideal, but an integer is an integer.
+            // Not ideal, but an integer should be an integer. Perhaps make this
+            // opt-in or opt-out.
             AstScalarType::Int => Self::Keyword(Keyword::BigInt),
             AstScalarType::String => Self::Keyword(Keyword::String),
             AstScalarType::Reference(identifier) => {

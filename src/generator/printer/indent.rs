@@ -1,3 +1,4 @@
+const PSL_INDENT: usize = 2;
 const GRAPHQL_INDENT: usize = 2;
 const TYPESCRIPT_INDENT: usize = 4;
 
@@ -11,4 +12,10 @@ pub fn graphql(level: usize) -> String {
 #[must_use]
 pub fn typescript(level: usize) -> String {
     " ".repeat(level * TYPESCRIPT_INDENT)
+}
+
+/// Return a string of spaces for the given indentation level.
+#[must_use]
+pub fn psl(level: usize) -> String {
+    " ".repeat(level * PSL_INDENT)
 }

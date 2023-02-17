@@ -71,40 +71,6 @@ impl Display for ExpressionWithTypeArguments {
 }
 
 /// A type parameter.
-///
-/// # Examples
-///
-/// ```rust
-/// use dragonfly::{
-///     ast::r#type::Scalar,
-///     generator::typescript::{
-///         interface::TypeParameter,
-///         r#type::{
-///             Keyword,
-///             Type,
-///         },
-///     },
-/// };
-///
-/// let code = TypeParameter {
-///     identifier: "T".to_string(),
-///     type_references: vec![],
-/// }
-/// .to_string();
-///
-/// assert_eq!(code, "T");
-///
-/// let code = TypeParameter {
-///     identifier: "U".to_string(),
-///     type_references: vec![
-///         Type::Keyword(Keyword::String),
-///         Type::Keyword(Keyword::Number),
-///     ],
-/// }
-/// .to_string();
-///
-/// assert_eq!(code, "U extends string, number");
-/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TypeParameter {
     /// The name of the type parameter.
@@ -261,6 +227,39 @@ mod tests {
             Type,
         },
     };
+
+    #[test]
+    fn test_display_type_parameter() {
+        assert_eq!(
+            TypeParameter {
+                identifier: "T".to_string(),
+                type_references: vec![],
+            }
+            .to_string(),
+            "T"
+        );
+
+        assert_eq!(
+            TypeParameter {
+                identifier: "U".to_string(),
+                type_references: vec![Type::Keyword(Keyword::String)],
+            }
+            .to_string(),
+            "U extends string"
+        );
+
+        assert_eq!(
+            TypeParameter {
+                identifier: "V".to_string(),
+                type_references: vec![
+                    Type::Keyword(Keyword::String),
+                    Type::Keyword(Keyword::Number),
+                ],
+            }
+            .to_string(),
+            "V extends string, number"
+        );
+    }
 
     #[test]
     fn test_display_expression_with_type_arguments() {
