@@ -25,6 +25,8 @@ Unimplemented:
 A model describes entities in your application by giving names to groups of
 fields. A field has a name and a type. A type can be an array or a scalar type.
 
+### Types
+
 Scalar types are:
 
 - `Boolean`: `true` or `false`,
@@ -33,6 +35,50 @@ Scalar types are:
 - `Int`: a 64-bit integer,
 - `Reference`: a reference to another enum or model,
 - `String`: a sequence of UTF-8 characters.
+
+### Relationships
+
+A reference points to an enum or a model. A reference to a model implies a
+relationship between two models.
+
+An example of a 1-1 relationship is a user and their profile. A user has one
+profile and a profile belongs to one user. `A { B }, B { A }`.
+
+```dfly
+model User {
+  profile: Profile
+}
+
+model Profile {
+  user: User
+}
+```
+
+An example of a 1-n relationship is a user and their posts. A user has many
+posts and a post belongs to one user. `A { [B] }, B { A }`.
+
+```dfly
+model User {
+  posts: [Post]
+}
+
+model Post {
+  author: User
+}
+```
+
+An example of a n-n relationship users and groups. A user belongs to many
+groups and a group has many users. `A { [B] }, B { [A] }`.
+
+```dfly
+model User {
+  groups: [Group]
+}
+
+model Group {
+  users: [User]
+}
+```
 
 ### Validation
 
@@ -327,10 +373,12 @@ Parsing transforms a string into an AST. This step fails if the syntax is
 invalid or if a declaration does not have a unique name. `ast::Ast` defines the
 AST type. The `parse` method defines the parser.
 
-### TODO
-
-- [ ] Implement a variant of `choice` that counts and restricts parser usage.
-- [ ] Use the new variant of `choice` inside `ast::route::Route::parse`.
+* `ast::Ast` contains the root AST type.
+* `ast::Ast::parse` defines the AST parser.
+* `parser::mod` contains parser combinators.
+* `parser::case` contains parsers for common casing styles.
+* `parser::char` contains parsers for common characters.
+* `parser::char_range` contains parsers for common character ranges.
 
 ## Type checker
 
@@ -340,7 +388,12 @@ can be found in `ast::Ast::check`.
 
 ## Generation
 
-Generation turns the AST into TypeScript code.
+Generation turns the AST into code:
+
+* `generator::graphql` generates GraphQL queries.
+* `generator::typescript` generates TypeScript code.
+* `generator::prisma` generates Prisma schemas.
+* `generator::printer` contains common code for pretty printing.
 
 # Development
 
