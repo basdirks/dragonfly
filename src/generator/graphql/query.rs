@@ -6,12 +6,15 @@ use {
         selection::Selection,
         value::Const,
     },
-    crate::generator::printer::{
-        common::{
-            comma_separated,
-            space_separated,
+    crate::{
+        ast::query::Query as AstQuery,
+        generator::printer::{
+            common::{
+                comma_separated,
+                space_separated,
+            },
+            print::Print,
         },
-        print::Print,
     },
     std::fmt::Display,
 };
@@ -81,6 +84,12 @@ impl Print for Query {
         }
 
         query
+    }
+}
+
+impl From<AstQuery> for Query {
+    fn from(_query: AstQuery) -> Self {
+        todo!()
     }
 }
 

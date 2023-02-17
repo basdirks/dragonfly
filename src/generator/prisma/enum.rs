@@ -1,4 +1,7 @@
-use std::fmt::Display;
+use {
+    crate::ast::r#enum::Enum as AstEnum,
+    std::fmt::Display,
+};
 
 /// An enumerated type.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -26,6 +29,17 @@ impl Display for Enum {
     }
 }
 
+impl From<AstEnum> for Enum {
+    fn from(
+        AstEnum {
+            name,
+            variants: enumerators,
+        }: AstEnum
+    ) -> Self {
+        Self { name, enumerators }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -43,6 +57,31 @@ mod tests {
 
         assert_eq!(
             enum_.to_string(),
+            "\
+enum Color {
+  Red
+  Green
+  Blue
+}"
+        );
+    }
+
+    #[test]
+    fn test_from() {
+        let (ast_enum, _) = AstEnum::parse(
+            "\
+enum Color {
+    Red
+    Green
+    Blue
+}",
+        )
+        .unwrap();
+
+        let r#enum = Enum::from(ast_enum);
+
+        assert_eq!(
+            r#enum.to_string(),
             "\
 enum Color {
   Red

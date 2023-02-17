@@ -3,12 +3,24 @@ use {
         attribute,
         value::Function,
     },
-    crate::generator::printer::{
-        common::{
-            newline_separated,
-            space_separated,
+    crate::{
+        ast::{
+            model::{
+                field::Field as AstField,
+                Model as AstModel,
+            },
+            r#type::{
+                Scalar as AstScalar,
+                Type as AstType,
+            },
         },
-        indent,
+        generator::printer::{
+            common::{
+                newline_separated,
+                space_separated,
+            },
+            indent,
+        },
     },
     std::fmt::Display,
 };
@@ -30,6 +42,19 @@ impl Display for FieldType {
         match self {
             Self::Name(name) => write!(f, "{name}"),
             Self::Function(function) => write!(f, "{function}"),
+        }
+    }
+}
+
+impl From<AstScalar> for FieldType {
+    fn from(scalar: AstScalar) -> Self {
+        match scalar {
+            AstScalar::Boolean => Self::Name("Boolean".to_string()),
+            AstScalar::DateTime => Self::Name("DateTime".to_string()),
+            AstScalar::Float => Self::Name("Float".to_string()),
+            AstScalar::Int => Self::Name("Int".to_string()),
+            AstScalar::Reference(name) => Self::Name(name),
+            AstScalar::String => Self::Name("String".to_string()),
         }
     }
 }
@@ -110,6 +135,34 @@ impl Display for Model {
         };
 
         write!(f, "model {name} {{\n{fields}{attributes}\n}}")
+    }
+}
+
+impl From<AstModel> for Model {
+    fn from(AstModel { name, fields }: AstModel) -> Self {
+        let fields = fields
+            .into_iter()
+            .map(|(_, AstField { r#type, name })| {
+                let (array, scalar) = match r#type {
+                    AstType::Array(scalar) => (true, scalar),
+                    AstType::Scalar(scalar) => (false, scalar),
+                };
+
+                Field {
+                    name,
+                    array,
+                    required: true,
+                    r#type: scalar.into(),
+                    attributes: vec![],
+                }
+            })
+            .collect();
+
+        Self {
+            name,
+            fields,
+            attributes: vec![],
+        }
     }
 }
 
