@@ -1,47 +1,21 @@
 use {
     super::r#type::Type,
-    crate::ast::model::{
-        field::Field,
-        Model,
+    crate::{
+        ast::model::{
+            field::Field,
+            Model,
+        },
+        generator::printer::{
+            common::comma_separated,
+            indent,
+            print::Print,
+        },
     },
     std::fmt::Display,
 };
 
 /// An interface property.
-///
-/// # Examples
-///
-/// ```rust
-/// use dragonfly::{
-///     ast::r#type::Scalar,
-///     generator::typescript::{
-///         interface::Property,
-///         r#type::{
-///             Keyword,
-///             Type,
-///         },
-///     },
-/// };
-///
-/// let code = Property {
-///     identifier: "foo".to_string(),
-///     r#type: Type::Keyword(Keyword::String),
-///     optional: false,
-/// }
-/// .to_string();
-///
-/// assert_eq!(code, "foo: string;");
-///
-/// let code = Property {
-///     identifier: "bar".to_string(),
-///     r#type: Type::Array(Box::new(Type::Keyword(Keyword::String))),
-///     optional: true,
-/// }
-/// .to_string();
-///
-/// assert_eq!(code, "bar?: Array<string>;");
-/// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Property {
     /// The name of the property. Usually camelCase.
     pub identifier: String,
@@ -51,62 +25,26 @@ pub struct Property {
     pub optional: bool,
 }
 
-// TODO: Replace with pretty printer.
-impl Display for Property {
-    fn fmt(
+impl Print for Property {
+    fn print(
         &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+        level: usize,
+    ) -> String {
         let Self {
             identifier,
             r#type: type_reference,
             optional,
         } = self;
 
-        if *optional {
-            write!(f, "{identifier}?: {type_reference};")
-        } else {
-            write!(f, "{identifier}: {type_reference};")
-        }
+        let optional = if *optional { "?" } else { "" };
+        let indent = indent::typescript(level);
+
+        format!("{indent}{identifier}{optional}: {type_reference};")
     }
 }
 
 /// An expression with type arguments.
-///
-/// # Examples
-///
-/// ```rust
-/// use dragonfly::{
-///     ast::r#type::Scalar,
-///     generator::typescript::{
-///         interface::ExpressionWithTypeArguments,
-///         r#type::{
-///             Keyword,
-///             Type,
-///         },
-///     },
-/// };
-///
-/// let code = ExpressionWithTypeArguments {
-///     identifier: "Foo".to_string(),
-///     type_arguments: vec![],
-/// }
-/// .to_string();
-///
-/// assert_eq!(code, "Foo");
-///
-/// let code = ExpressionWithTypeArguments {
-///     identifier: "Bar".to_string(),
-///     type_arguments: vec![
-///         Type::Keyword(Keyword::String),
-///         Type::Keyword(Keyword::Number),
-///     ],
-/// }
-/// .to_string();
-///
-/// assert_eq!(code, "Bar<string, number>");
-/// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExpressionWithTypeArguments {
     /// The name of the expression. Usually PascalCase.
     pub identifier: String,
@@ -127,13 +65,7 @@ impl Display for ExpressionWithTypeArguments {
         if type_arguments.is_empty() {
             write!(f, "{identifier}")
         } else {
-            let type_arguments = type_arguments
-                .iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", ");
-
-            write!(f, "{identifier}<{type_arguments}>")
+            write!(f, "{identifier}<{}>", comma_separated(type_arguments))
         }
     }
 }
@@ -173,7 +105,7 @@ impl Display for ExpressionWithTypeArguments {
 ///
 /// assert_eq!(code, "U extends string, number");
 /// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TypeParameter {
     /// The name of the type parameter.
     pub identifier: String,
@@ -197,87 +129,14 @@ impl Display for TypeParameter {
             write!(
                 f,
                 "{identifier} extends {}",
-                type_references
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                comma_separated(type_references)
             )
         }
     }
 }
 
 /// An interface declaration.
-///
-/// Only supports properties, so does *not* support methods, getters, setters,
-/// call signatures, construct signatures, or index signatures.
-///
-/// # Examples
-///
-/// ```rust
-/// use dragonfly::{
-///     ast::r#type::Scalar,
-///     generator::typescript::{
-///         interface::{
-///             ExpressionWithTypeArguments,
-///             Interface,
-///             Property,
-///             TypeParameter,
-///         },
-///         r#type::{
-///             Keyword,
-///             Type,
-///         },
-///     },
-/// };
-///
-/// let code = Interface {
-///     extends: vec![ExpressionWithTypeArguments {
-///         identifier: "Bar".to_string(),
-///         type_arguments: vec![
-///             Type::Keyword(Keyword::String),
-///             Type::Keyword(Keyword::Number),
-///         ],
-///     }],
-///     identifier: "Foo".to_string(),
-///     type_parameters: vec![
-///         TypeParameter {
-///             identifier: "T".to_string(),
-///             type_references: vec![],
-///         },
-///         TypeParameter {
-///             identifier: "U".to_string(),
-///             type_references: vec![Type::Keyword(Keyword::String)],
-///         },
-///     ],
-///     properties: vec![
-///         Property {
-///             identifier: "bar".to_string(),
-///             r#type: Type::Array(Box::new(Type::TypeReference {
-///                 identifier: "Bar".to_string(),
-///                 type_references: vec![],
-///             })),
-///             optional: true,
-///         },
-///         Property {
-///             identifier: "baz".to_string(),
-///             r#type: Type::Keyword(Keyword::Number),
-///             optional: false,
-///         },
-///     ],
-/// }
-/// .to_string();
-///
-/// assert_eq!(
-///     code,
-///     "\
-/// interface Foo<T, U extends string> extends Bar<string, number> {
-///     bar?: Array<Bar>;
-///     baz: number;
-/// }"
-/// );
-/// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Interface {
     /// The types that the interface extends.
     ///
@@ -327,12 +186,11 @@ pub struct Interface {
     pub properties: Vec<Property>,
 }
 
-// TODO: Replace with pretty printer.
-impl Display for Interface {
-    fn fmt(
+impl Print for Interface {
+    fn print(
         &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+        level: usize,
+    ) -> String {
         let Self {
             identifier: name,
             extends,
@@ -340,41 +198,29 @@ impl Display for Interface {
             properties,
         } = self;
 
+        let indent = indent::typescript(level);
+
         let extends = if extends.is_empty() {
             String::new()
         } else {
-            format!(
-                " extends {}",
-                extends
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
+            format!(" extends {}", comma_separated(extends))
         };
 
         let parameters = if parameters.is_empty() {
             String::new()
         } else {
-            format!(
-                "<{}>",
-                parameters
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
+            format!("<{}>", comma_separated(parameters))
         };
 
         let properties = properties
             .iter()
-            .map(ToString::to_string)
+            .map(|property| property.print(level + 1))
             .collect::<Vec<_>>()
-            .join("\n    ");
+            .join("\n");
 
-        write!(
-            f,
-            "interface {name}{parameters}{extends} {{\n    {properties}\n}}"
+        format!(
+            "{indent}interface {name}{parameters}{extends} \
+             {{\n{properties}\n{indent}}}",
         )
     }
 }
@@ -417,7 +263,63 @@ mod tests {
     };
 
     #[test]
-    fn test_display_interface() {
+    fn test_display_expression_with_type_arguments() {
+        assert_eq!(
+            ExpressionWithTypeArguments {
+                identifier: "Foo".to_string(),
+                type_arguments: vec![],
+            }
+            .to_string(),
+            "Foo"
+        );
+
+        assert_eq!(
+            ExpressionWithTypeArguments {
+                identifier: "Foo".to_string(),
+                type_arguments: vec![Type::Keyword(Keyword::String)],
+            }
+            .to_string(),
+            "Foo<string>"
+        );
+
+        assert_eq!(
+            ExpressionWithTypeArguments {
+                identifier: "Foo".to_string(),
+                type_arguments: vec![
+                    Type::Keyword(Keyword::String),
+                    Type::Keyword(Keyword::Number),
+                ],
+            }
+            .to_string(),
+            "Foo<string, number>"
+        );
+    }
+
+    #[test]
+    fn test_print_property() {
+        assert_eq!(
+            Property {
+                identifier: "foo".to_string(),
+                r#type: Type::Keyword(Keyword::String),
+                optional: false,
+            }
+            .print(0),
+            "foo: string;"
+        );
+
+        assert_eq!(
+            Property {
+                identifier: "foo".to_string(),
+                r#type: Type::Keyword(Keyword::String),
+                optional: true,
+            }
+            .print(0),
+            "foo?: string;"
+        );
+    }
+
+    #[test]
+    fn test_print_interface() {
         assert_eq!(
             Interface {
                 extends: vec![ExpressionWithTypeArguments {
@@ -456,7 +358,7 @@ mod tests {
                     },
                 ],
             }
-            .to_string(),
+            .print(0),
             "\
 interface Image<T> extends Resource<T> {
     title: string;
@@ -477,7 +379,7 @@ model Image {
 
         let (model, _) = Model::parse(input).unwrap();
         let interface = Interface::from(model);
-        let code = interface.to_string();
+        let code = interface.print(0);
 
         assert_eq!(
             code,

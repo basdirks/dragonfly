@@ -7,7 +7,10 @@ use {
         value::Const,
     },
     crate::generator::printer::{
-        indent,
+        common::{
+            comma_separated,
+            space_separated,
+        },
         print::Print,
     },
     std::fmt::Display,
@@ -38,15 +41,7 @@ impl Display for Variable {
         }
 
         if !self.directives.is_empty() {
-            write!(
-                f,
-                " {}",
-                self.directives
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            )?;
+            write!(f, " {}", space_separated(&self.directives))?;
         }
 
         Ok(())
@@ -74,37 +69,15 @@ impl Print for Query {
         let mut query = format!("query {}", self.name);
 
         if !self.variables.is_empty() {
-            query.push_str(&format!(
-                "({})",
-                self.variables
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ));
+            query.push_str(&format!("({})", comma_separated(&self.variables)));
         }
 
         if !self.directives.is_empty() {
-            query.push_str(&format!(
-                " {}",
-                self.directives
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            ));
+            query.push_str(&format!(" {}", space_separated(&self.directives)));
         }
 
         if !self.selections.is_empty() {
-            query.push_str(&format!(
-                " {{\n{}\n{}}}",
-                self.selections
-                    .iter()
-                    .map(|selection| selection.print(level + 1))
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-                indent::graphql(level)
-            ));
+            query.push_str(&Selection::print_multiple(&self.selections, level));
         }
 
         query
@@ -238,8 +211,8 @@ mod tests {
                 ],
             }
             .print(0),
-            "query imagesByCountryName($country: String!, $limit: Int = 10) \
-             @bar @baz {
+            "\
+query imagesByCountryName($country: String!, $limit: Int = 10) @bar @baz {
   images(country: $country) {
     url @deprecated(reason: \"Use `link` instead.\")
     link

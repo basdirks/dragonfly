@@ -59,15 +59,7 @@ impl Print for Inline {
             output.push_str(&format!(" {directive}"));
         }
 
-        output.push_str(&format!(
-            " {{\n{}\n{}}}",
-            self.selections
-                .iter()
-                .map(|selection| selection.print(level + 1))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            indent::graphql(level)
-        ));
+        output.push_str(&Selection::print_multiple(&self.selections, level));
 
         output
     }
@@ -104,11 +96,11 @@ mod tests {
             }],
         };
 
-        assert_eq!(spread.print(0), "...daboi @is(a: \"good boy.\")",);
+        assert_eq!(spread.print(0), "...daboi @is(a: \"good boy.\")");
     }
 
     #[test]
-    fn test_display_inline() {
+    fn test_print_inline() {
         let inline = Inline {
             type_condition: "Foo".to_string(),
             directives: vec![],

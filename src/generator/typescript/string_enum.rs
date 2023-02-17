@@ -1,5 +1,12 @@
 use {
-    crate::ast::r#enum::Enum as AstEnum,
+    crate::{
+        ast::r#enum::Enum as AstEnum,
+        generator::printer::{
+            common::newline_separated,
+            indent,
+            print::Print,
+        },
+    },
     std::fmt::Display,
 };
 
@@ -23,6 +30,27 @@ pub struct Variant {
     name: String,
     /// The value of the variant. May differ from the name.
     value: String,
+}
+
+impl Print for Variant {
+    fn print(
+        &self,
+        level: usize,
+    ) -> String {
+        let Self { name, value } = self;
+        let indent = indent::typescript(level);
+
+        format!("{indent}{name} = \"{value}\",")
+    }
+}
+
+impl Display for Variant {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        write!(f, "{} = \"{}\"", self.name, self.value)
+    }
 }
 
 /// A TypeScript enum declaration.
@@ -56,24 +84,26 @@ pub struct StringEnum {
     variants: Vec<Variant>,
 }
 
-// TODO: Replace with pretty printer.
-impl Display for StringEnum {
-    fn fmt(
+impl Print for StringEnum {
+    fn print(
         &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+        level: usize,
+    ) -> String {
         let Self {
             identifier: name,
             variants,
         } = self;
 
-        let variants = variants
-            .iter()
-            .map(|Variant { name, value }| format!("    {name} = \"{value}\","))
-            .collect::<Vec<_>>()
-            .join("\n");
+        let indent = indent::typescript(level);
 
-        write!(f, "enum {name} {{\n{variants}\n}}")
+        let variants = newline_separated(
+            &variants
+                .iter()
+                .map(|variant| variant.print(level + 1))
+                .collect::<Vec<_>>(),
+        );
+
+        format!("{indent}enum {name} {{\n{variants}\n{indent}}}")
     }
 }
 
@@ -147,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn test_display_enum() {
+    fn test_print_enum() {
         assert_eq!(
             StringEnum {
                 identifier: "CountryName".to_string(),
@@ -178,16 +208,15 @@ mod tests {
                     },
                 ]
             }
-            .to_string(),
-            "\
-enum CountryName {
-    France = \"France\",
-    Germany = \"Germany\",
-    Italy = \"Italy\",
-    Spain = \"Spain\",
-    UnitedKingdom = \"UnitedKingdom\",
-    UnitedStates = \"UnitedStates\",
-}"
+            .print(1),
+            "    enum CountryName {
+        France = \"France\",
+        Germany = \"Germany\",
+        Italy = \"Italy\",
+        Spain = \"Spain\",
+        UnitedKingdom = \"UnitedKingdom\",
+        UnitedStates = \"UnitedStates\",
+    }"
         );
     }
 }

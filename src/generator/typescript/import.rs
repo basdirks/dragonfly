@@ -1,4 +1,7 @@
-use std::fmt::Display;
+use {
+    crate::generator::printer::common::comma_separated,
+    std::fmt::Display,
+};
 
 /// A named import specifier.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -61,11 +64,7 @@ impl Display for Import {
     ) -> std::fmt::Result {
         match self {
             Self::Named { module, specifiers } => {
-                let specifiers = specifiers
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ");
+                let specifiers = comma_separated(specifiers);
 
                 write!(f, "import {{ {specifiers} }} from \"{module}\";")
             }

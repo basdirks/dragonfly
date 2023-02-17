@@ -1,20 +1,26 @@
 use {
-    crate::ast::r#type::{
-        Scalar as AstScalarType,
-        Type as AstType,
+    crate::{
+        ast::r#type::{
+            Scalar as AstScalarType,
+            Type as AstType,
+        },
+        generator::printer::common::{
+            comma_separated,
+            separated,
+        },
     },
     std::fmt::Display,
 };
 
 /// A JavaScript literal.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Literal {
     /// A BigInt literal: a number followed by `n`.
     BigInt(String),
     /// A boolean literal: `true` or `false`.
     Boolean(bool),
     /// A number literal.
-    Number(f64),
+    Number(String),
     /// A string literal: characters surrounded by double quotes.
     String(String),
 }
@@ -87,15 +93,51 @@ impl Display for Keyword {
     }
 }
 
+/// A function argument.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FunctionArgument {
+    /// The name of the argument.
+    pub name: String,
+    /// The type of the argument.
+    pub r#type: Type,
+}
+
+impl Display for FunctionArgument {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        write!(f, "{}: {}", self.name, self.r#type)
+    }
+}
+
+/// An object literal property.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ObjectLiteralProperty {
+    /// The name of the property.
+    pub name: String,
+    /// The type of the property.
+    pub r#type: Type,
+}
+
+impl Display for ObjectLiteralProperty {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        write!(f, "{}: {}", self.name, self.r#type)
+    }
+}
+
 /// A TypeScript type.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Type {
     /// An array type.
     Array(Box<Type>),
     /// A function type.
     Function {
         /// The function arguments.
-        arguments: Vec<(String, Type)>,
+        arguments: Vec<FunctionArgument>,
         /// The return type.
         return_type: Box<Type>,
     },
@@ -106,7 +148,7 @@ pub enum Type {
     /// A type literal.
     Literal(Literal),
     /// An object literal.
-    ObjectLiteral(Vec<(String, Type)>),
+    ObjectLiteral(Vec<ObjectLiteralProperty>),
     /// A tuple of types.
     Tuple(Vec<Type>),
     /// A type reference.
@@ -120,7 +162,6 @@ pub enum Type {
     Union(Vec<Type>),
 }
 
-// TODO: Replace with pretty printer.
 impl Display for Type {
     fn fmt(
         &self,
@@ -132,16 +173,7 @@ impl Display for Type {
                 arguments,
                 return_type,
             } => {
-                write!(
-                    f,
-                    "({}) => {}",
-                    arguments
-                        .iter()
-                        .map(|(name, r#type)| format!("{name}: {type}"))
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                    return_type
-                )
+                write!(f, "({}) => {}", comma_separated(arguments), return_type)
             }
             Self::Keyword(keyword) => write!(f, "{keyword}"),
             Self::TypeReference {
@@ -155,61 +187,22 @@ impl Display for Type {
                     if type_references.is_empty() {
                         String::new()
                     } else {
-                        format!(
-                            "<{}>",
-                            type_references
-                                .iter()
-                                .map(ToString::to_string)
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        )
+                        format!("<{}>", comma_separated(type_references))
                     }
                 )
             }
             Self::Intersection(types) => {
-                write!(
-                    f,
-                    "{}",
-                    types
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(" & ")
-                )
+                write!(f, "{}", separated(types, " & "))
             }
             Self::Literal(literal) => write!(f, "{literal}"),
             Self::ObjectLiteral(properties) => {
-                write!(
-                    f,
-                    "{{ {} }}",
-                    properties
-                        .iter()
-                        .map(|(name, r#type)| format!("{name}: {type}"))
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
+                write!(f, "{{ {} }}", comma_separated(properties))
             }
             Self::Tuple(types) => {
-                write!(
-                    f,
-                    "[{}]",
-                    types
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
+                write!(f, "[{}]", comma_separated(types))
             }
             Self::Union(types) => {
-                write!(
-                    f,
-                    "{}",
-                    types
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(" | ")
-                )
+                write!(f, "{}", separated(types, " | "))
             }
         }
     }
@@ -287,23 +280,23 @@ mod tests {
         assert_eq!(
             Type::Function {
                 arguments: vec![
-                    (
-                        "name".to_string(),
-                        Type::TypeReference {
+                    FunctionArgument {
+                        name: "name".to_string(),
+                        r#type: Type::TypeReference {
                             identifier: "Partial".to_string(),
                             type_references: vec![Type::TypeReference {
                                 identifier: "Image".to_string(),
                                 type_references: vec![],
                             }]
                         }
-                    ),
-                    (
-                        "countryName".to_string(),
-                        Type::TypeReference {
+                    },
+                    FunctionArgument {
+                        name: "countryName".to_string(),
+                        r#type: Type::TypeReference {
                             identifier: "CountryName".to_string(),
                             type_references: vec![],
                         }
-                    )
+                    }
                 ]
                 .into_iter()
                 .collect(),
@@ -343,8 +336,16 @@ mod tests {
 
         assert_eq!(Type::Literal(Literal::Boolean(true)).to_string(), "true");
         assert_eq!(Type::Literal(Literal::Boolean(false)).to_string(), "false");
-        assert_eq!(Type::Literal(Literal::Number(1.0)).to_string(), "1");
-        assert_eq!(Type::Literal(Literal::Number(1.5)).to_string(), "1.5");
+
+        assert_eq!(
+            Type::Literal(Literal::Number("1.0".to_string())).to_string(),
+            "1.0"
+        );
+
+        assert_eq!(
+            Type::Literal(Literal::Number("1.5".to_string())).to_string(),
+            "1.5"
+        );
 
         assert_eq!(
             Type::Literal(Literal::String("hello".to_string())).to_string(),
@@ -401,35 +402,35 @@ mod tests {
         assert_eq!(
             Type::ObjectLiteral(
                 vec![
-                    (
-                        "country".to_string(),
-                        Type::ObjectLiteral(
+                    ObjectLiteralProperty {
+                        name: "country".to_string(),
+                        r#type: Type::ObjectLiteral(
                             vec![
-                                (
-                                    "name".to_string(),
-                                    Type::TypeReference {
+                                ObjectLiteralProperty {
+                                    name: "name".to_string(),
+                                    r#type: Type::TypeReference {
                                         identifier: "CountryName".to_string(),
                                         type_references: vec![],
                                     }
-                                ),
-                                (
-                                    "languages".to_string(),
-                                    Type::Array(Box::new(Type::Keyword(
-                                        Keyword::String
-                                    )))
-                                )
+                                },
+                                ObjectLiteralProperty {
+                                    name: "languages".to_string(),
+                                    r#type: Type::Array(Box::new(
+                                        Type::Keyword(Keyword::String)
+                                    ))
+                                }
                             ]
                             .into_iter()
                             .collect(),
                         )
-                    ),
-                    (
-                        "tags".to_string(),
-                        Type::Array(Box::new(Type::TypeReference {
+                    },
+                    ObjectLiteralProperty {
+                        name: "tags".to_string(),
+                        r#type: Type::Array(Box::new(Type::TypeReference {
                             identifier: "Tag".to_string(),
                             type_references: vec![],
                         }))
-                    )
+                    }
                 ]
                 .into_iter()
                 .collect(),
@@ -529,8 +530,15 @@ mod tests {
 
     #[test]
     fn test_display_literal_number() {
-        assert_eq!(Type::Literal(Literal::Number(1.0)).to_string(), "1");
-        assert_eq!(Type::Literal(Literal::Number(1.1)).to_string(), "1.1");
+        assert_eq!(
+            Type::Literal(Literal::Number("1.0".to_string())).to_string(),
+            "1.0"
+        );
+
+        assert_eq!(
+            Type::Literal(Literal::Number("1.1".to_string())).to_string(),
+            "1.1"
+        );
     }
 
     #[test]

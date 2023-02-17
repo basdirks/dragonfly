@@ -1,5 +1,6 @@
 use {
     super::value::Value,
+    crate::generator::printer::common::comma_separated,
     std::fmt::Display,
 };
 
@@ -38,15 +39,7 @@ impl Display for Directive {
         write!(f, "@{}", self.name)?;
 
         if !self.arguments.is_empty() {
-            write!(
-                f,
-                "({})",
-                self.arguments
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )?;
+            write!(f, "({})", comma_separated(&self.arguments))?;
         }
 
         Ok(())

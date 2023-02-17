@@ -1,4 +1,7 @@
-use std::fmt::Display;
+use {
+    crate::generator::printer::common::comma_separated,
+    std::fmt::Display,
+};
 
 /// A constant object field.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -50,27 +53,11 @@ impl Display for Const {
                 write!(f, "{value}")
             }
             Self::List(values) => {
-                write!(
-                    f,
-                    "[{}]",
-                    values
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
+                write!(f, "[{}]", comma_separated(values))
             }
             Self::Null => write!(f, "null"),
             Self::Object(fields) => {
-                write!(
-                    f,
-                    "{{{}}}",
-                    fields
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
+                write!(f, "{{{}}}", comma_separated(fields))
             }
             Self::String(value) => write!(f, "\"{value}\""),
         }
@@ -132,27 +119,11 @@ impl Display for Value {
                 write!(f, "${value}")
             }
             Self::List(values) => {
-                write!(
-                    f,
-                    "[{}]",
-                    values
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
+                write!(f, "[{}]", comma_separated(values))
             }
             Self::Null => write!(f, "null"),
             Self::Object(fields) => {
-                write!(
-                    f,
-                    "{{{}}}",
-                    fields
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
+                write!(f, "{{{}}}", comma_separated(fields))
             }
             Self::String(value) => write!(f, "\"{value}\""),
         }

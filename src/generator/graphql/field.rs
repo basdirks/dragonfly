@@ -7,6 +7,7 @@ use {
         selection::Selection,
     },
     crate::generator::printer::{
+        common::comma_separated,
         indent,
         print::Print,
     },
@@ -34,14 +35,7 @@ impl Print for Field {
             format!("{}{}", indent::graphql(level), self.name.clone());
 
         if !self.arguments.is_empty() {
-            output.push_str(&format!(
-                "({})",
-                self.arguments
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ));
+            output.push_str(&format!("({})", comma_separated(&self.arguments)));
         }
 
         for directive in &self.directives {
@@ -49,15 +43,8 @@ impl Print for Field {
         }
 
         if !self.selections.is_empty() {
-            output.push_str(&format!(
-                " {{\n{}\n{}}}",
-                self.selections
-                    .iter()
-                    .map(|selection| selection.print(level + 1))
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-                indent::graphql(level)
-            ));
+            output
+                .push_str(&Selection::print_multiple(&self.selections, level));
         }
 
         output
@@ -118,7 +105,8 @@ mod tests {
 
         assert_eq!(
             field.print(0),
-            "images(after: $endCursor) {
+            "\
+images(after: $endCursor) {
   edges {
     node {
       id @id

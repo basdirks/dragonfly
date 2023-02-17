@@ -342,11 +342,6 @@ can be found in `ast::Ast::check`.
 
 Generation turns the AST into TypeScript code.
 
-### TODO
-
-- [ ] Replace `Display for generator::*` with a proper pretty printer.
-- [ ] Support extended parameters in `generator::typescript::ast::Interface`.
-
 # Development
 
 Parsers do not concern themselves with their surrounding whitespace. Whitespace

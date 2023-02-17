@@ -6,7 +6,10 @@ use {
             Spread,
         },
     },
-    crate::generator::printer::print::Print,
+    crate::generator::printer::{
+        indent,
+        print::Print,
+    },
 };
 
 /// A selection node.
@@ -18,6 +21,92 @@ pub enum Selection {
     FragmentSpread(Spread),
     /// An inline fragment.
     InlineFragment(Inline),
+}
+
+impl Selection {
+    /// Print multiple selections.
+    ///
+    /// # Arguments
+    ///
+    /// * `selections` - The selections to print.
+    /// * `level` - The indentation level.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::{
+    ///     graphql::{
+    ///         directive::Argument,
+    ///         field::Field,
+    ///         fragment::{
+    ///             Inline,
+    ///             Spread,
+    ///         },
+    ///         selection::Selection,
+    ///         value::Value,
+    ///     },
+    ///     printer::print::Print,
+    /// };
+    ///
+    /// let selections = vec![
+    ///     Selection::Field(Field {
+    ///         name: "images".to_string(),
+    ///         arguments: vec![Argument {
+    ///             name: "after".to_string(),
+    ///             value: Value::Variable("endCursor".to_string()),
+    ///         }],
+    ///         directives: vec![],
+    ///         selections: vec![Selection::Field(Field {
+    ///             name: "id".to_string(),
+    ///             arguments: vec![],
+    ///             directives: vec![],
+    ///             selections: vec![],
+    ///         })],
+    ///     }),
+    ///     Selection::FragmentSpread(Spread {
+    ///         name: "foo".to_string(),
+    ///         directives: vec![],
+    ///     }),
+    ///     Selection::InlineFragment(Inline {
+    ///         type_condition: "Image".to_string(),
+    ///         directives: vec![],
+    ///         selections: vec![Selection::Field(Field {
+    ///             name: "id".to_string(),
+    ///             arguments: vec![],
+    ///             directives: vec![],
+    ///             selections: vec![],
+    ///         })],
+    ///     }),
+    /// ];
+    ///
+    /// assert_eq!(
+    ///     Selection::print_multiple(&selections, 0),
+    ///     " {
+    ///   images(after: $endCursor) {
+    ///     id
+    ///   }
+    ///   ...foo
+    ///   ... on Image {
+    ///     id
+    ///   }
+    /// }"
+    /// );
+    /// ```
+    #[must_use]
+    pub fn print_multiple(
+        selections: &[Self],
+        level: usize,
+    ) -> String {
+        format!(
+            " {{\n{}\n{}}}",
+            selections
+                .iter()
+                .map(|selection| selection.print(level + 1))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            indent::graphql(level)
+        )
+    }
 }
 
 impl Print for Selection {
@@ -81,7 +170,8 @@ mod tests {
 
         assert_eq!(
             inline.print(0),
-            "... on Type {
+            "\
+... on Type {
 
 }"
         );
