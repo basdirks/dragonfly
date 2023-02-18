@@ -39,14 +39,11 @@ impl Model {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Field,
-    ///         Model,
-    ///         Scalar,
-    ///         Type,
-    ///     },
-    ///     std::collections::HashMap,
+    /// use dragonfly::ast::{
+    ///     Field,
+    ///     Model,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "model Foo {
@@ -55,35 +52,33 @@ impl Model {
     ///     qux: [Bar]
     /// }";
     ///
-    /// let mut fields = HashMap::new();
-    ///
-    /// fields.insert(
-    ///     "bar".to_string(),
-    ///     Field {
-    ///         name: "bar".to_string(),
-    ///         r#type: Type::Scalar(Scalar::String),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "baz".to_string(),
-    ///     Field {
-    ///         name: "baz".to_string(),
-    ///         r#type: Type::Scalar(Scalar::Int),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "qux".to_string(),
-    ///     Field {
-    ///         name: "qux".to_string(),
-    ///         r#type: Type::Array(Scalar::Reference("Bar".to_string())),
-    ///     },
-    /// );
-    ///
     /// let expected = Model {
     ///     name: "Foo".to_string(),
-    ///     fields,
+    ///     fields: vec![
+    ///         (
+    ///             "bar".to_string(),
+    ///             Field {
+    ///                 name: "bar".to_string(),
+    ///                 r#type: Type::Scalar(Scalar::String),
+    ///             },
+    ///         ),
+    ///         (
+    ///             "baz".to_string(),
+    ///             Field {
+    ///                 name: "baz".to_string(),
+    ///                 r#type: Type::Scalar(Scalar::Int),
+    ///             },
+    ///         ),
+    ///         (
+    ///             "qux".to_string(),
+    ///             Field {
+    ///                 name: "qux".to_string(),
+    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_string())),
+    ///             },
+    ///         ),
+    ///     ]
+    ///     .into_iter()
+    ///     .collect(),
     /// };
     ///
     /// assert_eq!(Model::parse(input), Ok((expected, "".to_string())));

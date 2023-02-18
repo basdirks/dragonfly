@@ -305,12 +305,9 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         QueryCondition,
-    ///         QueryWhere,
-    ///     },
-    ///     std::collections::HashSet,
+    /// use dragonfly::ast::{
+    ///     QueryCondition,
+    ///     QueryWhere,
     /// };
     ///
     /// let where_clause = QueryWhere::Node {
@@ -341,13 +338,13 @@ impl Where {
     ///     ],
     /// };
     ///
-    /// let mut expected = HashSet::new();
-    ///
-    /// expected.insert("foo".to_string());
-    /// expected.insert("bar".to_string());
-    /// expected.insert("baz".to_string());
-    ///
-    /// assert_eq!(where_clause.references(), expected);
+    /// assert_eq!(
+    ///     where_clause.references(),
+    ///     vec!["foo", "bar", "baz"]
+    ///         .iter()
+    ///         .map(ToString::to_string)
+    ///         .collect()
+    /// );
     /// ```
     pub fn references(&self) -> HashSet<String> {
         let mut references = HashSet::new();

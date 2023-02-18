@@ -17,6 +17,7 @@ pub use self::{
         Type,
     },
     route::Route,
+    type_error::TypeError,
 };
 use {
     crate::{
@@ -47,102 +48,8 @@ pub mod query;
 pub mod route;
 /// Types used inside models and queries.
 pub mod r#type;
-
-/// A type check error.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum TypeError {
-    /// The schema of a query is empty. This means that this query would not
-    /// return any data.
-    EmptyQuerySchema {
-        /// The name of the empty query.
-        query_name: String,
-    },
-    /// The structure of the schema of a query does not match the return type
-    /// of the query.
-    IncompatibleQuerySchema {
-        /// The actual, inferred return type of the query.
-        actual: Type,
-        /// The expected return type of the query.
-        expected: Type,
-        /// The name of the query.
-        query_name: String,
-    },
-    /// The type of a condition (as given by the corresponding argument) does
-    /// not match the type of the field.
-    IncompatibleQueryConditionType {
-        /// The name of the query.
-        query_name: String,
-        /// The condition that was not satisfied.
-        condition: QueryCondition,
-        /// The type of the condition as given by the argument.
-        expected: Type,
-    },
-    /// The structure of a where clause of a query does not match the structure
-    /// of the model and its relations.
-    IncompatibleQueryWhere {
-        /// The name of the query.
-        query_name: String,
-    },
-    /// The name of the root node of the where clause of a query does not match
-    /// the name of the root node of the schema.
-    IncompatibleQueryRootNodes {
-        /// The name of the schema root node.
-        schema_root: String,
-        /// The name of the query root node.
-        where_root: String,
-        /// The name of the query.
-        query_name: String,
-    },
-    /// The type of an argument may not be an array or a model.
-    InvalidQueryArgumentType {
-        /// The argument that has an invalid type.
-        argument: QueryArgument,
-        /// The name of the query.
-        query_name: String,
-    },
-    /// The type of a field of a model is undefined.
-    UnknownModelFieldType {
-        /// The field whose type is undefined.
-        field: Field,
-        /// The name of the model.
-        model_name: String,
-    },
-    /// The type of a query argument is undefined.
-    UnknownQueryArgumentType {
-        /// The argument whose type is undefined.
-        argument: QueryArgument,
-        /// The name of the query.
-        query_name: String,
-    },
-    /// The return type of a query is undefined.
-    UnknownQueryReturnType {
-        /// The name of the query.
-        query_name: String,
-        /// The return type of the query.
-        r#type: Type,
-    },
-    /// A condition mentions an undefined argument.
-    UnknownQueryConditionName {
-        /// The condition that mentions an undefined argument.
-        condition: QueryCondition,
-        /// The name of the query.
-        query_name: String,
-    },
-    /// The root component of a route is undefined.
-    UnknownRouteRoot {
-        /// The name of the route.
-        route_name: String,
-        /// The name of the component.
-        root: String,
-    },
-    /// An argument of a query is not used in the where clause.
-    UnusedQueryArgument {
-        /// The argument that is not used.
-        argument: QueryArgument,
-        /// The name of the query.
-        query_name: String,
-    },
-}
+/// Type checking errors.
+pub mod type_error;
 
 /// A declaration of a component, enum, model, query, or route.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -211,17 +118,14 @@ impl Declaration {
     /// ```
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Declaration,
-    ///         Field,
-    ///         Model,
-    ///         Query,
-    ///         Route,
-    ///         Scalar,
-    ///         Type,
-    ///     },
-    ///     std::collections::HashMap,
+    /// use dragonfly::ast::{
+    ///     Declaration,
+    ///     Field,
+    ///     Model,
+    ///     Query,
+    ///     Route,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "model Foo {
@@ -229,27 +133,26 @@ impl Declaration {
     ///     bar: [Bar]
     /// }";
     ///
-    /// let mut fields = HashMap::new();
-    ///
-    /// fields.insert(
-    ///     "foo".to_string(),
-    ///     Field {
-    ///         name: "foo".to_string(),
-    ///         r#type: Type::Scalar(Scalar::String),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "bar".to_string(),
-    ///     Field {
-    ///         name: "bar".to_string(),
-    ///         r#type: Type::Array(Scalar::Reference("Bar".to_string())),
-    ///     },
-    /// );
-    ///
     /// let expected = Declaration::Model(Model {
     ///     name: "Foo".to_string(),
-    ///     fields,
+    ///     fields: vec![
+    ///         (
+    ///             "foo".to_string(),
+    ///             Field {
+    ///                 name: "foo".to_string(),
+    ///                 r#type: Type::Scalar(Scalar::String),
+    ///             },
+    ///         ),
+    ///         (
+    ///             "bar".to_string(),
+    ///             Field {
+    ///                 name: "bar".to_string(),
+    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_string())),
+    ///             },
+    ///         ),
+    ///     ]
+    ///     .into_iter()
+    ///     .collect(),
     /// });
     ///
     /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_string())));
@@ -309,24 +212,21 @@ impl Ast {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Ast,
-    ///         Component,
-    ///         Declaration,
-    ///         Enum,
-    ///         Field,
-    ///         Model,
-    ///         Query,
-    ///         QueryArgument,
-    ///         QueryCondition,
-    ///         QuerySchema,
-    ///         QueryWhere,
-    ///         Route,
-    ///         Scalar,
-    ///         Type,
-    ///     },
-    ///     std::collections::HashMap,
+    /// use dragonfly::ast::{
+    ///     Ast,
+    ///     Component,
+    ///     Declaration,
+    ///     Enum,
+    ///     Field,
+    ///     Model,
+    ///     Query,
+    ///     QueryArgument,
+    ///     QueryCondition,
+    ///     QuerySchema,
+    ///     QueryWhere,
+    ///     Route,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "route / {
@@ -421,87 +321,48 @@ impl Ast {
     ///     },
     /// );
     ///
-    /// let mut fields = HashMap::new();
-    ///
-    /// fields.insert(
-    ///     "id".to_string(),
-    ///     Field {
-    ///         name: "id".to_string(),
-    ///         r#type: Type::Scalar(Scalar::Reference("ID".to_string())),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "title".to_string(),
-    ///     Field {
-    ///         name: "title".to_string(),
-    ///         r#type: Type::Scalar(Scalar::String),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "country".to_string(),
-    ///     Field {
-    ///         name: "country".to_string(),
-    ///         r#type: Type::Scalar(Scalar::Reference("Country".to_string())),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "category".to_string(),
-    ///     Field {
-    ///         name: "category".to_string(),
-    ///         r#type: Type::Array(Scalar::Reference("Category".to_string())),
-    ///     },
-    /// );
-    ///
     /// expected.models.insert(
     ///     "Image".to_string(),
     ///     Model {
     ///         name: "Image".to_string(),
-    ///         fields,
-    ///     },
-    /// );
-    ///
-    /// let mut fields = HashMap::new();
-    ///
-    /// fields.insert(
-    ///     "id".to_string(),
-    ///     Field {
-    ///         name: "id".to_string(),
-    ///         r#type: Type::Scalar(Scalar::Reference("ID".to_string())),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "domain".to_string(),
-    ///     Field {
-    ///         name: "domain".to_string(),
-    ///         r#type: Type::Scalar(Scalar::String),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "drivingSide".to_string(),
-    ///     Field {
-    ///         name: "drivingSide".to_string(),
-    ///         r#type: Type::Scalar(Scalar::Reference("DrivingSide".to_string())),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "flag".to_string(),
-    ///     Field {
-    ///         name: "flag".to_string(),
-    ///         r#type: Type::Scalar(Scalar::String),
-    ///     },
-    /// );
-    ///
-    /// fields.insert(
-    ///     "name".to_string(),
-    ///     Field {
-    ///         name: "name".to_string(),
-    ///         r#type: Type::Scalar(Scalar::Reference("CountryName".to_string())),
+    ///         fields: vec![
+    ///             (
+    ///                 "id".to_string(),
+    ///                 Field {
+    ///                     name: "id".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::Reference(
+    ///                         "ID".to_string(),
+    ///                     )),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "title".to_string(),
+    ///                 Field {
+    ///                     name: "title".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::String),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "country".to_string(),
+    ///                 Field {
+    ///                     name: "country".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::Reference(
+    ///                         "Country".to_string(),
+    ///                     )),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "category".to_string(),
+    ///                 Field {
+    ///                     name: "category".to_string(),
+    ///                     r#type: Type::Array(Scalar::Reference(
+    ///                         "Category".to_string(),
+    ///                     )),
+    ///                 },
+    ///             ),
+    ///         ]
+    ///         .into_iter()
+    ///         .collect(),
     ///     },
     /// );
     ///
@@ -509,7 +370,51 @@ impl Ast {
     ///     "Country".to_string(),
     ///     Model {
     ///         name: "Country".to_string(),
-    ///         fields,
+    ///         fields: vec![
+    ///             (
+    ///                 "id".to_string(),
+    ///                 Field {
+    ///                     name: "id".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::Reference(
+    ///                         "ID".to_string(),
+    ///                     )),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "domain".to_string(),
+    ///                 Field {
+    ///                     name: "domain".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::String),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "drivingSide".to_string(),
+    ///                 Field {
+    ///                     name: "drivingSide".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::Reference(
+    ///                         "DrivingSide".to_string(),
+    ///                     )),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "flag".to_string(),
+    ///                 Field {
+    ///                     name: "flag".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::String),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "name".to_string(),
+    ///                 Field {
+    ///                     name: "name".to_string(),
+    ///                     r#type: Type::Scalar(Scalar::Reference(
+    ///                         "CountryName".to_string(),
+    ///                     )),
+    ///                 },
+    ///             ),
+    ///         ]
+    ///         .into_iter()
+    ///         .collect(),
     ///     },
     /// );
     ///
@@ -770,10 +675,7 @@ impl Ast {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::Ast,
-    ///     std::collections::HashSet,
-    /// };
+    /// use dragonfly::ast::Ast;
     ///
     /// let input = "model User {
     ///     name: String
@@ -788,25 +690,23 @@ impl Ast {
     ///     name: CountryName
     /// }";
     ///
-    /// let mut expected = HashSet::new();
-    ///
-    /// expected.insert("User".to_string());
-    /// expected.insert("Country".to_string());
-    /// expected.insert("CountryName".to_string());
-    ///
-    /// assert_eq!(Ast::parse(input).unwrap().0.type_names(), expected);
+    /// assert_eq!(
+    ///     Ast::parse(input).unwrap().0.type_names(),
+    ///     vec!["User", "Country", "CountryName"]
+    ///         .iter()
+    ///         .map(ToString::to_string)
+    ///         .collect()
+    /// )
     /// ```
     #[must_use]
     pub fn type_names(&self) -> HashSet<String> {
-        let mut names = HashSet::new();
+        let mut names = self
+            .models
+            .values()
+            .map(|model| model.name.clone())
+            .collect::<HashSet<_>>();
 
-        for model in self.models.values() {
-            names.insert(model.name.clone());
-        }
-
-        for r#enum in self.enums.values() {
-            names.insert(r#enum.name.clone());
-        }
+        names.extend(self.enums.values().map(|r#enum| r#enum.name.clone()));
 
         names
     }
