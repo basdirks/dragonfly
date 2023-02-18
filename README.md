@@ -289,11 +289,13 @@ A component is a Javascript function that renders a user interface.
 
 ```ebnf
 (* Component *)
+
 component      = "component" component_name "{" "path" ":" path "}";
 path           = path_segment* file_name;
 path_segment   = "/" kebab_case;
 
 (* Names *)
+
 component_name = pascal_case;
 file_name      = pascal_case;
 ```
