@@ -1,15 +1,13 @@
 use {
     super::{
-        directive::{
-            Argument,
-            Directive,
-        },
-        selection::Selection,
+        Argument,
+        Directive,
+        Selection,
     },
     crate::generator::printer::{
-        common::comma_separated,
+        comma_separated,
         indent,
-        print::Print,
+        Print,
     },
 };
 
@@ -55,7 +53,7 @@ impl Print for Field {
 mod tests {
     use {
         super::*,
-        crate::generator::graphql::value::Value,
+        crate::generator::graphql::Value,
     };
 
     #[test]

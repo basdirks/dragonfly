@@ -1,17 +1,13 @@
 use super::{
-    char::{
-        hyphen,
-        underscore,
-    },
-    char_range::{
-        alphabetics,
-        digit,
-        lowercase,
-        uppercase,
-    },
+    alphabetics,
     choice,
+    digit,
+    hyphen,
+    lowercase,
     many,
     many1,
+    underscore,
+    uppercase,
     ParseError,
     ParseResult,
 };
@@ -145,22 +141,22 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     case::kebab,
+///     kebab_case
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(kebab("foo"), Ok(("foo".to_string(), "".to_string())));
+/// assert_eq!(kebab_case("foo"), Ok(("foo".to_string(), "".to_string())));
 ///
 /// assert_eq!(
-///     kebab("foo-bar"),
+///     kebab_case("foo-bar"),
 ///     Ok(("foo-bar".to_string(), "".to_string()))
 /// );
 ///
-/// assert!(kebab("foo_bar").is_err());
-/// assert!(kebab("fooBar").is_err());
-/// assert!(kebab("Foo").is_err());
-/// assert!(kebab("FooBar").is_err());
-/// assert!(kebab("foo--").is_err());
+/// assert!(kebab_case("foo_bar").is_err());
+/// assert!(kebab_case("fooBar").is_err());
+/// assert!(kebab_case("Foo").is_err());
+/// assert!(kebab_case("FooBar").is_err());
+/// assert!(kebab_case("foo--").is_err());
 /// ```
 pub fn kebab(input: &str) -> ParseResult<String> {
     let (head, input) = many1(input, lowercase)?;

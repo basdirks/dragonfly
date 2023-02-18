@@ -5,21 +5,15 @@ use {
     },
     crate::{
         ast::{
-            model::{
-                field::Field as AstField,
-                Model as AstModel,
-            },
-            r#type::{
-                Scalar as AstScalar,
-                Type as AstType,
-            },
+            Field as AstField,
+            Model as AstModel,
+            Scalar as AstScalar,
+            Type as AstType,
         },
         generator::printer::{
-            common::{
-                newline_separated,
-                space_separated,
-            },
             indent,
+            newline_separated,
+            space_separated,
         },
     },
     std::fmt::Display,

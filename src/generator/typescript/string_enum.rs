@@ -1,10 +1,10 @@
 use {
     crate::{
-        ast::r#enum::Enum as AstEnum,
+        ast::Enum as AstEnum,
         generator::printer::{
-            common::newline_separated,
             indent,
-            print::Print,
+            newline_separated,
+            Print,
         },
     },
     std::fmt::Display,

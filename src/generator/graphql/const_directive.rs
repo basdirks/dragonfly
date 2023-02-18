@@ -1,26 +1,8 @@
 use {
-    super::value::Const,
-    crate::generator::printer::common::comma_separated,
+    super::ConstArgument,
+    crate::generator::printer::comma_separated,
     std::fmt::Display,
 };
-
-/// A constant directive argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Argument {
-    /// The name of the argument.
-    pub name: String,
-    /// The value of the argument.
-    pub value: Const,
-}
-
-impl Display for Argument {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(f, "{}: {}", self.name, self.value)
-    }
-}
 
 /// A constant directive.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -28,7 +10,7 @@ pub struct Directive {
     /// The name of the directive.
     pub name: String,
     /// The arguments of the directive.
-    pub arguments: Vec<Argument>,
+    pub arguments: Vec<ConstArgument>,
 }
 
 impl Display for Directive {
@@ -48,7 +30,13 @@ impl Display for Directive {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use {
+        super::*,
+        crate::generator::graphql::{
+            ConstArgument,
+            ConstValue,
+        },
+    };
 
     #[test]
     fn test_display() {
@@ -65,13 +53,13 @@ mod tests {
             Directive {
                 name: "foo".to_string(),
                 arguments: vec![
-                    Argument {
+                    ConstArgument {
                         name: "bar".to_string(),
-                        value: Const::String("baz".to_string()),
+                        value: ConstValue::String("baz".to_string()),
                     },
-                    Argument {
+                    ConstArgument {
                         name: "qux".to_string(),
-                        value: Const::String("quux".to_string()),
+                        value: ConstValue::String("quux".to_string()),
                     },
                 ],
             }

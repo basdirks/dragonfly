@@ -1,14 +1,14 @@
 use {
     super::r#type::Type,
     crate::{
-        ast::model::{
-            field::Field,
+        ast::{
+            Field,
             Model,
         },
         generator::printer::{
             common::comma_separated,
             indent,
-            print::Print,
+            Print,
         },
     },
     std::fmt::Display,

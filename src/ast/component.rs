@@ -1,17 +1,13 @@
 use crate::parser::{
-    case::{
-        kebab,
-        pascal,
-    },
-    char::{
-        brace_close,
-        brace_open,
-        colon,
-        forward_slash,
-    },
-    char_range::spaces,
+    brace_close,
+    brace_open,
+    colon,
+    forward_slash,
+    kebab_case,
     literal,
     many,
+    pascal_case,
+    spaces,
     ParseResult,
 };
 
@@ -39,7 +35,7 @@ impl Component {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::component::Component;
+    /// use dragonfly::ast::Component;
     ///
     /// let input = "component Foo {
     ///    path: foo/bar/Foo
@@ -70,7 +66,7 @@ impl Component {
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "component")?;
         let (_, input) = spaces(&input)?;
-        let (name, input) = pascal(&input)?;
+        let (name, input) = pascal_case(&input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
@@ -79,13 +75,13 @@ impl Component {
         let (_, input) = spaces(&input)?;
 
         let (segments, input) = many(&input, |input| {
-            let (segment, input) = kebab(input)?;
+            let (segment, input) = kebab_case(input)?;
             let (_, input) = forward_slash(&input)?;
 
             Ok((segment, input))
         })?;
 
-        let (file_name, input) = pascal(&input)?;
+        let (file_name, input) = pascal_case(&input)?;
 
         let component = Self {
             name,

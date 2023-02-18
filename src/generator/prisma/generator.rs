@@ -1,6 +1,6 @@
 use {
     crate::generator::printer::{
-        common::comma_separated,
+        comma_separated,
         indent,
     },
     std::fmt::Display,
@@ -23,7 +23,7 @@ impl Display for Provider {
     ) -> std::fmt::Result {
         write!(
             f,
-            "{}",
+            "\"{}\"",
             match self {
                 Self::File(path) => path,
                 Self::PrismaClientJs => "prisma-client-js",
@@ -273,7 +273,7 @@ impl Display for Generator {
         } = self;
 
         let indent = indent::psl(1);
-        let mut lines = vec![format!("{indent}provider = \"{provider}\"")];
+        let mut lines = vec![format!("{indent}provider = {provider}")];
 
         if let Some(output) = output {
             lines.push(format!("{indent}output = \"{output}\""));

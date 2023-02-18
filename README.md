@@ -390,12 +390,18 @@ can be found in `ast::Ast::check`.
 
 Generation turns the AST into code:
 
-* `generator::graphql` generates GraphQL queries.
+* `generator::graphql` converts generates GraphQL queries.
 * `generator::typescript` generates TypeScript code.
 * `generator::prisma` generates Prisma schemas.
 * `generator::printer` contains common code for pretty printing.
 
 # Development
+
+## Rust version
+
+Rust nightly (1.69.0 or higher) is required.
+
+## Parsing
 
 Parsers do not concern themselves with their surrounding whitespace. Whitespace
 is handled inside their parent parsers.

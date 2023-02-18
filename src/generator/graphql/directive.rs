@@ -1,26 +1,8 @@
 use {
-    super::value::Value,
-    crate::generator::printer::common::comma_separated,
+    super::Argument,
+    crate::generator::printer::comma_separated,
     std::fmt::Display,
 };
-
-/// A directive argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Argument {
-    /// The name of the argument.
-    pub name: String,
-    /// The value of the argument.
-    pub value: Value,
-}
-
-impl Display for Argument {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(f, "{}: {}", self.name, self.value)
-    }
-}
 
 /// A directive.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -48,7 +30,10 @@ impl Display for Directive {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use {
+        super::*,
+        crate::generator::graphql::Value,
+    };
 
     #[test]
     fn test_display() {

@@ -1,5 +1,5 @@
 use {
-    crate::generator::printer::common::comma_separated,
+    crate::generator::printer::comma_separated,
     std::fmt::Display,
 };
 
@@ -13,6 +13,24 @@ pub struct ConstObjectField {
 }
 
 impl Display for ConstObjectField {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        write!(f, "{}: {}", self.name, self.value)
+    }
+}
+
+/// A constant directive argument.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Argument {
+    /// The name of the argument.
+    pub name: String,
+    /// The value of the argument.
+    pub value: Const,
+}
+
+impl Display for Argument {
     fn fmt(
         &self,
         f: &mut std::fmt::Formatter<'_>,

@@ -1,14 +1,12 @@
 use {
     super::{
-        field::Field,
-        fragment::{
-            Inline,
-            Spread,
-        },
+        Field,
+        FragmentSpread,
+        InlineFragment,
     },
     crate::generator::printer::{
         indent,
-        print::Print,
+        Print,
     },
 };
 
@@ -18,9 +16,9 @@ pub enum Selection {
     /// A field.
     Field(Field),
     /// A fragment spread.
-    FragmentSpread(Spread),
+    FragmentSpread(FragmentSpread),
     /// An inline fragment.
-    InlineFragment(Inline),
+    InlineFragment(InlineFragment),
 }
 
 impl Selection {
@@ -36,16 +34,14 @@ impl Selection {
     /// ```rust
     /// use dragonfly::generator::{
     ///     graphql::{
-    ///         directive::Argument,
-    ///         field::Field,
-    ///         fragment::{
-    ///             Inline,
-    ///             Spread,
-    ///         },
-    ///         selection::Selection,
-    ///         value::Value,
+    ///         Argument,
+    ///         Field,
+    ///         FragmentSpread,
+    ///         InlineFragment,
+    ///         Selection,
+    ///         Value,
     ///     },
-    ///     printer::print::Print,
+    ///     printer::Print,
     /// };
     ///
     /// let selections = vec![
@@ -128,8 +124,8 @@ mod tests {
         super::*,
         crate::generator::{
             graphql::{
-                directive::Argument,
-                value::Value,
+                Argument,
+                Value,
             },
             printer::print::Print,
         },
@@ -152,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_print_fragment_spread() {
-        let spread = Spread {
+        let spread = FragmentSpread {
             name: "name".to_string(),
             directives: vec![],
         };
@@ -162,7 +158,7 @@ mod tests {
 
     #[test]
     fn test_print_inline_fragment() {
-        let inline = Inline {
+        let inline = InlineFragment {
             type_condition: "Type".to_string(),
             directives: vec![],
             selections: vec![],

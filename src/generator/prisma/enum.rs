@@ -1,5 +1,5 @@
 use {
-    crate::ast::r#enum::Enum as AstEnum,
+    crate::ast::Enum as AstEnum,
     std::fmt::Display,
 };
 

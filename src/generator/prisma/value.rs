@@ -1,5 +1,5 @@
 use {
-    crate::generator::printer::common::comma_separated,
+    crate::generator::printer::comma_separated,
     std::fmt::Display,
 };
 

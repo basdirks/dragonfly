@@ -1,11 +1,9 @@
 use crate::{
     ast::r#type::Type,
     parser::{
-        char::colon,
-        char_range::{
-            alphabetics,
-            spaces,
-        },
+        alphabetics,
+        colon,
+        spaces,
         ParseResult,
     },
 };
@@ -34,11 +32,9 @@ impl Field {
     ///
     /// ```rust
     /// use dragonfly::ast::{
-    ///     model::field::Field,
-    ///     r#type::{
-    ///         Scalar,
-    ///         Type,
-    ///     },
+    ///     Field,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "bar: String";

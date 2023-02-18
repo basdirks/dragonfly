@@ -1,17 +1,13 @@
 use crate::parser::{
-    case::pascal,
-    char::{
-        brace_close,
-        brace_open,
-        colon,
-    },
-    char_range::{
-        alphabetics,
-        chars_if,
-        spaces,
-    },
+    alphabetics,
+    brace_close,
+    brace_open,
+    chars_if,
     choice,
+    colon,
     literal,
+    pascal_case,
+    spaces,
     ParseResult,
 };
 
@@ -36,11 +32,35 @@ impl Route {
     /// # Errors
     ///
     /// Returns a `ParseError` if the input does not start with a valid root.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Route;
+    ///
+    /// assert_eq!(
+    ///     Route::parse_root("root: Foo"),
+    ///     Ok(("Foo".to_string(), "".to_string()))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Route::parse_root("root Foo"),
+    ///     Err(ParseError::UnmatchedChar {
+    ///         expected: ':',
+    ///         found: ' '
+    ///     })
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Route::parse_root("component: Foo"),
+    ///     Err(ParseError::UnmatchedLiteral { expected: "root" })
+    /// );
+    /// ```
     pub fn parse_root(input: &str) -> ParseResult<String> {
         let (_, input) = literal(input, "root")?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
-        let (root, input) = pascal(&input)?;
+        let (root, input) = pascal_case(&input)?;
 
         Ok((root, input))
     }
@@ -54,6 +74,30 @@ impl Route {
     /// # Errors
     ///
     /// Returns a `ParseError` if the input does not start with a valid title.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Route;
+    ///
+    /// assert_eq!(
+    ///     Route::parse_title("title: Foo"),
+    ///     Ok(("Foo".to_string(), "".to_string()))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Route::parse_title("title Foo"),
+    ///     Err(ParseError::UnmatchedChar {
+    ///         expected: ':',
+    ///         found: ' '
+    ///     })
+    /// );
+    ///
+    /// assert_eq!(
+    ///     Route::parse_title("name: Foo"),
+    ///     Err(ParseError::UnmatchedLiteral { expected: "title" })
+    /// );
+    /// ```
     pub fn parse_title(input: &str) -> ParseResult<String> {
         let (_, input) = literal(input, "title")?;
         let (_, input) = colon(&input)?;
@@ -76,7 +120,7 @@ impl Route {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::route::Route;
+    /// use dragonfly::ast::Route;
     ///
     /// let input = "route /foo/bar {
     ///   root: Foo
@@ -99,7 +143,7 @@ impl Route {
     /// Order of `root` and `title` does not matter.
     ///
     /// ```rust
-    /// use dragonfly::ast::route::Route;
+    /// use dragonfly::ast::Route;
     ///
     /// let input1 = "route / {
     ///   root: Index

@@ -1,11 +1,11 @@
 use {
     super::{
-        directive::Directive,
-        selection::Selection,
+        Directive,
+        Selection,
     },
     crate::generator::printer::{
         indent,
-        print::Print,
+        Print,
     },
 };
 
@@ -70,9 +70,9 @@ mod tests {
     use {
         super::*,
         crate::generator::graphql::{
-            directive::Argument,
-            field::Field,
-            value::Value,
+            Argument,
+            Field,
+            Value,
         },
     };
 

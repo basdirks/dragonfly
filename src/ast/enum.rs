@@ -1,13 +1,11 @@
 use {
     crate::parser::{
-        case::capitalized,
-        char::{
-            brace_close,
-            brace_open,
-        },
-        char_range::spaces,
+        brace_close,
+        brace_open,
+        capitalized,
         literal,
         many1,
+        spaces,
         ParseError,
         ParseResult,
     },
@@ -38,7 +36,7 @@ impl Enum {
     ///
     /// ```rust
     /// use dragonfly::{
-    ///     ast::r#enum::Enum,
+    ///     ast::Enum,
     ///     parser::ParseError,
     /// };
     ///

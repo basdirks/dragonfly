@@ -1,13 +1,11 @@
+pub use self::field::Field;
 use {
-    self::field::Field,
     crate::parser::{
-        case::capitalized,
-        char::{
-            brace_close,
-            brace_open,
-        },
-        char_range::spaces,
+        brace_close,
+        brace_open,
+        capitalized,
         literal,
+        spaces,
         ParseError,
         ParseResult,
     },
@@ -43,14 +41,10 @@ impl Model {
     /// ```rust
     /// use {
     ///     dragonfly::ast::{
-    ///         model::{
-    ///             field::Field,
-    ///             Model,
-    ///         },
-    ///         r#type::{
-    ///             Scalar,
-    ///             Type,
-    ///         },
+    ///         Field,
+    ///         Model,
+    ///         Scalar,
+    ///         Type,
     ///     },
     ///     std::collections::HashMap,
     /// };

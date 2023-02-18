@@ -216,6 +216,49 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
     )
 }
 
+/// Parse one or more alphanumeric ASCII characters into a string.
+///
+/// # Arguments
+///
+/// * `input` - The input string to parse.
+///
+/// # Errors
+///
+/// * `ParseError::UnmetPredicate`
+/// if the first character is not alphanumeric.
+///
+/// * `ParseError::UnexpectedEof`
+/// if the input is empty.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::parser::{
+///     char_range::alphanumerics,
+///     ParseError,
+/// };
+///
+/// assert_eq!(
+///     alphanumerics("abc"),
+///     Ok(("123".to_string(), "".to_string()))
+/// );
+///
+/// assert_eq!(
+///     alphanumerics("abc"),
+///     Err(ParseError::UnmetPredicate {
+///         actual: 'a',
+///         message: "character is not alphanumeric".to_string(),
+///     }),
+/// );
+/// ```
+pub fn alphanumerics(input: &str) -> ParseResult<String> {
+    chars_if(
+        input,
+        |char| char.is_ascii_alphanumeric(),
+        "character is not alphanumerics",
+    )
+}
+
 /// Parse an alphanumeric ASCII character.
 ///
 /// # Arguments
@@ -396,14 +439,14 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::whitespace,
+///     char_range::space,
 ///     ParseError,
 /// };
 ///
-/// assert!(whitespace(" ").is_ok());
-/// assert!(whitespace("\t").is_ok());
-/// assert!(whitespace("\r").is_ok());
-/// assert!(whitespace("\n").is_ok());
+/// assert!(space(" ").is_ok());
+/// assert!(space("\t").is_ok());
+/// assert!(space("\r").is_ok());
+/// assert!(space("\n").is_ok());
 ///
 /// assert_eq!(
 ///     whitespace("a"),
@@ -413,7 +456,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///     })
 /// );
 /// ```
-pub fn whitespace(input: &str) -> ParseResult<char> {
+pub fn space(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_whitespace(),
@@ -446,5 +489,5 @@ pub fn whitespace(input: &str) -> ParseResult<char> {
 /// assert_eq!(spaces("abc"), Ok((vec![], "abc".to_string())));
 /// ```
 pub fn spaces(input: &str) -> ParseResult<Vec<char>> {
-    many(input, whitespace)
+    many(input, space)
 }

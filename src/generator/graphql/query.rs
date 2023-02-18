@@ -1,19 +1,17 @@
 use {
     super::{
-        const_directive::Directive as ConstDirective,
-        directive::Directive,
-        r#type::Type,
-        selection::Selection,
-        value::Const,
+        ConstDirective,
+        ConstValue,
+        Directive,
+        Selection,
+        Type,
     },
     crate::{
         ast::query::Query as AstQuery,
         generator::printer::{
-            common::{
-                comma_separated,
-                space_separated,
-            },
-            print::Print,
+            comma_separated,
+            space_separated,
+            Print,
         },
     },
     std::fmt::Display,
@@ -27,7 +25,7 @@ pub struct Variable {
     /// The type of the variable.
     pub r#type: Type,
     /// The default value of the variable.
-    pub default_value: Option<Const>,
+    pub default_value: Option<ConstValue>,
     /// The directives of the variable.
     pub directives: Vec<ConstDirective>,
 }
@@ -98,9 +96,9 @@ mod tests {
     use {
         super::*,
         crate::generator::graphql::{
-            directive::Argument,
-            field::Field,
-            value::Value,
+            Argument,
+            Field,
+            Value,
         },
     };
 
@@ -121,7 +119,7 @@ mod tests {
             Variable {
                 name: "foo".to_string(),
                 r#type: Type::Name("String".to_string()),
-                default_value: Some(Const::String("bar".to_string())),
+                default_value: Some(ConstValue::String("bar".to_string())),
                 directives: vec![],
             }
             .to_string(),
@@ -214,7 +212,7 @@ mod tests {
                     Variable {
                         name: "limit".to_string(),
                         r#type: Type::Name("Int".to_string()),
-                        default_value: Some(Const::Int("10".to_string())),
+                        default_value: Some(ConstValue::Int("10".to_string())),
                         directives: vec![],
                     },
                 ],

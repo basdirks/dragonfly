@@ -1,6 +1,6 @@
 use {
     crate::generator::printer::{
-        common::comma_separated,
+        comma_separated,
         indent,
     },
     std::fmt::Display,
@@ -143,7 +143,7 @@ impl Provider {
     /// ## `PostgreSql`
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::data_source::Provider;
+    /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = Provider::PostgreSql {
     ///     user: "user".to_string(),
@@ -152,6 +152,7 @@ impl Provider {
     ///     port: 5432,
     ///     database: "database".to_string(),
     ///     schema: "public".to_string(),
+    ///     extensions: vec![],
     /// };
     ///
     /// assert_eq!(
@@ -163,7 +164,7 @@ impl Provider {
     /// ## `MySql`
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::data_source::Provider;
+    /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = Provider::MySql {
     ///     user: "user".to_string(),
@@ -182,7 +183,7 @@ impl Provider {
     /// ## `Sqlite`
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::data_source::Provider;
+    /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = Provider::Sqlite {
     ///     path: "path/to/database.db".to_string(),
@@ -194,7 +195,7 @@ impl Provider {
     /// ## `MongoDb`
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::data_source::Provider;
+    /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = Provider::MongoDb {
     ///     user: "user".to_string(),
@@ -214,7 +215,7 @@ impl Provider {
     /// ## `SqlServer`, following JDBC URL format.
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::data_source::Provider;
+    /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = Provider::SqlServer {
     ///     user: "user".to_string(),
@@ -234,7 +235,7 @@ impl Provider {
     /// ## `CockroachDb`
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::data_source::Provider;
+    /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = Provider::CockroachDb {
     ///     user: "user".to_string(),

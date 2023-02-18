@@ -3,7 +3,7 @@ use crate::{
     map,
     parser::{
         between,
-        case::capitalized,
+        capitalized,
         choice,
         literal,
         map,
@@ -45,7 +45,7 @@ impl Scalar {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::Scalar;
+    /// use dragonfly::ast::Scalar;
     ///
     /// assert_eq!(
     ///     Scalar::parse("Boolean"),
@@ -67,7 +67,7 @@ impl Scalar {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::Scalar;
+    /// use dragonfly::ast::Scalar;
     ///
     /// assert_eq!(
     ///     Scalar::parse("Foo"),
@@ -123,11 +123,9 @@ impl Type {
     ///
     /// ```rust
     /// use dragonfly::{
-    ///     ast::r#type::{
-    ///         Scalar,
-    ///         Type,
-    ///     },
     ///     parser::ParseError,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// assert_eq!(
@@ -152,7 +150,7 @@ impl Type {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{
+    /// use dragonfly::ast::{
     ///     Scalar,
     ///     Type,
     /// };
@@ -164,7 +162,7 @@ impl Type {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::{
+    /// use dragonfly::ast::{
     ///     Scalar,
     ///     Type,
     /// };
@@ -181,7 +179,7 @@ impl Type {
     /// Nested arrays are not supported:
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::Type;
+    /// use dragonfly::ast::Type;
     ///
     /// assert!(Type::parse("[[String]]").is_err());
     /// ```
@@ -189,7 +187,7 @@ impl Type {
     /// A type name must start with an uppercase letter:
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::Type;
+    /// use dragonfly::ast::Type;
     ///
     /// assert!(Type::parse("foo").is_err());
     /// ```
@@ -197,7 +195,7 @@ impl Type {
     /// An empty string is not a valid type:
     ///
     /// ```rust
-    /// use dragonfly::ast::r#type::Type;
+    /// use dragonfly::ast::Type;
     ///
     /// assert!(Type::parse("").is_err());
     /// ```

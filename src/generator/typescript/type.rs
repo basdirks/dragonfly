@@ -1,10 +1,10 @@
 use {
     crate::{
-        ast::r#type::{
+        ast::{
             Scalar as AstScalarType,
             Type as AstType,
         },
-        generator::printer::common::{
+        generator::printer::{
             comma_separated,
             separated,
         },

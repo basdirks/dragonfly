@@ -2,10 +2,42 @@
 pub mod case;
 /// Parse common ASCII characters.
 pub mod char;
-/// Parse ASCII characters in different ranges.
-pub mod char_range;
+/// Parse ASCII characters that match a predicate.
+pub mod char_predicate;
 /// Macro utilities.
 pub mod r#macro;
+
+pub use {
+    self::char::{
+        brace_close,
+        brace_open,
+        colon,
+        comma,
+        dollar,
+        forward_slash,
+        hyphen,
+        paren_close,
+        paren_open,
+        underscore,
+    },
+    case::{
+        capitalized,
+        kebab as kebab_case,
+        pascal as pascal_case,
+    },
+    char_predicate::{
+        alphabetic,
+        alphabetics,
+        alphanumeric,
+        alphanumerics,
+        chars_if,
+        digit,
+        lowercase,
+        space,
+        spaces,
+        uppercase,
+    },
+};
 
 /// Low-level parsing errors.
 #[derive(Clone, Debug, Eq, PartialEq)]
