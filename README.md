@@ -91,12 +91,19 @@ model Group {
 ### EBNF
 
 ```ebnf
+(* Model *)
+
 model          = "model" model_name "{" field+ "}";
 field          = field_name ":" type;
+
+(* Types *)
+
 type           = "[" basic_type "]" | basic_type;
 basic_type     = primitive_type | reference;
 primitive_type = "Boolean" | "DateTime" | "Float" | "Int" | "String";
 reference      = model_name | enum_name;
+
+(* Names *)
 
 model_name     = pascal_case;
 field_name     = camel_case;
@@ -112,7 +119,7 @@ enum_name = ...
 
 ```dfly
 model Image {
-  id: ID
+  id: Int
   title: String
   country: Country
   category: [Category]
@@ -132,6 +139,8 @@ An enum is a predefined list of one or more string values.
 ### EBNF
 
 ```ebnf
+(* Enum *)
+
 enum         = "enum" enum_name "{" enum_variant+ "}";
 enum_name    = pascal_case;
 enum_variant = pascal_case;
@@ -163,7 +172,7 @@ A query is a subset of data. It consists of:
 ### Rules
 
 - The name of a query must be unique.
-- The return type must be a known model or an array of such a model.
+- The return type must be a known model or an array of such a type.
 - The root node of the schema must contain at least one field.
 - The schema must be a subset of the return type, or in the case of an array, a  
 subset of the array's item type.
@@ -186,20 +195,30 @@ name inside the application.
 ### EBNF
 
 ```ebnf
+(* Query *)
+
 query         = "query" query_name [ "(" argument+ ")" ] ":" return_type
                 schema [ where_clause ];
 argument      = argument_name ":" type;
 return_type   = model_name | "[" model_name "]";
 
+(* Schema *)
+
 schema        = root_name "{" schema_node+ "}";
 schema_node   = node_name [ "{" schema_node+ "}" ];
+
+(* Where *)
 
 where_clause  = "where" "{" root_name "{" where_node+ "}" "}";
 where_node    = node_name "{" where_node+ | condition+ "}";
 
+(* Conditions *)
+
 condition      = contains | equals;
 contains      = "contains" ":" argument_name;
 equals        = "equals" ":" argument_name;
+
+(* Names *)
 
 query_name    = camel_case;
 node_name     = camel_case;
@@ -236,6 +255,8 @@ A route connects a URL to a component. It consists of:
 ### EBNF
 
 ```ebnf
+(* Route *)
+
 route        = "route" path "{" "root" ":" component_name "title" ":" string "}";
 path         = "/" | path_segment+;
 path_segment = "/" kebab_case;
@@ -267,10 +288,12 @@ A component is a Javascript function that renders a user interface.
 ### EBNF
 
 ```ebnf
+(* Component *)
 component      = "component" component_name "{" "path" ":" path "}";
 path           = path_segment* file_name;
 path_segment   = "/" kebab_case;
 
+(* Names *)
 component_name = pascal_case;
 file_name      = pascal_case;
 ```
