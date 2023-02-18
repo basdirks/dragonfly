@@ -7,7 +7,7 @@ use {
         Type,
     },
     crate::{
-        ast::query::Query as AstQuery,
+        ast::QueryArgument as AstQueryArgument,
         generator::printer::{
             comma_separated,
             space_separated,
@@ -28,6 +28,17 @@ pub struct Variable {
     pub default_value: Option<ConstValue>,
     /// The directives of the variable.
     pub directives: Vec<ConstDirective>,
+}
+
+impl From<AstQueryArgument> for Variable {
+    fn from(AstQueryArgument { name, r#type }: AstQueryArgument) -> Self {
+        Self {
+            name,
+            r#type: r#type.into(),
+            default_value: None,
+            directives: vec![],
+        }
+    }
 }
 
 impl Display for Variable {
@@ -85,22 +96,41 @@ impl Print for Query {
     }
 }
 
-impl From<AstQuery> for Query {
-    fn from(_query: AstQuery) -> Self {
-        todo!()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use {
         super::*,
-        crate::generator::graphql::{
-            Argument,
-            Field,
-            Value,
+        crate::{
+            ast::{
+                QueryArgument as AstQueryArgument,
+                Scalar as AstScalar,
+                Type as AstType,
+            },
+            generator::graphql::{
+                Argument,
+                Field,
+                Value,
+            },
         },
     };
+
+    #[test]
+    fn test_variable_from_ast() {
+        assert_eq!(
+            Variable::from(AstQueryArgument {
+                name: "foo".to_string(),
+                r#type: AstType::Array(AstScalar::String),
+            }),
+            Variable {
+                name: "foo".to_string(),
+                r#type: Type::NonNull(Box::new(Type::List(Box::new(
+                    Type::Name("String".to_string())
+                )))),
+                default_value: None,
+                directives: vec![],
+            }
+        );
+    }
 
     #[test]
     fn test_display_variable() {

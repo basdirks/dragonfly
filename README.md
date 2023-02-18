@@ -296,7 +296,6 @@ component Home {
 }
 
 model Image {
-  id: ID
   title: String
   country: Country
   category: [Category]
@@ -334,7 +333,6 @@ enum DrivingSide {
 }
 
 model Country {
-  id: ID
   domain: String
   drivingSide: DrivingSide
   flag: String
@@ -391,6 +389,113 @@ Generation turns the AST into code:
 * `generator::typescript` generates TypeScript code.
 * `generator::prisma` generates Prisma schemas.
 * `generator::printer` contains common code for pretty printing.
+
+### GraphQL
+
+GraphQL queries are generated from the AST.
+
+### TypeScript
+
+Models can be converted to TypeScript interfaces:
+
+```dfly
+model Country {
+  languages: [Language]
+  name: String
+  population: Int
+  formation: DateTime
+  area: Float
+  hasCoverage: Boolean
+}
+```
+
+```typescript
+interface Country {
+    languages: Array<Language>;
+    name: string;
+    population: bigint;
+    formation: Date;
+    area: number;
+    hasCoverage: boolean;
+}
+```
+
+Enums can be converted to TypeScript enums:
+
+```dfly
+enum Category {
+  Architecture
+  Bollard
+  Chevron
+  TrafficLight
+  TrafficSign
+  UtilityPole
+}
+```
+
+```typescript
+enum Category {
+    Architecture = "Architecture",
+    Bollard = "Bollard",
+    Chevron = "Chevron",
+    TrafficLight = "TrafficLight",
+    TrafficSign = "TrafficSign",
+    UtilityPole = "UtilityPole",
+}
+```
+
+### Prisma
+
+Prisma schemas can be generated from the AST.
+
+```dfly
+model User {
+  posts: [Post]
+  birthday: DateTime
+  name: String
+  admin: Boolean
+}
+
+model Post {
+  title: String
+  author: User
+}
+
+enum Country {
+  Albania
+  Andorra
+  Austria
+  Yemen
+  Zambia
+  Zimbabwe
+}
+```
+
+```prisma
+model User {
+  id Int @id @default(autoincrement())
+  birthday DateTime
+  name String
+  admin Boolean
+  posts Post[]
+}
+
+model Post {
+  id Int @id @default(autoincrement())
+  title String
+  author User @relation(fields: [authorId], references: [id])
+  authorId Int
+}
+
+enum Country {
+  Albania
+  Andorra
+  Austria
+  Yemen
+  Zambia
+  Zimbabwe
+}
+```
 
 # Development
 
