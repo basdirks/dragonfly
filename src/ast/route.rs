@@ -36,7 +36,10 @@ impl Route {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::Route;
+    /// use dragonfly::{
+    ///     ast::Route,
+    ///     parser::ParseError,
+    /// };
     ///
     /// assert_eq!(
     ///     Route::parse_root("root: Foo"),
@@ -47,13 +50,15 @@ impl Route {
     ///     Route::parse_root("root Foo"),
     ///     Err(ParseError::UnmatchedChar {
     ///         expected: ':',
-    ///         found: ' '
+    ///         actual: ' '
     ///     })
     /// );
     ///
     /// assert_eq!(
     ///     Route::parse_root("component: Foo"),
-    ///     Err(ParseError::UnmatchedLiteral { expected: "root" })
+    ///     Err(ParseError::UnmatchedLiteral {
+    ///         expected: "root".to_string()
+    ///     })
     /// );
     /// ```
     pub fn parse_root(input: &str) -> ParseResult<String> {
@@ -78,7 +83,10 @@ impl Route {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::Route;
+    /// use dragonfly::{
+    ///     ast::Route,
+    ///     parser::ParseError,
+    /// };
     ///
     /// assert_eq!(
     ///     Route::parse_title("title: Foo"),
@@ -89,13 +97,15 @@ impl Route {
     ///     Route::parse_title("title Foo"),
     ///     Err(ParseError::UnmatchedChar {
     ///         expected: ':',
-    ///         found: ' '
+    ///         actual: ' '
     ///     })
     /// );
     ///
     /// assert_eq!(
     ///     Route::parse_title("name: Foo"),
-    ///     Err(ParseError::UnmatchedLiteral { expected: "title" })
+    ///     Err(ParseError::UnmatchedLiteral {
+    ///         expected: "title".to_string()
+    ///     })
     /// );
     /// ```
     pub fn parse_title(input: &str) -> ParseResult<String> {

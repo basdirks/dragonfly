@@ -559,12 +559,12 @@ impl Ast {
     ///         schema: QuerySchema::Model {
     ///             name: "image".to_string(),
     ///             nodes: vec![
-    ///                 Schema::Field("title".to_string()),
-    ///                 Schema::Model {
+    ///                 QuerySchema::Field("title".to_string()),
+    ///                 QuerySchema::Model {
     ///                     name: "country".to_string(),
-    ///                     nodes: vec![Schema::Field("name".to_string())],
+    ///                     nodes: vec![QuerySchema::Field("name".to_string())],
     ///                 },
-    ///                 Schema::Field("category".to_string()),
+    ///                 QuerySchema::Field("category".to_string()),
     ///             ],
     ///         },
     ///         r#where: None,
@@ -580,23 +580,23 @@ impl Ast {
     ///         schema: QuerySchema::Model {
     ///             name: "image".to_string(),
     ///             nodes: vec![
-    ///                 Schema::Field("title".to_string()),
-    ///                 Schema::Field("category".to_string()),
+    ///                 QuerySchema::Field("title".to_string()),
+    ///                 QuerySchema::Field("category".to_string()),
     ///             ],
     ///         },
     ///         r#where: Some(QueryWhere::Node {
     ///             name: "image".to_string(),
-    ///             nodes: vec![Where::Node {
+    ///             nodes: vec![QueryWhere::Node {
     ///                 name: "country".to_string(),
-    ///                 nodes: vec![Where::Node {
+    ///                 nodes: vec![QueryWhere::Node {
     ///                     name: "name".to_string(),
-    ///                     nodes: vec![Where::Condition(Condition::Equals(
-    ///                         "name".to_string(),
-    ///                     ))],
+    ///                     nodes: vec![QueryWhere::Condition(
+    ///                         QueryCondition::Equals("name".to_string()),
+    ///                     )],
     ///                 }],
     ///             }],
     ///         }),
-    ///         arguments: vec![Argument {
+    ///         arguments: vec![QueryArgument {
     ///             name: "name".to_string(),
     ///             r#type: Type::Scalar(Scalar::Reference(
     ///                 "CountryName".to_string(),
@@ -771,7 +771,7 @@ impl Ast {
     ///
     /// ```rust
     /// use {
-    ///     ast::Ast,
+    ///     dragonfly::ast::Ast,
     ///     std::collections::HashSet,
     /// };
     ///

@@ -59,11 +59,11 @@ impl Selection {
     ///             selections: vec![],
     ///         })],
     ///     }),
-    ///     Selection::FragmentSpread(Spread {
+    ///     Selection::FragmentSpread(FragmentSpread {
     ///         name: "foo".to_string(),
     ///         directives: vec![],
     ///     }),
-    ///     Selection::InlineFragment(Inline {
+    ///     Selection::InlineFragment(InlineFragment {
     ///         type_condition: "Image".to_string(),
     ///         directives: vec![],
     ///         selections: vec![Selection::Field(Field {

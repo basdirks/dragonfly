@@ -123,9 +123,11 @@ impl Type {
     ///
     /// ```rust
     /// use dragonfly::{
+    ///     ast::{
+    ///         Scalar,
+    ///         Type,
+    ///     },
     ///     parser::ParseError,
-    ///     Scalar,
-    ///     Type,
     /// };
     ///
     /// assert_eq!(

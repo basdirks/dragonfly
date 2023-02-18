@@ -375,10 +375,7 @@ AST type. The `parse` method defines the parser.
 
 * `ast::Ast` contains the root AST type.
 * `ast::Ast::parse` defines the AST parser.
-* `parser::mod` contains parser combinators.
-* `parser::case` contains parsers for common casing styles.
-* `parser::char` contains parsers for common characters.
-* `parser::char_range` contains parsers for common character ranges.
+* `parser` contains parser combinators and common parsers.
 
 ## Type checker
 

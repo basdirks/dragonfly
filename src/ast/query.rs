@@ -792,7 +792,7 @@ impl Query {
     ///     ],
     ///     schema: QuerySchema::Model {
     ///         name: "image".to_string(),
-    ///         nodes: vec![Schema::Field("title".to_string())],
+    ///         nodes: vec![QuerySchema::Field("title".to_string())],
     ///     },
     ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
     ///     r#where: Some(QueryWhere::Node {
@@ -800,7 +800,7 @@ impl Query {
     ///         nodes: vec![QueryWhere::Node {
     ///             name: "title".to_string(),
     ///             nodes: vec![
-    ///                 QueryWhere::Condition(Condition::Equals(
+    ///                 QueryWhere::Condition(QueryCondition::Equals(
     ///                     "title".to_string(),
     ///                 )),
     ///                 QueryWhere::Node {

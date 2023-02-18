@@ -141,7 +141,7 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     kebab_case
+///     kebab_case,
 ///     ParseError,
 /// };
 ///

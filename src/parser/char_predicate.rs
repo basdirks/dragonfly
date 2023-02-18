@@ -24,7 +24,7 @@ use super::{
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::char_if,
+///     char_if,
 ///     ParseError,
 /// };
 ///
@@ -94,7 +94,7 @@ pub fn char_if(
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::chars_if,
+///     chars_if,
 ///     ParseError,
 /// };
 ///
@@ -153,7 +153,7 @@ pub fn chars_if(
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::alphabetic,
+///     alphabetic,
 ///     ParseError,
 /// };
 ///
@@ -194,7 +194,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::alphabetics,
+///     alphabetics,
 ///     ParseError,
 /// };
 ///
@@ -234,19 +234,19 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::alphanumerics,
+///     alphanumerics,
 ///     ParseError,
 /// };
 ///
 /// assert_eq!(
-///     alphanumerics("abc"),
-///     Ok(("123".to_string(), "".to_string()))
+///     alphanumerics("1a3"),
+///     Ok(("1a3".to_string(), "".to_string()))
 /// );
 ///
 /// assert_eq!(
-///     alphanumerics("abc"),
+///     alphanumerics("_bc"),
 ///     Err(ParseError::UnmetPredicate {
-///         actual: 'a',
+///         actual: '_',
 ///         message: "character is not alphanumeric".to_string(),
 ///     }),
 /// );
@@ -255,7 +255,7 @@ pub fn alphanumerics(input: &str) -> ParseResult<String> {
     chars_if(
         input,
         |char| char.is_ascii_alphanumeric(),
-        "character is not alphanumerics",
+        "character is not alphanumeric",
     )
 }
 
@@ -277,7 +277,7 @@ pub fn alphanumerics(input: &str) -> ParseResult<String> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::alphanumeric,
+///     alphanumeric,
 ///     ParseError,
 /// };
 ///
@@ -319,7 +319,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::digit,
+///     digit,
 ///     ParseError,
 /// };
 ///
@@ -359,7 +359,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::lowercase,
+///     lowercase,
 ///     ParseError,
 /// };
 ///
@@ -399,7 +399,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::uppercase,
+///     uppercase,
 ///     ParseError,
 /// };
 ///
@@ -439,7 +439,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::space,
+///     space,
 ///     ParseError,
 /// };
 ///
@@ -449,7 +449,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 /// assert!(space("\n").is_ok());
 ///
 /// assert_eq!(
-///     whitespace("a"),
+///     space("a"),
 ///     Err(ParseError::UnmetPredicate {
 ///         actual: 'a',
 ///         message: "character is not whitespace".to_string(),
@@ -478,7 +478,7 @@ pub fn space(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char_range::spaces,
+///     spaces,
 ///     ParseError,
 /// };
 ///

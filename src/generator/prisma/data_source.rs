@@ -145,7 +145,7 @@ impl Provider {
     /// ```rust
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
-    /// let provider = Provider::PostgreSql {
+    /// let provider = DataSourceProvider::PostgreSql {
     ///     user: "user".to_string(),
     ///     password: "password".to_string(),
     ///     host: "localhost".to_string(),
@@ -166,7 +166,7 @@ impl Provider {
     /// ```rust
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
-    /// let provider = Provider::MySql {
+    /// let provider = DataSourceProvider::MySql {
     ///     user: "user".to_string(),
     ///     password: "password".to_string(),
     ///     host: "localhost".to_string(),
@@ -185,7 +185,7 @@ impl Provider {
     /// ```rust
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
-    /// let provider = Provider::Sqlite {
+    /// let provider = DataSourceProvider::Sqlite {
     ///     path: "path/to/database.db".to_string(),
     /// };
     ///
@@ -197,7 +197,7 @@ impl Provider {
     /// ```rust
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
-    /// let provider = Provider::MongoDb {
+    /// let provider = DataSourceProvider::MongoDb {
     ///     user: "user".to_string(),
     ///     password: "password".to_string(),
     ///     host: "localhost".to_string(),
@@ -217,7 +217,7 @@ impl Provider {
     /// ```rust
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
-    /// let provider = Provider::SqlServer {
+    /// let provider = DataSourceProvider::SqlServer {
     ///     user: "user".to_string(),
     ///     password: "password".to_string(),
     ///     host: "localhost".to_string(),
@@ -237,7 +237,7 @@ impl Provider {
     /// ```rust
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
-    /// let provider = Provider::CockroachDb {
+    /// let provider = DataSourceProvider::CockroachDb {
     ///     user: "user".to_string(),
     ///     password: "password".to_string(),
     ///     host: "localhost".to_string(),
