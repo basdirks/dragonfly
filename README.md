@@ -33,7 +33,7 @@ Scalar types are:
 - `DateTime`: a date and time,
 - `Float`: a 64-bit floating point number,
 - `Int`: a 64-bit integer,
-- `Reference`: a reference to another enum or model,
+- `Reference`: a reference to an enum or another model,
 - `String`: a sequence of UTF-8 characters.
 
 ### Relationships
@@ -42,7 +42,8 @@ A reference points to an enum or a model. A reference to a model implies a
 relationship between two models.
 
 An example of a 1-1 relationship is a user and their profile. A user has one
-profile and a profile belongs to one user. `A { B }, B { A }`.
+profile and a profile belongs to one user.
+`A { B }, B { A }`.
 
 ```dfly
 model User {
@@ -55,7 +56,8 @@ model Profile {
 ```
 
 An example of a 1-n relationship is a user and their posts. A user has many
-posts and a post belongs to one user. `A { [B] }, B { A }`.
+posts and a post belongs to one user.
+`A { [B] }, B { A }`.
 
 ```dfly
 model User {
@@ -68,7 +70,8 @@ model Post {
 ```
 
 An example of a n-n relationship users and groups. A user belongs to many
-groups and a group has many users. `A { [B] }, B { [A] }`.
+groups and a group has many users.
+`A { [B] }, B { [A] }`.
 
 ```dfly
 model User {
