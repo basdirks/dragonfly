@@ -204,4 +204,24 @@ impl Type {
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice::<Self>(input, vec![Self::parse_one, Self::parse_array])
     }
+
+    /// Return the scalar type of this type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Scalar,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Type::Scalar(Scalar::String).scalar(), &Scalar::String);
+    /// assert_eq!(Type::Array(Scalar::String).scalar(), &Scalar::String);
+    /// ```
+    #[must_use]
+    pub const fn scalar(&self) -> &Scalar {
+        match self {
+            Self::Scalar(scalar) | Self::Array(scalar) => scalar,
+        }
+    }
 }

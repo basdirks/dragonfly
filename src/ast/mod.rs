@@ -595,77 +595,75 @@ impl Ast {
         Ok((ast, input))
     }
 
-    /// Check if the AST is valid.
+    /// Check for errors in individual entities.
     ///
     /// # Errors
     ///
-    /// ## Query errors
+    /// Returns a `TypeError::EmptyQuerySchema` if the schema of any query does
+    /// not contain any fields.
     ///
-    /// * `TypeError::EmptyQuerySchema`
-    /// if the schema of a query is empty.
+    /// Returns a `TypeError::UnusedQueryArgument` if any query argument is not
+    /// used in the query's `where` clause.
     ///
-    /// * `TypeError::IncompatibleQuerySchema`
-    /// if the schema of a query is incompatible with the structure of the
-    /// models and their relations.
+    /// Returns a `TypeError::IncompatibleQueryRootNodes` if the root nodes of
+    /// any query's schema and `where` clause do not match.
     ///
-    /// * `TypeError::IncompatibleQueryConditionType`
-    /// if the type of an argument in a condition does not match the type of the
-    /// corresponding model field.
-    ///
-    /// * `TypeError::IncompatibleQueryWhere`
-    /// if the where clause of a query is incompatible to the structure of the
-    /// models and their relations.
-    ///
-    /// * `TypeError::IncompatibleQueryRootNodes`
-    /// if the top-level schema node name does not match the name of the root
-    /// node in the where clause.
-    ///
-    /// * `TypeError::InvalidQueryArgumentType`
-    /// if the type of a query argument is an array or a model.
-    ///
-    /// * `TypeError::UnknownQueryArgumentType`
-    /// if the type of a query argument is undefined.
-    ///
-    /// * `TypeError::UnknownQueryReturnType`
-    /// if the return type of a query is does not match the (inferred) type of
-    /// the schema.
-    ///
-    /// * `TypeError::UnknownQueryConditionName`
-    /// if a condition refers to an undefined query argument.
-    ///
-    /// * `TypeError::UnusedQueryArgument`
-    /// if a query argument is not used at least once in the where clause.
-    ///
-    /// ## Route errors
-    ///
-    /// * `TypeError::UnknownRouteRoot`
-    /// if the root component of a route is undefined.
-    ///
-    /// ## Model errors
-    ///
-    /// * `TypeError::UnknownModelFieldType`
-    /// if the type of a field in a model is undefined.
-    pub fn check(&self) -> Result<(), TypeError> {
+    /// Returns a `TypeError::UnknownQueryConditionReference` if any query
+    /// selector references an argument that does not exist.
+    pub fn check_entities(&self) -> Result<(), TypeError> {
+        // Many of these checks could be combined into a single pass over the
+        // AST, but doing them separately is easier to understand.
+
         for query in self.queries.values() {
             // Self::check_query_schema(query, self)?;
             // Self::check_query_where(query, self)?;
             // Self::check_query_condition_types(query, self)?;
-            // Self::check_query_condition_names(query, self)?;
-            // Self::check_query_argument_types(query, self)?;
-            // Self::check_query_return_type(query, self)?;
-            // query.check_argument_types(self)?;
             query.check_unused_arguments()?;
-            query.check_non_empty_schema()?;
+            query.check_empty_schema()?;
             query.check_root_nodes()?;
+            query.check_condition_references()?;
         }
 
-        // for model in self.models.values() {
-        //     Self::check_model_field_types(model, self)?;
-        // }
+        Ok(())
+    }
 
-        // for route in self.routes.values() {
-        //     Self::check_route_root(route, self)?;
-        // }
+    /// Check for cross-entity type errors.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::InvalidQueryArgumentType` if the type of any query
+    /// is not a primitive or a reference to an enum.
+    ///
+    /// Returns a `TypeError::InvalidQueryReturnType` if the return type of any
+    /// query is not a reference to a known model.
+    ///
+    /// Returns a `TypeError::UnknownRouteRoot` if the root of any route is not
+    /// a reference to a known component.
+    ///
+    /// Returns a `TypeError::InvalidModelFieldType` if the type of any model
+    /// field is not a primitive, a reference to a known enum or model, or an
+    /// array of any such a type.
+    pub fn check_types(&self) -> Result<(), TypeError> {
+        // We could return the model relations during this pass, but it's
+        // easier to understand if we do it separately.
+
+        let model_names = self.models.keys().cloned().collect::<HashSet<_>>();
+        let component_names =
+            self.components.keys().cloned().collect::<HashSet<_>>();
+        let enum_names = self.enums.keys().cloned().collect::<HashSet<_>>();
+
+        for query in self.queries.values() {
+            query.check_argument_types(&self.enums)?;
+            query.check_return_type(&model_names)?;
+        }
+
+        for model in self.models.values() {
+            model.check_field_types(&model_names, &enum_names)?;
+        }
+
+        for route in self.routes.values() {
+            route.check_root(&component_names)?;
+        }
 
         Ok(())
     }

@@ -11,6 +11,8 @@ pub enum TypeError {
     /// A query schema should contain at least one field, but the schema of
     /// this query is empty. An empty schema is not allowed because it would
     /// not return any data.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_empty_schema`.
     EmptyQuerySchema {
         /// The name of the empty query.
         query_name: String,
@@ -52,14 +54,19 @@ pub enum TypeError {
         expected: Type,
     },
 
-    /// The structure of a where clause of a query does not match the structure
-    /// of the model and its relations.
+    /// The where clause should only refer to fields, nested or otherwise, that
+    /// are defined in the model. The where clause of this query refers to a
+    /// field that is not defined in the model.
     IncompatibleQueryWhere {
         /// The name of the query.
         query_name: String,
     },
-    /// The name of the root node of the where clause of a query does not match
-    /// the name of the root node of the schema.
+    /// The root node of content of the where clause should have the same name
+    /// as the root node of the query schema. The name of the root node of the
+    /// where clause of this query does not match that of the root node of the
+    /// schema.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_root_nodes`.
     IncompatibleQueryRootNodes {
         /// The name of the schema root node.
         schema_root: String,
@@ -68,49 +75,60 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
-    /// The type of an argument may not be an array or a model.
+    /// The type of a query argument must be a primitive, a reference to an
+    /// existing enum, or an array of such a type. The type of an argument of
+    /// this query is unknown.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_argument_types`.
     InvalidQueryArgumentType {
         /// The argument that has an invalid type.
         argument: QueryArgument,
         /// The name of the query.
         query_name: String,
     },
-    /// The type of a field of a model is undefined.
+    /// The return type of a query must be a reference to an existing model.
+    /// The return type of this query is unknown.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_return_type`.
+    InvalidQueryReturnType {
+        /// The name of the query.
+        query_name: String,
+        /// The return type of the query.
+        r#type: Type,
+    },
+    /// The type of a field in a model must be a primitive, a reference to an
+    /// existing enum or model, or an array of such a type. The type of a field
+    /// of this model is unknown.
     UnknownModelFieldType {
         /// The field whose type is undefined.
         field: Field,
         /// The name of the model.
         model_name: String,
     },
-    /// The type of a query argument is undefined.
-    UnknownQueryArgumentType {
-        /// The argument whose type is undefined.
-        argument: QueryArgument,
-        /// The name of the query.
-        query_name: String,
-    },
-    /// The return type of a query is undefined.
-    UnknownQueryReturnType {
-        /// The name of the query.
-        query_name: String,
-        /// The return type of the query.
-        r#type: Type,
-    },
-    /// A condition mentions an undefined argument.
-    UnknownQueryConditionName {
+    /// A condition must refer to a query argument. This query contains a
+    /// condition that refers to an undefined argument.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_condition_references`.
+    UnknownQueryConditionReference {
         /// The condition that mentions an undefined argument.
         condition: QueryCondition,
         /// The name of the query.
         query_name: String,
     },
-    /// The root component of a route is undefined.
+    /// The root of a route must be a reference to a known component. The root
+    /// of this route is unknown.
+    ///
+    /// Checked in `dragonfly::ast::Route::check_root`.
     UnknownRouteRoot {
         /// The name of the route.
         route_name: String,
         /// The name of the component.
         root: String,
     },
-    /// An argument of a query is not used in the where clause.
+    /// Every query argument must be used in the where clause. This query
+    /// contains an argument that is not used.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_unused_arguments`.
     UnusedQueryArgument {
         /// The argument that is not used.
         argument: QueryArgument,

@@ -180,7 +180,7 @@ mod tests {
                 parameters: vec![Value::Array(vec![
                     Value::String("firstName".to_string()),
                     Value::String("lastName".to_string()),
-                ]),],
+                ])],
             })
             .to_string(),
             "unique([firstName, lastName])"

@@ -40,7 +40,7 @@ impl Display for Literal {
 }
 
 /// A TypeScript type keyword.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Keyword {
     /// The `any` type.
     Any,

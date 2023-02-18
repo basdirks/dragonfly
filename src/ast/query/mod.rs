@@ -1,584 +1,44 @@
 use {
     super::{
         r#type::Type,
+        Enum,
+        Scalar,
         TypeError,
     },
     crate::parser::{
         alphabetics,
         brace_close,
         brace_open,
-        choice,
         colon,
         comma,
         dollar,
         literal,
-        many1,
-        map,
         maybe,
         paren_close,
         paren_open,
         spaces,
         ParseResult,
     },
-    std::collections::HashSet,
+    std::collections::{
+        HashMap,
+        HashSet,
+    },
+};
+pub use {
+    argument::Argument,
+    condition::Condition,
+    r#where::Where,
+    schema::Schema,
 };
 
-/// A condition that must be met for a query to return a result.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Condition {
-    /// The value of the given field must contain the given value.
-    Contains(String),
-    /// The value of the given field must equal the given value.
-    Equals(String),
-}
-
-impl Condition {
-    fn parse_contains(input: &str) -> ParseResult<Self> {
-        let (_, input) = literal(input, "contains")?;
-        let (_, input) = colon(&input)?;
-        let (_, input) = spaces(&input)?;
-        let (value, input) = Query::parse_reference(&input)?;
-
-        Ok((Self::Contains(value), input))
-    }
-
-    fn parse_equals(input: &str) -> ParseResult<Self> {
-        let (_, input) = literal(input, "equals")?;
-        let (_, input) = colon(&input)?;
-        let (_, input) = spaces(&input)?;
-        let (value, input) = Query::parse_reference(&input)?;
-
-        Ok((Self::Equals(value), input))
-    }
-
-    /// Parse a condition from the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The input to parse.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `ParseError` if the input does not start with a valid
-    /// condition.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QueryCondition;
-    ///
-    /// let input = "contains: $foo";
-    ///
-    /// assert_eq!(
-    ///     QueryCondition::parse(input),
-    ///     Ok((QueryCondition::Contains("foo".to_string()), "".to_string()))
-    /// );
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QueryCondition;
-    ///
-    /// let input = "equals: $bar";
-    ///
-    /// assert_eq!(
-    ///     QueryCondition::parse(input),
-    ///     Ok((QueryCondition::Equals("bar".to_string()), "".to_string()))
-    /// );
-    /// ```
-    pub fn parse(input: &str) -> ParseResult<Self> {
-        choice::<Self>(input, vec![Self::parse_contains, Self::parse_equals])
-    }
-}
-
-/// The conditions that queried data must meet.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Where {
-    /// A condition that must be met for a query to return a result.
-    Condition(Condition),
-    /// A field.
-    Node {
-        /// The name of the field.
-        name: String,
-        /// In the case of a relation, the fields and their conditions. This is
-        /// empty if the field does not refer to another model.
-        nodes: Vec<Where>,
-    },
-}
-
-impl Where {
-    /// Parse a condition from the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The input to parse.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `ParseError` if the input does not start with a valid
-    /// condition.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryWhere,
-    /// };
-    ///
-    /// let input = "contains: $foo";
-    ///
-    /// assert_eq!(
-    ///     QueryWhere::parse_condition(input),
-    ///     Ok((
-    ///         QueryWhere::Condition(QueryCondition::Contains("foo".to_string())),
-    ///         "".to_string(),
-    ///     ))
-    /// );
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryWhere,
-    /// };
-    ///
-    /// let input = "equals: $bar";
-    ///
-    /// assert_eq!(
-    ///     QueryWhere::parse_condition(input),
-    ///     Ok((
-    ///         QueryWhere::Condition(QueryCondition::Equals("bar".to_string())),
-    ///         "".to_string(),
-    ///     ))
-    /// );
-    /// ```
-    pub fn parse_condition(input: &str) -> ParseResult<Self> {
-        let (condition, input) = Condition::parse(input)?;
-
-        Ok((Self::Condition(condition), input))
-    }
-
-    /// Parse a node from the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The input to parse.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `ParseError` if the input does not start with a valid node.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryWhere,
-    /// };
-    ///
-    /// let input = "foo {
-    ///     contains: $foo
-    /// }";
-    ///
-    /// assert_eq!(
-    ///     QueryWhere::parse_node(input),
-    ///     Ok((
-    ///         QueryWhere::Node {
-    ///             name: "foo".to_string(),
-    ///             nodes: vec![QueryWhere::Condition(QueryCondition::Contains(
-    ///                 "foo".to_string()
-    ///             ))]
-    ///         },
-    ///         "".to_string()
-    ///     ))
-    /// );
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryWhere,
-    /// };
-    ///
-    /// let input = "foo {
-    ///     bar {
-    ///         contains: $foo
-    ///     }
-    /// }";
-    ///
-    /// assert_eq!(
-    ///     QueryWhere::parse_node(input),
-    ///     Ok((
-    ///         QueryWhere::Node {
-    ///             name: "foo".to_string(),
-    ///             nodes: vec![QueryWhere::Node {
-    ///                 name: "bar".to_string(),
-    ///                 nodes: vec![QueryWhere::Condition(
-    ///                     QueryCondition::Contains("foo".to_string())
-    ///                 )]
-    ///             }]
-    ///         },
-    ///         "".to_string()
-    ///     ))
-    /// );
-    /// ```
-    pub fn parse_node(input: &str) -> ParseResult<Self> {
-        let (name, input) = alphabetics(input)?;
-        let (_, input) = spaces(&input)?;
-        let (_, input) = brace_open(&input)?;
-        let (_, input) = spaces(&input)?;
-
-        let (structure, input) = many1(&input, |input| {
-            let (_, input) = spaces(input)?;
-            let (where_clause, input) =
-                choice(&input, vec![Self::parse_condition, Self::parse_node])?;
-            let (_, input) = spaces(&input)?;
-
-            Ok((where_clause, input))
-        })?;
-
-        let (_, input) = spaces(&input)?;
-        let (_, input) = brace_close(&input)?;
-
-        Ok((
-            Self::Node {
-                name,
-                nodes: structure,
-            },
-            input,
-        ))
-    }
-
-    /// Parse a where clause from the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The input to parse.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `ParseError` if the input does not start with a valid where
-    /// clause.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryWhere,
-    /// };
-    ///
-    /// let input = "where {
-    ///     foo {
-    ///         contains: $foo
-    ///     }
-    /// }";
-    ///
-    /// assert_eq!(
-    ///     QueryWhere::parse(input),
-    ///     Ok((
-    ///         QueryWhere::Node {
-    ///             name: "foo".to_string(),
-    ///             nodes: vec![QueryWhere::Condition(QueryCondition::Contains(
-    ///                 "foo".to_string()
-    ///             ))]
-    ///         },
-    ///         "".to_string()
-    ///     ))
-    /// );
-    /// ```
-    pub fn parse(input: &str) -> ParseResult<Self> {
-        let (_, input) = literal(input, "where")?;
-        let (_, input) = spaces(&input)?;
-        let (_, input) = brace_open(&input)?;
-        let (_, input) = spaces(&input)?;
-        let (where_clause, input) =
-            choice(&input, vec![Self::parse_condition, Self::parse_node])?;
-        let (_, input) = spaces(&input)?;
-        let (_, input) = brace_close(&input)?;
-
-        Ok((where_clause, input))
-    }
-
-    /// Return all references used in the conditions of this where clause.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryWhere,
-    /// };
-    ///
-    /// let where_clause = QueryWhere::Node {
-    ///     name: "foo".to_string(),
-    ///     nodes: vec![
-    ///         QueryWhere::Node {
-    ///             name: "bar".to_string(),
-    ///             nodes: vec![
-    ///                 QueryWhere::Condition(QueryCondition::Contains(
-    ///                     "bar".to_string(),
-    ///                 )),
-    ///                 QueryWhere::Condition(QueryCondition::Contains(
-    ///                     "baz".to_string(),
-    ///                 )),
-    ///             ],
-    ///         },
-    ///         QueryWhere::Node {
-    ///             name: "baz".to_string(),
-    ///             nodes: vec![
-    ///                 QueryWhere::Condition(QueryCondition::Contains(
-    ///                     "bar".to_string(),
-    ///                 )),
-    ///                 QueryWhere::Condition(QueryCondition::Contains(
-    ///                     "foo".to_string(),
-    ///                 )),
-    ///             ],
-    ///         },
-    ///     ],
-    /// };
-    ///
-    /// assert_eq!(
-    ///     where_clause.references(),
-    ///     vec!["foo", "bar", "baz"]
-    ///         .iter()
-    ///         .map(ToString::to_string)
-    ///         .collect()
-    /// );
-    /// ```
-    pub fn references(&self) -> HashSet<String> {
-        let mut references = HashSet::new();
-
-        match self {
-            Self::Condition(
-                Condition::Contains(reference) | Condition::Equals(reference),
-            ) => {
-                references.insert(reference.clone());
-            }
-            Self::Node { nodes, .. } => {
-                references.extend(
-                    nodes
-                        .iter()
-                        .flat_map(Self::references)
-                        .collect::<HashSet<String>>(),
-                );
-            }
-        }
-
-        references
-    }
-}
-
-/// A query argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Argument {
-    /// The name of the argument. Used inside the conditions of
-    /// the where clause.
-    pub name: String,
-    /// The type of the argument.
-    pub r#type: Type,
-}
-
-impl Argument {
-    /// Parse an argument from the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The input to parse.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `ParseError` if the input does not start with a valid
-    /// argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryArgument,
-    ///     Scalar,
-    ///     Type,
-    /// };
-    ///
-    /// assert_eq!(
-    ///     QueryArgument::parse("$name: String"),
-    ///     Ok((
-    ///         QueryArgument {
-    ///             name: "name".to_string(),
-    ///             r#type: Type::Scalar(Scalar::String),
-    ///         },
-    ///         "".to_string()
-    ///     ))
-    /// );
-    /// ```
-    pub fn parse(input: &str) -> ParseResult<Self> {
-        let (name, input) = Query::parse_reference(input)?;
-        let (_, input) = colon(&input)?;
-        let (_, input) = spaces(&input)?;
-        let (r#type, input) = Type::parse(&input)?;
-
-        Ok((Self { name, r#type }, input))
-    }
-}
-
+/// Query arguments.
+pub mod argument;
+/// Conditions that queried data must meet.
+pub mod condition;
 /// The structure of the data that the query should return.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Schema {
-    /// A leaf node: a field.
-    Field(String),
-    /// A node with children. Either the root node or a relation.
-    Model {
-        /// The name of the node.
-        name: String,
-        /// The children of the node; fields or relations.
-        nodes: Vec<Self>,
-    },
-}
-
-impl Schema {
-    fn parse_node(input: &str) -> ParseResult<Self> {
-        let (name, input) = alphabetics(input)?;
-        let (_, input) = spaces(&input)?;
-        let (_, input) = brace_open(&input)?;
-        let (_, input) = spaces(&input)?;
-
-        let (structure, input) = many1(&input, |input| {
-            let (_, input) = spaces(input)?;
-            let (schema, input) = Self::parse(&input)?;
-            let (_, input) = spaces(&input)?;
-
-            Ok((schema, input))
-        })?;
-
-        let (_, input) = spaces(&input)?;
-        let (_, input) = brace_close(&input)?;
-
-        Ok((
-            Self::Model {
-                name,
-                nodes: structure,
-            },
-            input,
-        ))
-    }
-
-    fn parse_identifier(input: &str) -> ParseResult<Self> {
-        map(input, alphabetics, Self::Field)
-    }
-
-    /// Parse a schema from the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The input to parse.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `ParseError` if the input does not start with a valid schema.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// assert_eq!(
-    ///     QuerySchema::parse("user"),
-    ///     Ok((QuerySchema::Field("user".to_string()), "".to_string())),
-    /// );
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let input = "user {
-    ///   name
-    /// }";
-    ///
-    /// assert_eq!(
-    ///     QuerySchema::parse(input),
-    ///     Ok((
-    ///         QuerySchema::Model {
-    ///             name: "user".to_string(),
-    ///             nodes: vec![QuerySchema::Field("name".to_string())],
-    ///         },
-    ///         "".to_string()
-    ///     )),
-    /// );
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let input = "user {
-    ///   name {
-    ///     first
-    ///     last
-    ///   }
-    /// }";
-    ///
-    /// assert_eq!(
-    ///     QuerySchema::parse(input),
-    ///     Ok((
-    ///         QuerySchema::Model {
-    ///             name: "user".to_string(),
-    ///             nodes: vec![QuerySchema::Model {
-    ///                 name: "name".to_string(),
-    ///                 nodes: vec![
-    ///                     QuerySchema::Field("first".to_string()),
-    ///                     QuerySchema::Field("last".to_string()),
-    ///                 ]
-    ///             }]
-    ///         },
-    ///         "".to_string()
-    ///     )),
-    /// );
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let input = "user";
-    ///
-    /// assert_eq!(
-    ///     QuerySchema::parse(input),
-    ///     Ok((QuerySchema::Field("user".to_string()), "".to_string())),
-    /// );
-    /// ```
-    pub fn parse(input: &str) -> ParseResult<Self> {
-        choice(input, vec![Self::parse_node, Self::parse_identifier])
-    }
-
-    /// Check if the schema is empty. The schema is empty if the root node has
-    /// no children.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let schema = QuerySchema::Field("user".to_string());
-    ///
-    /// assert_eq!(schema.is_empty(), true);
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let schema = QuerySchema::Model {
-    ///     name: "user".to_string(),
-    ///     nodes: vec![QuerySchema::Field("name".to_string())],
-    /// };
-    ///
-    /// assert_eq!(schema.is_empty(), false);
-    /// ```
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        match self {
-            Self::Field(_) => true,
-            Self::Model { nodes: schema, .. } => schema.is_empty(),
-        }
-    }
-}
+pub mod schema;
+/// Sets of conditions that queried data must meet.
+pub mod r#where;
 
 /// A query.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -1011,7 +471,7 @@ impl Query {
     ///
     /// assert!(Query::parse(input).is_err());
     /// ```
-    pub fn check_non_empty_schema(&self) -> Result<(), TypeError> {
+    pub fn check_empty_schema(&self) -> Result<(), TypeError> {
         if self.schema.is_empty() {
             Err(TypeError::EmptyQuerySchema {
                 query_name: self.name.clone(),
@@ -1131,6 +591,288 @@ impl Query {
                 return Err(TypeError::UnusedQueryArgument {
                     query_name: self.name.clone(),
                     argument: argument.clone(),
+                });
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check whether each condition references an existing argument.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::UnknownQueryConditionReference` if any condition
+    /// references an argument that does not exist.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Query;
+    ///
+    /// let input = "query images($name: CountryName): [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    ///   where {
+    ///     image {
+    ///       country {
+    ///         name {
+    ///           equals: $name
+    ///         }
+    ///       }
+    ///     }
+    ///   }
+    /// }";
+    ///
+    /// assert!(Query::parse(input)
+    ///     .unwrap()
+    ///     .0
+    ///     .check_condition_references()
+    ///     .is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Query,
+    ///     QueryCondition,
+    ///     TypeError,
+    /// };
+    ///
+    /// let input = "query images($name: CountryName): [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    ///   where {
+    ///     image {
+    ///       country {
+    ///         name {
+    ///           equals: $tag
+    ///         }
+    ///       }
+    ///     }
+    ///   }
+    /// }";
+    ///
+    /// assert_eq!(
+    ///     Query::parse(input).unwrap().0.check_condition_references(),
+    ///     Err(TypeError::UnknownQueryConditionReference {
+    ///         query_name: "images".to_string(),
+    ///         condition: QueryCondition::Equals("tag".to_string()),
+    ///     }),
+    /// );
+    /// ```
+    pub fn check_condition_references(&self) -> Result<(), TypeError> {
+        if let Some(r#where) = &self.r#where {
+            let argument_names = self
+                .arguments
+                .iter()
+                .map(|argument| argument.name.clone())
+                .collect::<HashSet<String>>();
+
+            for condition in &r#where.conditions() {
+                if !argument_names.contains(condition.reference()) {
+                    return Err(TypeError::UnknownQueryConditionReference {
+                        query_name: self.name.clone(),
+                        condition: condition.clone(),
+                    });
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check whether each query arguments is a primitive type or a reference
+    /// to an existing enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `enums` - A list of enums.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::InvalidQueryArgumentType` if any argument type is
+    /// not a primitive type or a reference to an existing enum.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Enum,
+    ///     Query,
+    /// };
+    ///
+    /// let input = "query images($name: CountryName): [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }";
+    ///
+    /// let query = Query::parse(input).unwrap().0;
+    ///
+    /// let enums = vec![(
+    ///     "CountryName".to_string(),
+    ///     Enum {
+    ///         name: "CountryName".to_string(),
+    ///         variants: vec!["France".to_string(), "Germany".to_string()]
+    ///             .into_iter()
+    ///             .collect(),
+    ///     },
+    /// )]
+    /// .into_iter()
+    /// .collect();
+    ///
+    /// assert!(query.check_argument_types(&enums).is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use {
+    ///     dragonfly::ast::Query,
+    ///     std::collections::HashMap,
+    /// };
+    ///
+    /// let input = "query foo($p: Boolean, $date: DateTime, $rate: Float, \
+    ///              $population: Int, $name: String): [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }";
+    ///
+    /// let query = Query::parse(input).unwrap().0;
+    ///
+    /// assert!(query.check_argument_types(&HashMap::new()).is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Enum,
+    ///     Query,
+    ///     QueryArgument,
+    ///     Scalar,
+    ///     Type,
+    ///     TypeError,
+    /// };
+    ///
+    /// let input = "query images($name: CountryName): [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }";
+    ///
+    /// let query = Query::parse(input).unwrap().0;
+    ///
+    /// let enums = vec![(
+    ///     "ContinentName".to_string(),
+    ///     Enum {
+    ///         name: "ContinentName".to_string(),
+    ///         variants: vec!["Europe".to_string(), "Asia".to_string()]
+    ///             .into_iter()
+    ///             .collect(),
+    ///     },
+    /// )]
+    /// .into_iter()
+    /// .collect();
+    ///
+    /// assert_eq!(
+    ///     query.check_argument_types(&enums),
+    ///     Err(TypeError::InvalidQueryArgumentType {
+    ///         query_name: "images".to_string(),
+    ///         argument: QueryArgument {
+    ///             name: "name".to_string(),
+    ///             r#type: Type::Scalar(Scalar::Reference(
+    ///                 "CountryName".to_string()
+    ///             )),
+    ///         },
+    ///     }),
+    /// );
+    /// ```
+    pub fn check_argument_types(
+        &self,
+        enums: &HashMap<String, Enum>,
+    ) -> Result<(), TypeError> {
+        for argument in &self.arguments {
+            if let Scalar::Reference(name) = &argument.scalar() {
+                if !enums.contains_key(name) {
+                    return Err(TypeError::InvalidQueryArgumentType {
+                        query_name: self.name.clone(),
+                        argument: argument.clone(),
+                    });
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check that the return type of the query is a reference to an existing
+    /// model, or an array of such a type.
+    ///
+    /// # Arguments
+    ///
+    /// * `models` - An list of models.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::InvalidQueryReturnType` if the return type is
+    /// not a reference to an existing model, or an array of such a type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Model,
+    ///     Query,
+    /// };
+    ///
+    /// let input = "query images: [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }";
+    ///
+    /// let query = Query::parse(input).unwrap().0;
+    /// let models = vec!["Image".to_string()].into_iter().collect();
+    ///
+    /// assert!(query.check_return_type(&models).is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use {
+    ///     dragonfly::ast::{
+    ///         Query,
+    ///         Scalar,
+    ///         Type,
+    ///         TypeError,
+    ///     },
+    ///     std::collections::HashSet,
+    /// };
+    ///
+    /// let input = "query images: [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }";
+    ///
+    /// let query = Query::parse(input).unwrap().0;
+    ///
+    /// assert_eq!(
+    ///     query.check_return_type(&HashSet::new()),
+    ///     Err(TypeError::InvalidQueryReturnType {
+    ///         query_name: "images".to_string(),
+    ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
+    ///     })
+    /// );
+    /// ```
+    pub fn check_return_type(
+        &self,
+        model_names: &HashSet<String>,
+    ) -> Result<(), TypeError> {
+        if let Scalar::Reference(name) = &self.r#type.scalar() {
+            if !model_names.contains(name) {
+                return Err(TypeError::InvalidQueryReturnType {
+                    query_name: self.name.clone(),
+                    r#type: self.r#type.clone(),
                 });
             }
         }

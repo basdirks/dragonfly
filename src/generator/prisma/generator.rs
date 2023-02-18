@@ -33,7 +33,7 @@ impl Display for Provider {
 }
 
 /// A binary target.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum BinaryTarget {
     /// `linux-musl`
     ///
@@ -157,7 +157,7 @@ impl Display for BinaryTarget {
 }
 
 /// An engine type.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum EngineType {
     /// A library.
     #[default]
@@ -183,7 +183,7 @@ impl Display for EngineType {
 }
 
 /// Preview features (updated 4.10.0).
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PreviewFeature {
     /// `clientExtensions`, since 3.6.0.
     ClientExtensions,

@@ -7,7 +7,7 @@ use {
 };
 
 /// How referential integrity is enforced.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum RelationMode {
     /// Foreign keys are enforced by the database.
     ForeignKeys,

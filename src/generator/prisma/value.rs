@@ -114,7 +114,7 @@ mod tests {
     #[test]
     fn test_display_relation_array() {
         assert_eq!(
-            Value::RelationArray(vec!["foo".to_string(), "bar".to_string(),])
+            Value::RelationArray(vec!["foo".to_string(), "bar".to_string()])
                 .to_string(),
             "[foo, bar]"
         );

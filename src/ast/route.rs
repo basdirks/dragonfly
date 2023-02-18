@@ -1,14 +1,18 @@
-use crate::parser::{
-    alphabetics,
-    brace_close,
-    brace_open,
-    chars_if,
-    choice,
-    colon,
-    literal,
-    pascal_case,
-    spaces,
-    ParseResult,
+use {
+    super::TypeError,
+    crate::parser::{
+        alphabetics,
+        brace_close,
+        brace_open,
+        chars_if,
+        choice,
+        colon,
+        literal,
+        pascal_case,
+        spaces,
+        ParseResult,
+    },
+    std::collections::HashSet,
 };
 
 /// A route describes access to a component.
@@ -206,5 +210,68 @@ impl Route {
         let (_, input) = brace_close(&input)?;
 
         Ok((Self { path, root, title }, input))
+    }
+
+    /// Check whether the root references a known component.
+    ///
+    /// # Arguments
+    ///
+    /// * `components` - The components to check against.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::UnknownComponent` if the root does not reference a
+    /// known component.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Route;
+    ///
+    /// let route = Route {
+    ///     path: "/".to_string(),
+    ///     root: "Index".to_string(),
+    ///     title: "Home".to_string(),
+    /// };
+    ///
+    /// let components = vec!["Index".to_string()].into_iter().collect();
+    ///
+    /// assert!(route.check_root(&components).is_ok());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Route,
+    ///     TypeError,
+    /// };
+    ///
+    /// let route = Route {
+    ///     path: "/".to_string(),
+    ///     root: "Index".to_string(),
+    ///     title: "Home".to_string(),
+    /// };
+    ///
+    /// let components = vec!["Home".to_string()].into_iter().collect();
+    ///
+    /// assert_eq!(
+    ///     route.check_root(&components),
+    ///     Err(TypeError::UnknownRouteRoot {
+    ///         root: "Index".to_string(),
+    ///         route_name: "/".to_string(),
+    ///     })
+    /// );
+    /// ```
+    pub fn check_root(
+        &self,
+        components: &HashSet<String>,
+    ) -> Result<(), TypeError> {
+        if !components.contains(&self.root) {
+            return Err(TypeError::UnknownRouteRoot {
+                root: self.root.clone(),
+                route_name: self.path.clone(),
+            });
+        }
+
+        Ok(())
     }
 }
