@@ -142,6 +142,9 @@ An enum is a predefined list of one or more string values.
 (* Enum *)
 
 enum         = "enum" enum_name "{" enum_variant+ "}";
+
+(* Names *)
+
 enum_name    = pascal_case;
 enum_variant = pascal_case;
 ```
