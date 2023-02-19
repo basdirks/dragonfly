@@ -3,6 +3,8 @@
 Dragonfly is a toy DSL that explores ways to describe the structure of
 full-stack web applications. You should not use it in production.
 
+If you are looking for a real solution, check out [Wasp](https://wasp-lang.dev/).
+
 # Entities
 
 An application consists of:
@@ -138,7 +140,7 @@ An enum is a predefined list of one or more string values.
 
 - The enum must have at least one variant.
 - The name of an enum must be unique.
-- The name of an enum variant must be unique within an enum.
+- The name of an enum variant must be unique within the enum.
 
 ### EBNF
 
@@ -286,7 +288,7 @@ route / {
 
 ## Components
 
-A component is a Javascript function that renders a user interface.
+A component is a Javascript function that renders a part of the user interface.
 
 ### Rules
 
