@@ -1,16 +1,19 @@
-use crate::parser::{
-    camel_case,
-    choice,
-    colon,
-    dollar,
-    literal,
-    spaces,
-    ParseResult,
+use {
+    crate::parser::{
+        camel_case,
+        choice,
+        colon,
+        dollar,
+        literal,
+        spaces,
+        ParseResult,
+    },
+    std::collections::VecDeque,
 };
 
 /// The type of a condition.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Type {
+pub enum Operator {
     /// The value of the field must contain the value of the argument.
     Contains {
         /// The name of the referenced argument.
@@ -23,7 +26,7 @@ pub enum Type {
     },
 }
 
-impl Type {
+impl Operator {
     /// Parse a condition type from the given input.
     ///
     /// # Arguments
@@ -38,12 +41,12 @@ impl Type {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::QueryConditionType;
+    /// use dragonfly::ast::QueryOperator;
     ///
     /// assert_eq!(
-    ///     QueryConditionType::parse("contains: $foo"),
+    ///     QueryOperator::parse("contains: $foo"),
     ///     Ok((
-    ///         QueryConditionType::Contains {
+    ///         QueryOperator::Contains {
     ///             argument: "foo".to_string(),
     ///         },
     ///         "".to_string()
@@ -52,12 +55,12 @@ impl Type {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::QueryConditionType;
+    /// use dragonfly::ast::QueryOperator;
     ///
     /// assert_eq!(
-    ///     QueryConditionType::parse("equals: $bar"),
+    ///     QueryOperator::parse("equals: $bar"),
     ///     Ok((
-    ///         QueryConditionType::Equals {
+    ///         QueryOperator::Equals {
     ///             argument: "bar".to_string(),
     ///         },
     ///         "".to_string()
@@ -66,9 +69,9 @@ impl Type {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::QueryConditionType;
+    /// use dragonfly::ast::QueryOperator;
     ///
-    /// assert!(QueryConditionType::parse("starts_with: $foo").is_err());
+    /// assert!(QueryOperator::parse("starts_with: $foo").is_err());
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice(
@@ -103,9 +106,9 @@ impl Type {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Condition {
     /// The path to the field that must meet the condition.
-    pub field: Vec<String>,
+    pub field_path: VecDeque<String>,
     /// The type of the condition.
-    pub r#type: Type,
+    pub operator: Operator,
 }
 
 impl Condition {
@@ -114,14 +117,17 @@ impl Condition {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryConditionType,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let condition = QueryCondition {
-    ///     field: vec!["foo".to_string()],
-    ///     r#type: QueryConditionType::Contains {
+    ///     field_path: VecDeque::from(vec!["foo".to_string()]),
+    ///     operator: QueryOperator::Contains {
     ///         argument: "bar".to_string(),
     ///     },
     /// };
@@ -130,14 +136,17 @@ impl Condition {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryConditionType,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let condition = QueryCondition {
-    ///     field: vec!["foo".to_string()],
-    ///     r#type: QueryConditionType::Equals {
+    ///     field_path: VecDeque::from(vec!["foo".to_string()]),
+    ///     operator: QueryOperator::Equals {
     ///         argument: "baz".to_string(),
     ///     },
     /// };
@@ -146,8 +155,10 @@ impl Condition {
     /// ```
     #[must_use]
     pub fn argument(&self) -> &str {
-        match &self.r#type {
-            Type::Contains { argument } | Type::Equals { argument } => argument,
+        match &self.operator {
+            Operator::Contains { argument } | Operator::Equals { argument } => {
+                argument
+            }
         }
     }
 }

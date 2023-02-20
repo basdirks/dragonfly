@@ -1,7 +1,6 @@
 use {
     super::{
         r#type::Type,
-        Model,
         Scalar,
         TypeError,
     },
@@ -17,18 +16,16 @@ use {
         paren_close,
         paren_open,
         spaces,
+        ParseError,
         ParseResult,
     },
-    std::collections::{
-        HashMap,
-        HashSet,
-    },
+    std::collections::HashSet,
 };
 pub use {
     argument::Argument,
     condition::{
         Condition,
-        Type as ConditionType,
+        Operator as ConditionType,
     },
     r#where::Where,
     schema::{
@@ -46,6 +43,78 @@ pub mod schema;
 /// Sets of conditions that queried data must meet.
 pub mod r#where;
 
+/// The return type of a query.
+///
+/// Must be a model or an array of such a type.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ReturnType {
+    /// The name of a model.
+    Model(String),
+    /// An array of a model.
+    Array(String),
+}
+
+impl ReturnType {
+    /// Parse a return type from the given input.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input to parse.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `ParseError` if the input does not start with a valid return
+    /// type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::QueryReturnType,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// assert_eq!(
+    ///     QueryReturnType::parse("Foo"),
+    ///     Ok((QueryReturnType::Model("Foo".to_string()), "".to_string()))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     QueryReturnType::parse("[Foo]"),
+    ///     Ok((QueryReturnType::Array("Foo".to_string()), "".to_string()))
+    /// );
+    ///
+    /// assert!(QueryReturnType::parse("{Foo}").is_err());
+    /// ```
+    pub fn parse(input: &str) -> ParseResult<Self> {
+        let (r#type, input) = Type::parse(input)?;
+        let (_, input) = spaces(&input)?;
+
+        match r#type {
+            Type::Scalar(Scalar::Reference(name)) => {
+                Ok((Self::Model(name), input))
+            }
+            Type::Array(Scalar::Reference(name)) => {
+                Ok((Self::Array(name), input))
+            }
+            _ => {
+                Err(ParseError::CustomError {
+                    message: "expected return type".to_string(),
+                    input,
+                })
+            }
+        }
+    }
+
+    /// Return the name of the model that the return type references.
+    #[must_use]
+    pub fn model(&self) -> &str {
+        match self {
+            Self::Model(name) | Self::Array(name) => name,
+        }
+    }
+}
+
 /// A query.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Query {
@@ -55,8 +124,9 @@ pub struct Query {
     pub arguments: Vec<Argument>,
     /// The schema of the query.
     pub schema: Schema,
-    /// The return type of the query.
-    pub r#type: Type,
+    /// The return type of the query. Must be a model reference or an array of
+    /// a model reference.
+    pub r#type: ReturnType,
     /// The where clause of the query.
     pub r#where: Option<Where>,
 }
@@ -189,6 +259,7 @@ impl Query {
     /// ```rust
     /// use dragonfly::ast::{
     ///     Query,
+    ///     QueryReturnType,
     ///     QuerySchema,
     ///     QuerySchemaNode,
     ///     Scalar,
@@ -208,7 +279,7 @@ impl Query {
     ///         name: "image".to_string(),
     ///         nodes: vec![QuerySchemaNode::Field("title".to_string())],
     ///     },
-    ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
+    ///     r#type: QueryReturnType::Array("Image".to_string()),
     ///     r#where: None,
     /// };
     ///
@@ -216,16 +287,20 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     Query,
-    ///     QueryArgument,
-    ///     QueryCondition,
-    ///     QueryConditionType,
-    ///     QuerySchema,
-    ///     QuerySchemaNode,
-    ///     QueryWhere,
-    ///     Scalar,
-    ///     Type,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         Query,
+    ///         QueryArgument,
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///         QueryReturnType,
+    ///         QuerySchema,
+    ///         QuerySchemaNode,
+    ///         QueryWhere,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let input = "query images($tag: String, $title: String): [Image] {
@@ -260,19 +335,22 @@ impl Query {
     ///         name: "image".to_string(),
     ///         nodes: vec![QuerySchemaNode::Field("title".to_string())],
     ///     },
-    ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
+    ///     r#type: QueryReturnType::Array("Image".to_string()),
     ///     r#where: Some(QueryWhere {
     ///         name: "image".to_string(),
     ///         conditions: vec![
     ///             QueryCondition {
-    ///                 field: vec!["title".to_string()],
-    ///                 r#type: QueryConditionType::Equals {
+    ///                 field_path: VecDeque::from(vec!["title".to_string()]),
+    ///                 operator: QueryOperator::Equals {
     ///                     argument: "title".to_string(),
     ///                 },
     ///             },
     ///             QueryCondition {
-    ///                 field: vec!["title".to_string(), "tags".to_string()],
-    ///                 r#type: QueryConditionType::Contains {
+    ///                 field_path: VecDeque::from(vec![
+    ///                     "title".to_string(),
+    ///                     "tags".to_string(),
+    ///                 ]),
+    ///                 operator: QueryOperator::Contains {
     ///                     argument: "tag".to_string(),
     ///                 },
     ///             },
@@ -284,16 +362,20 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     Query,
-    ///     QueryArgument,
-    ///     QueryCondition,
-    ///     QueryConditionType,
-    ///     QuerySchema,
-    ///     QuerySchemaNode,
-    ///     QueryWhere,
-    ///     Scalar,
-    ///     Type,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         Query,
+    ///         QueryArgument,
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///         QueryReturnType,
+    ///         QuerySchema,
+    ///         QuerySchemaNode,
+    ///         QueryWhere,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let input = "query imagesByCountryName($name: CountryName): [Image] {
@@ -325,12 +407,15 @@ impl Query {
     ///             QuerySchemaNode::Field("category".to_string()),
     ///         ],
     ///     },
-    ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
+    ///     r#type: QueryReturnType::Array("Image".to_string()),
     ///     r#where: Some(QueryWhere {
     ///         name: "image".to_string(),
     ///         conditions: vec![QueryCondition {
-    ///             field: vec!["country".to_string(), "name".to_string()],
-    ///             r#type: QueryConditionType::Equals {
+    ///             field_path: VecDeque::from(vec![
+    ///                 "country".to_string(),
+    ///                 "name".to_string(),
+    ///             ]),
+    ///             operator: QueryOperator::Equals {
     ///                 argument: "name".to_string(),
     ///             },
     ///         }],
@@ -347,7 +432,7 @@ impl Query {
         let (arguments, input) = Self::parse_arguments(&input)?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
-        let (r#type, input) = Type::parse(&input)?;
+        let (r#type, input) = ReturnType::parse(&input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
@@ -650,11 +735,14 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     Query,
-    ///     QueryCondition,
-    ///     QueryConditionType,
-    ///     TypeError,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         Query,
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///         TypeError,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let input = "query images($name: CountryName): [Image] {
@@ -677,11 +765,11 @@ impl Query {
     ///     Err(TypeError::UnknownQueryConditionReference {
     ///         query_name: "images".to_string(),
     ///         condition: QueryCondition {
-    ///             field: ["country", "name"]
-    ///                 .into_iter()
-    ///                 .map(String::from)
-    ///                 .collect::<Vec<String>>(),
-    ///             r#type: QueryConditionType::Equals {
+    ///             field_path: VecDeque::from(vec![
+    ///                 "country".to_string(),
+    ///                 "name".to_string()
+    ///             ]),
+    ///             operator: QueryOperator::Equals {
     ///                 argument: "tag".to_string(),
     ///             }
     ///         }
@@ -862,9 +950,9 @@ impl Query {
     ///
     /// assert_eq!(
     ///     query.check_return_type(&HashSet::new()),
-    ///     Err(TypeError::InvalidQueryReturnType {
+    ///     Err(TypeError::UnknownQueryReturnType {
     ///         query_name: "images".to_string(),
-    ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
+    ///         model_name: "Image".to_string(),
     ///     })
     /// );
     /// ```
@@ -872,39 +960,15 @@ impl Query {
         &self,
         model_names: &HashSet<String>,
     ) -> Result<(), TypeError> {
-        if let Scalar::Reference(name) = &self.r#type.scalar() {
-            if !model_names.contains(name) {
-                return Err(TypeError::InvalidQueryReturnType {
-                    query_name: self.name.clone(),
-                    r#type: self.r#type.clone(),
-                });
-            }
+        let model_name = self.r#type.model();
+
+        if !model_names.contains(model_name) {
+            return Err(TypeError::UnknownQueryReturnType {
+                query_name: self.name.clone(),
+                model_name: model_name.to_string(),
+            });
         }
 
         Ok(())
-    }
-
-    /// Check that the types of the condition operands are valid.
-    ///
-    /// # Arguments
-    ///
-    /// * `models` - A list of models.
-    /// * `enum_names` - A list of enum names.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `TypeError::IncompatibleQueryConditionType` if the
-    /// types of the condition operands are not compatible with one another or
-    /// with the type of condition.
-    ///
-    /// # Panics
-    ///
-    /// TODO
-    pub fn check_condition_types(
-        &self,
-        _models: &HashMap<String, Model>,
-        _enum_names: &HashSet<String>,
-    ) -> Result<(), TypeError> {
-        todo!();
     }
 }

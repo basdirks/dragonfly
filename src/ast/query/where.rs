@@ -1,6 +1,6 @@
 use {
     super::{
-        condition::Type,
+        condition::Operator,
         Condition,
     },
     crate::parser::{
@@ -12,6 +12,7 @@ use {
         ParseError,
         ParseResult,
     },
+    std::collections::VecDeque,
 };
 
 /// The conditions that queried data must meet.
@@ -37,10 +38,13 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryConditionType,
-    ///     QueryWhere,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///         QueryWhere,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let input = "foo {
@@ -62,20 +66,26 @@ impl Where {
     ///     conditions,
     ///     vec![
     ///         QueryCondition {
-    ///             field: vec!["foo".to_string()],
-    ///             r#type: QueryConditionType::Contains {
+    ///             field_path: VecDeque::from(vec!["foo".to_string()]),
+    ///             operator: QueryOperator::Contains {
     ///                 argument: "foo".to_string(),
     ///             }
     ///         },
     ///         QueryCondition {
-    ///             field: vec!["foo".to_string(), "bar".to_string()],
-    ///             r#type: QueryConditionType::Equals {
+    ///             field_path: VecDeque::from(vec![
+    ///                 "foo".to_string(),
+    ///                 "bar".to_string()
+    ///             ]),
+    ///             operator: QueryOperator::Equals {
     ///                 argument: "bar".to_string(),
     ///             }
     ///         },
     ///         QueryCondition {
-    ///             field: vec!["foo".to_string(), "baz".to_string()],
-    ///             r#type: QueryConditionType::Contains {
+    ///             field_path: VecDeque::from(vec![
+    ///                 "foo".to_string(),
+    ///                 "baz".to_string()
+    ///             ]),
+    ///             operator: QueryOperator::Contains {
     ///                 argument: "baz".to_string(),
     ///             }
     ///         }
@@ -101,7 +111,7 @@ impl Where {
     /// ```
     pub fn parse_conditions(input: &str) -> ParseResult<Vec<Condition>> {
         let mut input = input.to_string();
-        let mut path = vec![];
+        let mut path = VecDeque::new();
         let mut conditions: Vec<Condition> = vec![];
 
         loop {
@@ -117,7 +127,7 @@ impl Where {
             {
                 println!("push: {segment:#?} onto {path:#?}");
 
-                path.push(segment);
+                path.push_back(segment);
 
                 input = new_input;
 
@@ -126,10 +136,10 @@ impl Where {
 
             // Parse `condition_type: $argument`.
             if let Ok((r#type, new_input)) = (|input: &str| {
-                let (r#type, input) = Type::parse(input)?;
+                let (r#type, input) = Operator::parse(input)?;
                 let (_, input) = spaces(&input)?;
 
-                Ok::<(Type, String), ParseError>((r#type, input))
+                Ok::<(Operator, String), ParseError>((r#type, input))
             })(&input)
             {
                 if path.is_empty() {
@@ -141,8 +151,8 @@ impl Where {
                 }
 
                 conditions.push(Condition {
-                    field: path.clone(),
-                    r#type,
+                    field_path: path.clone(),
+                    operator: r#type,
                 });
 
                 input = new_input;
@@ -161,7 +171,7 @@ impl Where {
                 {
                     input = new_input;
 
-                    let _ = path.pop();
+                    let _ = path.pop_back();
 
                     continue;
                 }
@@ -185,10 +195,13 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryConditionType,
-    ///     QueryWhere,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///         QueryWhere,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let input = "where {
@@ -205,8 +218,8 @@ impl Where {
     ///         QueryWhere {
     ///             name: "foo".to_string(),
     ///             conditions: vec![QueryCondition {
-    ///                 field: vec!["bar".to_string()],
-    ///                 r#type: QueryConditionType::Contains {
+    ///                 field_path: VecDeque::from(vec!["bar".to_string()]),
+    ///                 operator: QueryOperator::Contains {
     ///                     argument: "foo".to_string(),
     ///                 }
     ///             }]
@@ -217,10 +230,13 @@ impl Where {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     QueryCondition,
-    ///     QueryConditionType,
-    ///     QueryWhere,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///         QueryWhere,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let input = "where {
@@ -241,14 +257,17 @@ impl Where {
     ///             name: "image".to_string(),
     ///             conditions: vec![
     ///                 QueryCondition {
-    ///                     field: vec!["title".to_string()],
-    ///                     r#type: QueryConditionType::Equals {
+    ///                     field_path: VecDeque::from(vec!["title".to_string()]),
+    ///                     operator: QueryOperator::Equals {
     ///                         argument: "title".to_string(),
     ///                     }
     ///                 },
     ///                 QueryCondition {
-    ///                     field: vec!["title".to_string(), "tags".to_string(),],
-    ///                     r#type: QueryConditionType::Contains {
+    ///                     field_path: VecDeque::from(vec![
+    ///                         "title".to_string(),
+    ///                         "tags".to_string(),
+    ///                     ]),
+    ///                     operator: QueryOperator::Contains {
     ///                         argument: "tag".to_string(),
     ///                     }
     ///                 }

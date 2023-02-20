@@ -7,8 +7,9 @@ pub use self::{
     query::{
         Argument as QueryArgument,
         Condition as QueryCondition,
-        ConditionType as QueryConditionType,
+        ConditionType as QueryOperator,
         Query,
+        ReturnType as QueryReturnType,
         Schema as QuerySchema,
         SchemaNode as QuerySchemaNode,
         Where as QueryWhere,
@@ -35,6 +36,7 @@ use {
     std::collections::{
         HashMap,
         HashSet,
+        VecDeque,
     },
 };
 
@@ -214,23 +216,27 @@ impl Ast {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::{
-    ///     Ast,
-    ///     Component,
-    ///     Declaration,
-    ///     Enum,
-    ///     Field,
-    ///     Model,
-    ///     Query,
-    ///     QueryArgument,
-    ///     QueryCondition,
-    ///     QueryConditionType,
-    ///     QuerySchema,
-    ///     QuerySchemaNode,
-    ///     QueryWhere,
-    ///     Route,
-    ///     Scalar,
-    ///     Type,
+    /// use {
+    ///     dragonfly::ast::{
+    ///         Ast,
+    ///         Component,
+    ///         Declaration,
+    ///         Enum,
+    ///         Field,
+    ///         Model,
+    ///         Query,
+    ///         QueryArgument,
+    ///         QueryCondition,
+    ///         QueryOperator,
+    ///         QueryReturnType,
+    ///         QuerySchema,
+    ///         QuerySchemaNode,
+    ///         QueryWhere,
+    ///         Route,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     std::collections::VecDeque,
     /// };
     ///
     /// let input = "route / {
@@ -464,7 +470,7 @@ impl Ast {
     ///     "images".to_string(),
     ///     Query {
     ///         name: "images".to_string(),
-    ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
+    ///         r#type: QueryReturnType::Array("Image".to_string()),
     ///         schema: QuerySchema {
     ///             name: "image".to_string(),
     ///             nodes: vec![
@@ -485,7 +491,7 @@ impl Ast {
     ///     "imagesByCountryName".to_string(),
     ///     Query {
     ///         name: "imagesByCountryName".to_string(),
-    ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
+    ///         r#type: QueryReturnType::Array("Image".to_string()),
     ///         schema: QuerySchema {
     ///             name: "image".to_string(),
     ///             nodes: vec![
@@ -496,8 +502,11 @@ impl Ast {
     ///         r#where: Some(QueryWhere {
     ///             name: "image".to_string(),
     ///             conditions: vec![QueryCondition {
-    ///                 field: vec!["country".to_string(), "name".to_string()],
-    ///                 r#type: QueryConditionType::Equals {
+    ///                 field_path: VecDeque::from(vec![
+    ///                     "country".to_string(),
+    ///                     "name".to_string(),
+    ///                 ]),
+    ///                 operator: QueryOperator::Equals {
     ///                     argument: "name".to_string(),
     ///                 },
     ///             }],
@@ -602,6 +611,41 @@ impl Ast {
         Ok((ast, input))
     }
 
+    /// Check the AST for type errors.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::EmptyQuerySchema` if the schema of any query does
+    /// not contain any fields.
+    ///
+    /// Returns a `TypeError::UnusedQueryArgument` if any query argument is not
+    /// used in the query's `where` clause.
+    ///
+    /// Returns a `TypeError::IncompatibleQueryRootNodes` if the root nodes of
+    /// any query's schema and `where` clause do not match.
+    ///
+    /// Returns a `TypeError::UnknownQueryConditionReference` if any query
+    /// selector references an argument that does not exist.
+    ///
+    /// Returns a `TypeError::InvalidQueryArgumentType` if the type of any query
+    /// is not a primitive or a reference to an enum.
+    ///
+    /// Returns a `TypeError::InvalidQueryReturnType` if the return type of any
+    /// query is not a reference to a known model.
+    ///
+    /// Returns a `TypeError::UnknownRouteRoot` if the root of any route is not
+    /// a reference to a known component.
+    ///
+    /// Returns a `TypeError::InvalidModelFieldType` if the type of any model
+    /// field is not a primitive, a reference to a known enum or model, or an
+    /// array of any such a type.
+    pub fn check(&self) -> Result<(), TypeError> {
+        self.check_entities()?;
+        self.check_types()?;
+
+        Ok(())
+    }
+
     /// Check for errors in individual entities.
     ///
     /// # Errors
@@ -622,9 +666,6 @@ impl Ast {
         // AST, but doing them separately is easier to understand.
 
         for query in self.queries.values() {
-            // Self::check_query_schema(query, self)?;
-            // Self::check_query_where(query, self)?;
-            // Self::check_query_condition_types(query, self)?;
             query.check_unused_arguments()?;
             query.check_empty_schema()?;
             query.check_root_nodes()?;
@@ -654,13 +695,13 @@ impl Ast {
         // We could return the model relations during this pass, but it's
         // easier to understand if we do it separately.
 
-        let model_names = self.models.keys().cloned().collect::<HashSet<_>>();
         let enum_names = self.enums.keys().cloned().collect::<HashSet<_>>();
+        let model_names = self.models.keys().cloned().collect::<HashSet<_>>();
 
         for query in self.queries.values() {
+            self.check_query_condition_types(query)?;
             query.check_argument_types(&enum_names)?;
             query.check_return_type(&model_names)?;
-            query.check_condition_types(&self.models, &enum_names)?;
         }
 
         for model in self.models.values() {
@@ -673,6 +714,139 @@ impl Ast {
 
             for route in self.routes.values() {
                 route.check_root(&component_names)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check that the types of the condition operands are valid.
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - The query to check.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::IncompatibleQueryOperator` if the
+    /// types of the condition operands are not compatible with one another or
+    /// with the type of condition.
+    ///
+    /// # Panics
+    ///
+    /// TODO
+    #[allow(clippy::too_many_lines)]
+    pub fn check_query_condition_types(
+        &self,
+        query: &Query,
+    ) -> Result<(), TypeError> {
+        if let Some(r#where) = &query.r#where {
+            let argument_map = query
+                .arguments
+                .iter()
+                .map(|argument| (argument.name.clone(), argument))
+                .collect::<HashMap<_, _>>();
+
+            for condition in &r#where.conditions {
+                let field_type = self.resolve_path(
+                    &query.name,
+                    query.r#type.model(),
+                    &mut condition.field_path.clone(),
+                )?;
+
+                if let Some(argument) = argument_map.get(condition.argument()) {
+                    let argument_type = argument.r#type.clone();
+
+                    match (
+                        (argument_type.clone(), field_type.clone()),
+                        condition.operator.clone(),
+                    ) {
+                        // Values of the same primitive type can be compared for
+                        // equality.
+                        (
+                            (
+                                Type::Scalar(Scalar::Boolean),
+                                Type::Scalar(Scalar::Boolean),
+                            )
+                            | (
+                                Type::Scalar(Scalar::DateTime),
+                                Type::Scalar(Scalar::DateTime),
+                            )
+                            | (
+                                Type::Scalar(Scalar::Float),
+                                Type::Scalar(Scalar::Float),
+                            )
+                            | (
+                                Type::Scalar(Scalar::Int),
+                                Type::Scalar(Scalar::Int),
+                            )
+                            | (
+                                Type::Scalar(Scalar::String),
+                                Type::Scalar(Scalar::String),
+                            ),
+                            QueryOperator::Equals { .. },
+                        ) |
+                        // A primitive value can be contained in an array of
+                        // the same type.
+                        (
+                            (
+                                Type::Scalar(Scalar::Boolean),
+                                Type::Array(Scalar::Boolean),
+                            )
+                            | (
+                                Type::Scalar(Scalar::DateTime),
+                                Type::Array(Scalar::DateTime),
+                            )
+                            | (
+                                Type::Scalar(Scalar::Float),
+                                Type::Array(Scalar::Float),
+                            )
+                            | (
+                                Type::Scalar(Scalar::Int),
+                                Type::Array(Scalar::Int),
+                            )
+                            | (
+                                Type::Scalar(Scalar::String),
+                                Type::Array(Scalar::String),
+                            ),
+                            QueryOperator::Contains { .. },
+                        ) => {
+                            continue;
+                        }
+                        // An enum variant can be contained in an array of the
+                        // same enum.
+                        (
+                            (
+                                Type::Scalar(Scalar::Reference(lhs)),
+                                Type::Array(Scalar::Reference(rhs)),
+                            ),
+                            QueryOperator::Contains { .. },
+                        ) |
+                        // Enum variants can be compared for equality if they
+                        // are from the same, existing enum.
+                        (
+                            (
+                                Type::Scalar(Scalar::Reference(lhs)),
+                                Type::Scalar(Scalar::Reference(rhs)),
+                            ),
+                            QueryOperator::Equals { .. },
+                        ) => {
+                            if lhs == rhs && self.enums.contains_key(&lhs) {
+                                continue;
+                            }
+                        }
+                        _ => {
+                            return Err(
+                                TypeError::IncompatibleQueryOperator {
+                                    query_name: query.name.clone(),
+                                    condition: condition.clone(),
+                                    argument_type,
+                                    field_type,
+                                },
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -718,5 +892,134 @@ impl Ast {
         names.extend(self.enums.values().map(|r#enum| r#enum.name.clone()));
 
         names
+    }
+
+    /// Resolve the type of a path.
+    ///
+    /// # Arguments
+    ///
+    /// * `model` - The name of the model that the path is relative to.
+    /// * `path` - The path to resolve.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::UnresolvedPath` if the path cannot be resolved.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use {
+    ///     dragonfly::ast::{
+    ///         Ast,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     std::collections::VecDeque,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// model User {
+    ///   name: String
+    ///   country: Country
+    ///   friends: [User]
+    /// }
+    ///
+    /// model Country {
+    ///   name: String
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// let ast = Ast::parse(input).unwrap().0;
+    ///
+    /// assert_eq!(
+    ///     ast.resolve_path(
+    ///         "Foo",
+    ///         "User",
+    ///         &mut VecDeque::from(vec!["name".to_string()])
+    ///     ),
+    ///     Ok(Type::Scalar(Scalar::String)),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     ast.resolve_path(
+    ///         "Foo",
+    ///         "User",
+    ///         &mut VecDeque::from(vec![
+    ///             "country".to_string(),
+    ///             "name".to_string()
+    ///         ])
+    ///     ),
+    ///     Ok(Type::Scalar(Scalar::String)),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     ast.resolve_path(
+    ///         "Foo",
+    ///         "User",
+    ///         &mut VecDeque::from(vec![
+    ///             "friends".to_string(),
+    ///             "name".to_string()
+    ///         ])
+    ///     ),
+    ///     Ok(Type::Scalar(Scalar::String)),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     ast.resolve_path(
+    ///         "Foo",
+    ///         "User",
+    ///         &mut VecDeque::from(vec![
+    ///             "friends".to_string(),
+    ///             "country".to_string()
+    ///         ])
+    ///     ),
+    ///     Ok(Type::Scalar(Scalar::Reference("Country".to_string()))),
+    /// );
+    /// ```
+    pub fn resolve_path(
+        &self,
+        query_name: &str,
+        model_name: &str,
+        path: &mut VecDeque<String>,
+    ) -> Result<Type, TypeError> {
+        let path_clone = path.clone();
+
+        println!("Resolving path: {path:?}");
+
+        if let Some(model) = self.models.get(model_name) {
+            if let Some(segment) = path.pop_front() {
+                if let Some(Field { r#type, .. }) = model.fields.get(&segment) {
+                    // The path is empty, we must return a type.
+                    if path.is_empty() {
+                        println!("Path is empty, returning type: {type:?}");
+
+                        match r#type.scalar() {
+                            Scalar::Reference(reference) => {
+                                if self.models.contains_key(reference)
+                                    || self.enums.contains_key(reference)
+                                {
+                                    return Ok(r#type.clone());
+                                }
+                            }
+                            _ => return Ok(r#type.clone()),
+                        }
+                    } else if let Scalar::Reference(model) = r#type.scalar() {
+                        if let Some(Model { name, .. }) = self.models.get(model)
+                        {
+                            return self.resolve_path(query_name, name, path);
+                        }
+                    }
+                }
+            }
+        }
+
+        Err(TypeError::UnresolvedPath {
+            path: path_clone,
+            query_name: query_name.to_string(),
+            model_name: model_name.to_string(),
+        })
     }
 }

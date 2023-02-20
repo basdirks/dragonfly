@@ -1,8 +1,11 @@
-use super::{
-    Field,
-    QueryArgument,
-    QueryCondition,
-    Type,
+use {
+    super::{
+        Field,
+        QueryArgument,
+        QueryCondition,
+        Type,
+    },
+    std::collections::VecDeque,
 };
 
 /// Type checking errors.
@@ -28,28 +31,22 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
-    /// Operand types must be compatible with their condition. For example, a
+    /// Operand must be compatible with their condition. For example, a
     /// string can only equal another string, and an integer can only equal
     /// another integer. This query contains a condition operand (either
     /// the field or the argument) that is not compatible with the
     /// condition.
     ///
-    /// Checked in `dragonfly::ast::Query::check_condition_types`.
-    IncompatibleQueryConditionType {
+    /// Checked in `dragonfly::ast::Ast::check_query_condition_types`.
+    IncompatibleQueryOperator {
         /// The name of the query.
         query_name: String,
-        /// The condition that was not satisfied.
+        /// The condition.
         condition: QueryCondition,
         /// The type of the condition as given by the argument.
-        expected: Type,
-    },
-
-    /// The where clause should only refer to fields, nested or otherwise, that
-    /// are defined in the model. The where clause of this query refers to a
-    /// field that is not defined in the model.
-    IncompatibleQueryWhere {
-        /// The name of the query.
-        query_name: String,
+        argument_type: Type,
+        /// The type of the field that the condition is applied to.
+        field_type: Type,
     },
     /// The root node of content of the where clause should have the same name
     /// as the root node of the query schema. The name of the root node of the
@@ -76,19 +73,21 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
-    /// The return type of a query must be a reference to an existing model.
-    /// The return type of this query is unknown.
+    /// The return type of a query must reference an existing model. The model
+    /// that this return type references does not exist.
     ///
     /// Checked in `dragonfly::ast::Query::check_return_type`.
-    InvalidQueryReturnType {
+    UnknownQueryReturnType {
         /// The name of the query.
         query_name: String,
-        /// The return type of the query.
-        r#type: Type,
+        /// The name of the model.
+        model_name: String,
     },
     /// The type of a field in a model must be a primitive, a reference to an
     /// existing enum or model, or an array of such a type. The type of a field
     /// of this model is unknown.
+    ///
+    /// Checked in `dragonfly::ast::Model::check_field_types`.
     UnknownModelFieldType {
         /// The field whose type is undefined.
         field: Field,
@@ -114,6 +113,19 @@ pub enum TypeError {
         route_name: String,
         /// The name of the component.
         root: String,
+    },
+    /// The path of each condition in a query must be a reference to a field
+    /// that is defined in the model. This query contains a condition that
+    /// refers to an undefined field.
+    ///
+    /// Checked in `dragonfly::ast::Ast::check_query_condition_types`.
+    UnresolvedPath {
+        /// The path that can not be resolved.
+        path: VecDeque<String>,
+        /// The name of the model.
+        model_name: String,
+        /// The name of the query.
+        query_name: String,
     },
     /// Every query argument must be used in the where clause. This query
     /// contains an argument that is not used.
