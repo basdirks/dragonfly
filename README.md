@@ -10,10 +10,10 @@ If you are looking for a real solution, check out [Wasp](https://wasp-lang.dev/)
 An application consists of:
 
 - types: sets of values,
-- models: the structure of entities,
-- enums: predefined string values,
-- queries: subsets of data,
-- routes: the logical structure,
+- enums: sets of predefined strings,
+- models: how data is stored,
+- queries: retrieving stored data,
+- routes: tying components to endpoints,
 - components: the user interface.
 
 Unimplemented:
@@ -41,7 +41,8 @@ Scalar types are:
 ### Relationships
 
 A reference points to an enum or a model. A reference to a model implies a
-relationship between two models.
+relationship between two models. There are three types of relationships: one-to-
+one, one-to-many, and many-to-many.
 
 #### One-to-one, 1-1,
 
@@ -187,7 +188,7 @@ enum Category {
 
 ## Queries
 
-A query is a subset of data. It consists of:
+A query describes what data can be retrieved from the database.
 
 - a name,
 - a return type,
@@ -195,28 +196,24 @@ A query is a subset of data. It consists of:
 - optional arguments to filter the data,
 - an optional where clause to use the arguments as constraints.
 
-### Rules
+### Validation
 
 - The name of a query must be unique.
 - The return type must be a known model or an array of such a type.
 - The root node of the schema must contain at least one field.
-- The schema must be a subset of the return type, or in the case of an array, a  
-subset of the array's item type.
+- The fields in the schema must exist in model referenced in the return type, or  
+in the model referenced by the fields.
 - The content of the where clause must be a subset of the schema, except for the  
 conditions.
 - The name of the root node of the schema must match the name of the root node  
 of the content of the where clause.
-- The type of the argument must match the type of the field to which the  
-condition is applied.
-- Each condition must refer to an existing argument.
-- The type of the condition (inferred by the argument) must be compatible with  
-the type of the field to which it is applied.
+- The types of the operands of a condition must be compatible with the condition
+and one another.
+- The right-hand side of a condition must refer to an existing argument.
 - The name of each argument must be unique.
-- The type of each argument must be a scalar type.
-- If the return type is a reference, there must exist an enum or model with that  
-name inside the application.
-- Each argument must be used at least once in the where clause.
-- An argument may not be an array or a model.
+- The type of each argument must be a primitive scalar type, a reference to an
+- enum, or an array of such a type. An argument may not reference a model.
+- Each argument must be used inside at least one condition.
 
 ### EBNF
 
@@ -272,7 +269,7 @@ A route connects a URL to a component. It consists of:
 - a title,
 - a root component.
 
-### Rules
+### Validation
 
 - The path must be unique.
 - The path must consist of one or more segments starting with a forward slash.
@@ -307,7 +304,7 @@ route / {
 
 A component is a Javascript function that renders a part of the user interface.
 
-### Rules
+### Validation
 
 - The name of a component must be unique.
 
