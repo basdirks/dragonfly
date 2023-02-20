@@ -46,6 +46,27 @@ impl Field {
     ///
     /// assert_eq!(Field::parse(input), Ok((expected, "".to_string())));
     /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::{
+    ///         Field,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "baz= Int";
+    ///
+    /// assert_eq!(
+    ///     Field::parse(input),
+    ///     Err(ParseError::UnmatchedChar {
+    ///         expected: ':',
+    ///         actual: '=',
+    ///     })
+    /// );
+    /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (name, input) = alphabetics(input)?;
         let (_, input) = colon(&input)?;
