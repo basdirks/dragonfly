@@ -7,7 +7,7 @@ pub use self::{
     query::{
         Argument as QueryArgument,
         Condition as QueryCondition,
-        ConditionType as QueryOperator,
+        Operator as QueryOperator,
         Query,
         ReturnType as QueryReturnType,
         Schema as QuerySchema,
@@ -506,9 +506,8 @@ impl Ast {
     ///                     "country".to_string(),
     ///                     "name".to_string(),
     ///                 ]),
-    ///                 operator: QueryOperator::Equals {
-    ///                     argument: "name".to_string(),
-    ///                 },
+    ///                 operator: QueryOperator::Equals,
+    ///                 argument: "name".to_string(),
     ///             }],
     ///         }),
     ///         arguments: vec![QueryArgument {
@@ -754,12 +753,12 @@ impl Ast {
                     &mut condition.field_path.clone(),
                 )?;
 
-                if let Some(argument) = argument_map.get(condition.argument()) {
+                if let Some(argument) = argument_map.get(&condition.argument) {
                     let argument_type = argument.r#type.clone();
 
                     match (
                         (argument_type.clone(), field_type.clone()),
-                        condition.operator.clone(),
+                        condition.operator
                     ) {
                         // Values of the same primitive type can be compared for
                         // equality.

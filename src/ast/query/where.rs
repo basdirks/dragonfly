@@ -7,6 +7,8 @@ use {
         brace_close,
         brace_open,
         camel_case,
+        colon,
+        dollar,
         literal,
         spaces,
         ParseError,
@@ -60,37 +62,34 @@ impl Where {
     ///
     /// let (conditions, input) = QueryWhere::parse_conditions(input).unwrap();
     ///
-    /// assert_eq!(input, "}");
-    ///
     /// assert_eq!(
     ///     conditions,
     ///     vec![
     ///         QueryCondition {
     ///             field_path: VecDeque::from(vec!["foo".to_string()]),
-    ///             operator: QueryOperator::Contains {
-    ///                 argument: "foo".to_string(),
-    ///             }
+    ///             operator: QueryOperator::Contains,
+    ///             argument: "foo".to_string(),
     ///         },
     ///         QueryCondition {
     ///             field_path: VecDeque::from(vec![
     ///                 "foo".to_string(),
     ///                 "bar".to_string()
     ///             ]),
-    ///             operator: QueryOperator::Equals {
-    ///                 argument: "bar".to_string(),
-    ///             }
+    ///             operator: QueryOperator::Equals,
+    ///             argument: "bar".to_string(),
     ///         },
     ///         QueryCondition {
     ///             field_path: VecDeque::from(vec![
     ///                 "foo".to_string(),
     ///                 "baz".to_string()
     ///             ]),
-    ///             operator: QueryOperator::Contains {
-    ///                 argument: "baz".to_string(),
-    ///             }
+    ///             operator: QueryOperator::Contains,
+    ///             argument: "baz".to_string(),
     ///         }
     ///     ]
     /// );
+    ///
+    /// assert_eq!(input, "}");
     /// ```
     ///
     /// ```rust
@@ -125,8 +124,6 @@ impl Where {
                 Ok::<(String, String), ParseError>((segment, input))
             })(&input)
             {
-                println!("push: {segment:#?} onto {path:#?}");
-
                 path.push_back(segment);
 
                 input = new_input;
@@ -135,11 +132,18 @@ impl Where {
             }
 
             // Parse `condition_type: $argument`.
-            if let Ok((r#type, new_input)) = (|input: &str| {
-                let (r#type, input) = Operator::parse(input)?;
+            if let Ok((operator, argument, new_input)) = (|input: &str| {
+                let (operator, input) = Operator::parse(input)?;
+                let (_, input) = spaces(&input)?;
+                let (_, input) = colon(&input)?;
+                let (_, input) = spaces(&input)?;
+                let (_, input) = dollar(&input)?;
+                let (argument, input) = camel_case(&input)?;
                 let (_, input) = spaces(&input)?;
 
-                Ok::<(Operator, String), ParseError>((r#type, input))
+                Ok::<(Operator, String, String), ParseError>((
+                    operator, argument, input,
+                ))
             })(&input)
             {
                 if path.is_empty() {
@@ -152,7 +156,8 @@ impl Where {
 
                 conditions.push(Condition {
                     field_path: path.clone(),
-                    operator: r#type,
+                    operator,
+                    argument,
                 });
 
                 input = new_input;
@@ -219,9 +224,8 @@ impl Where {
     ///             name: "foo".to_string(),
     ///             conditions: vec![QueryCondition {
     ///                 field_path: VecDeque::from(vec!["bar".to_string()]),
-    ///                 operator: QueryOperator::Contains {
-    ///                     argument: "foo".to_string(),
-    ///                 }
+    ///                 operator: QueryOperator::Contains,
+    ///                 argument: "foo".to_string(),
     ///             }]
     ///         },
     ///         "".to_string()
@@ -258,18 +262,16 @@ impl Where {
     ///             conditions: vec![
     ///                 QueryCondition {
     ///                     field_path: VecDeque::from(vec!["title".to_string()]),
-    ///                     operator: QueryOperator::Equals {
-    ///                         argument: "title".to_string(),
-    ///                     }
+    ///                     operator: QueryOperator::Equals,
+    ///                     argument: "title".to_string(),
     ///                 },
     ///                 QueryCondition {
     ///                     field_path: VecDeque::from(vec![
     ///                         "title".to_string(),
     ///                         "tags".to_string(),
     ///                     ]),
-    ///                     operator: QueryOperator::Contains {
-    ///                         argument: "tag".to_string(),
-    ///                     }
+    ///                     operator: QueryOperator::Contains,
+    ///                     argument: "tag".to_string(),
     ///                 }
     ///             ]
     ///         },
@@ -283,14 +285,10 @@ impl Where {
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
         let (name, input) = camel_case(&input)?;
-        println!("name: {name}");
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
-        println!("input: {input}");
         let (conditions, input) = Self::parse_conditions(&input)?;
-        println!("conditions: {conditions:#?}");
-        println!("input: {input}");
         let (_, input) = spaces(&input)?;
 
         let check_closing_brace = |input: &str, name: &str| {

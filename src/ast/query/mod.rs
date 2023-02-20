@@ -25,7 +25,7 @@ pub use {
     argument::Argument,
     condition::{
         Condition,
-        Operator as ConditionType,
+        Operator,
     },
     r#where::Where,
     schema::{
@@ -341,18 +341,16 @@ impl Query {
     ///         conditions: vec![
     ///             QueryCondition {
     ///                 field_path: VecDeque::from(vec!["title".to_string()]),
-    ///                 operator: QueryOperator::Equals {
-    ///                     argument: "title".to_string(),
-    ///                 },
+    ///                 operator: QueryOperator::Equals,
+    ///                 argument: "title".to_string(),
     ///             },
     ///             QueryCondition {
     ///                 field_path: VecDeque::from(vec![
     ///                     "title".to_string(),
     ///                     "tags".to_string(),
     ///                 ]),
-    ///                 operator: QueryOperator::Contains {
-    ///                     argument: "tag".to_string(),
-    ///                 },
+    ///                 operator: QueryOperator::Contains,
+    ///                 argument: "tag".to_string(),
     ///             },
     ///         ],
     ///     }),
@@ -415,9 +413,8 @@ impl Query {
     ///                 "country".to_string(),
     ///                 "name".to_string(),
     ///             ]),
-    ///             operator: QueryOperator::Equals {
-    ///                 argument: "name".to_string(),
-    ///             },
+    ///             operator: QueryOperator::Equals,
+    ///             argument: "name".to_string(),
     ///         }],
     ///     }),
     /// };
@@ -675,7 +672,7 @@ impl Query {
                 let used_arguments = r#where
                     .conditions
                     .iter()
-                    .map(|condition| condition.argument().to_string())
+                    .map(|condition| condition.argument.to_string())
                     .collect::<HashSet<_>>();
 
                 println!("{used_arguments:?}");
@@ -769,9 +766,8 @@ impl Query {
     ///                 "country".to_string(),
     ///                 "name".to_string()
     ///             ]),
-    ///             operator: QueryOperator::Equals {
-    ///                 argument: "tag".to_string(),
-    ///             }
+    ///             operator: QueryOperator::Equals,
+    ///             argument: "tag".to_string(),
     ///         }
     ///     }),
     /// );
@@ -785,7 +781,7 @@ impl Query {
                 .collect::<HashSet<String>>();
 
             for condition in &r#where.conditions {
-                if !argument_names.contains(condition.argument()) {
+                if !argument_names.contains(&condition.argument) {
                     return Err(TypeError::UnknownQueryConditionReference {
                         query_name: self.name.clone(),
                         condition: condition.clone(),

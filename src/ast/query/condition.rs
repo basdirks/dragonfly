@@ -1,29 +1,24 @@
 use {
-    crate::parser::{
-        camel_case,
-        choice,
-        colon,
-        dollar,
+    crate::{
         literal,
-        spaces,
-        ParseResult,
+        parser::{
+            choice,
+            literal,
+            tag,
+            ParseResult,
+        },
+        tag,
     },
     std::collections::VecDeque,
 };
 
 /// The type of a condition.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Operator {
     /// The value of the field must contain the value of the argument.
-    Contains {
-        /// The name of the referenced argument.
-        argument: String,
-    },
+    Contains,
     /// The value of the field must equal the value of the argument.
-    Equals {
-        /// The name of the referenced argument.
-        argument: String,
-    },
+    Equals,
 }
 
 impl Operator {
@@ -45,12 +40,7 @@ impl Operator {
     ///
     /// assert_eq!(
     ///     QueryOperator::parse("contains: $foo"),
-    ///     Ok((
-    ///         QueryOperator::Contains {
-    ///             argument: "foo".to_string(),
-    ///         },
-    ///         "".to_string()
-    ///     ))
+    ///     Ok((QueryOperator::Contains, ": $foo".to_string()))
     /// );
     /// ```
     ///
@@ -59,12 +49,7 @@ impl Operator {
     ///
     /// assert_eq!(
     ///     QueryOperator::parse("equals: $bar"),
-    ///     Ok((
-    ///         QueryOperator::Equals {
-    ///             argument: "bar".to_string(),
-    ///         },
-    ///         "".to_string()
-    ///     ))
+    ///     Ok((QueryOperator::Equals, ": $bar".to_string()))
     /// );
     /// ```
     ///
@@ -77,26 +62,8 @@ impl Operator {
         choice(
             input,
             vec![
-                |input| {
-                    let (_, input) = literal(input, "contains")?;
-                    let (_, input) = spaces(&input)?;
-                    let (_, input) = colon(&input)?;
-                    let (_, input) = spaces(&input)?;
-                    let (_, input) = dollar(&input)?;
-                    let (argument, input) = camel_case(&input)?;
-
-                    Ok((Self::Contains { argument }, input))
-                },
-                |input| {
-                    let (_, input) = literal(input, "equals")?;
-                    let (_, input) = spaces(&input)?;
-                    let (_, input) = colon(&input)?;
-                    let (_, input) = spaces(&input)?;
-                    let (_, input) = dollar(&input)?;
-                    let (argument, input) = camel_case(&input)?;
-
-                    Ok((Self::Equals { argument }, input))
-                },
+                tag!(literal!("contains"), Self::Contains),
+                tag!(literal!("equals"), Self::Equals),
             ],
         )
     }
@@ -109,56 +76,6 @@ pub struct Condition {
     pub field_path: VecDeque<String>,
     /// The type of the condition.
     pub operator: Operator,
-}
-
-impl Condition {
-    /// Return the name of the argument referenced by the condition.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///     },
-    ///     std::collections::VecDeque,
-    /// };
-    ///
-    /// let condition = QueryCondition {
-    ///     field_path: VecDeque::from(vec!["foo".to_string()]),
-    ///     operator: QueryOperator::Contains {
-    ///         argument: "bar".to_string(),
-    ///     },
-    /// };
-    ///
-    /// assert_eq!(condition.argument(), "bar");
-    /// ```
-    ///
-    /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///     },
-    ///     std::collections::VecDeque,
-    /// };
-    ///
-    /// let condition = QueryCondition {
-    ///     field_path: VecDeque::from(vec!["foo".to_string()]),
-    ///     operator: QueryOperator::Equals {
-    ///         argument: "baz".to_string(),
-    ///     },
-    /// };
-    ///
-    /// assert_eq!(condition.argument(), "baz");
-    /// ```
-    #[must_use]
-    pub fn argument(&self) -> &str {
-        match &self.operator {
-            Operator::Contains { argument } | Operator::Equals { argument } => {
-                argument
-            }
-        }
-    }
+    /// The right-hand side of the condition.
+    pub argument: String,
 }
