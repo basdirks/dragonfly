@@ -3,7 +3,7 @@
 Dragonfly is a toy DSL that explores ways to describe the structure of
 full-stack web applications. You should not use it in production.
 
-If you are looking for a real solution, check out [Wasp](https://wasp-lang.dev/).
+For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 
 # Entities
 
@@ -24,7 +24,7 @@ Unimplemented:
 
 ## Models
 
-A model describes entities in your application by giving names to groups of
+A model describes entities in an application by giving names to groups of
 fields. A field has a name and a type. A type can be an array or a scalar type.
 
 ### Types
@@ -32,27 +32,27 @@ fields. A field has a name and a type. A type can be an array or a scalar type.
 Scalar types are:
 
 - `Boolean`: `true` or `false`,
-- `DateTime`: a date and time,
+- `DateTime`: date and time,
 - `Float`: a 64-bit floating point number,
 - `Int`: a 64-bit integer,
-- `Reference`: a reference to an enum or another model,
+- `Reference`: a reference to an enumerated type or another model,
 - `String`: a sequence of UTF-8 characters.
 
 ### Relationships
 
-A reference points to an enum or a model. A reference to a model implies a
-relationship between two models. There are three types of relationships: one-to-
-one, one-to-many, and many-to-many.
+A reference points to an enumerated type or a model. A reference to a model
+implies a relationship between two models. Three three types of relationships
+exist: one-to-one, one-to-many, and many-to-many.
 
-#### One-to-one, 1-1,
+#### One-to-one, 1-1
 
 ```
 A { B }
 B { A }
 ```
 
-An example of a 1-1 relationship is a user and their profile. A user has one
-profile and a profile belongs to one user.
+An example of a 1-1 relationship is between a user and their profile. A user has
+one profile and a profile belongs to one user.
 
 ```dfly
 model User {
@@ -110,7 +110,7 @@ model Group {
 - The name of a model must be unique.
 - The name of a field must be unique within a model.
 - Arrays may not be nested.
-- Referenced types must be defined inside the application.
+- Applications must define all types referenced by models.
 
 ### EBNF
 
@@ -152,13 +152,13 @@ model Image {
 
 ## Enums
 
-An enum is a predefined list of one or more string values.
+An enumerated type is a predefined list of one or more string values.
 
 ### Validation
 
 - The enum must have at least one variant.
-- The name of an enum must be unique.
-- The name of an enum variant must be unique within the enum.
+- The name of an enumerated type must be unique.
+- The name of an enumerated type variant must be unique within the enum.
 
 ### EBNF
 
@@ -201,19 +201,19 @@ A query describes what data can be retrieved from the database.
 - The name of a query must be unique.
 - The return type must be a known model or an array of such a type.
 - The root node of the schema must contain at least one field.
-- The fields in the schema must exist in model referenced in the return type, or  
-in the model referenced by the fields.
+- The schema fields must exist in the return type model or in the model
+referenced by the fields.
 - The content of the where clause must be a subset of the schema, except for the  
 conditions.
 - The name of the root node of the schema must match the name of the root node  
 of the content of the where clause.
-- The types of the operands of a condition must be compatible with the condition
+- The types of operands of a condition must be compatible with the condition
 and one another.
 - The right-hand side of a condition must refer to an existing argument.
 - The name of each argument must be unique.
 - The type of each argument must be a primitive scalar type, a reference to an
-- enum, or an array of such a type. An argument may not reference a model.
-- Each argument must be used inside at least one condition.
+enum, or an array of such a type. An argument may not reference a model.
+- Some condition must make use of each argument.
 
 ### EBNF
 
@@ -416,7 +416,7 @@ the AST. The generator turns the AST into TypeScript code.
 ## Parser
 
 Parsing transforms a string into an AST. This step fails if the syntax is
-invalid or if a declaration does not have a unique name. `ast::Ast` defines the
+invalid or a declaration does not have a unique name. `ast::Ast` defines the
 AST type. The `parse` method defines the parser.
 
 * `ast::Ast` contains the root AST type.
@@ -427,24 +427,36 @@ AST type. The `parse` method defines the parser.
 
 The type checker verifies the internal consistency of the AST. Some checks could
 be done during parsing but are done separately for simplicity. The type checker
-can be found in `ast::Ast::check`.
+lives in `ast::Ast::check`.
 
 ## Generation
 
 Generation turns the AST into code:
 
-* `generator::graphql` converts generates GraphQL queries.
+* `generator::graphql` generates GraphQL queries.
 * `generator::typescript` generates TypeScript code.
 * `generator::prisma` generates Prisma schemas.
-* `generator::printer` contains common code for pretty printing.
+* `generator::printer` contains pretty printing utilities.
 
 ### GraphQL
 
-GraphQL queries are generated from the AST.
+`generator::graphql` implements the GraphQL AST.
+
+`generator::graphql::type` converts dragonfly types to GraphQL types and
+prints them.
+
+`generator::graphql::Query` generates GraphQL queries from dragonfly queries and
+prints them.
 
 ### TypeScript
 
-Models can be converted to TypeScript interfaces:
+`generator::typescript` implements the TypeScript AST.
+
+`generator::typescript::type` converts dragonfly types to TypeScript types and
+prints them.
+
+`generator::typescript::Interface` generates TypeScript interfaces from
+dragonfly models and prints them.
 
 ```dfly
 model Country {
@@ -468,7 +480,8 @@ interface Country {
 }
 ```
 
-Enums can be converted to TypeScript enums:
+`generator::typescript::StringEnum` generates TypeScript enums from dragonfly
+enumerated types and prints them.
 
 ```dfly
 enum Category {
@@ -494,7 +507,10 @@ enum Category {
 
 ### Prisma
 
-Prisma schemas can be generated from the AST.
+`generator::prisma` implements the Prisma Schema Language AST.
+
+`generator::prisma::Model` generates Prisma models and enums from dragonfly
+models and enumerated types and prints them.
 
 ```dfly
 model User {
@@ -545,6 +561,10 @@ enum Country {
 }
 ```
 
+`dragonfly::prisma::data_source` creates Prisma and prints data sources.
+
+`dragonfly::prisma::generator` creates Prisma and prints generators.
+
 # Development
 
 ## Rust version
@@ -553,8 +573,8 @@ Rust nightly (1.69.0 or higher) is required.
 
 ## Parsing
 
-Parsers do not concern themselves with their surrounding whitespace. Whitespace
-is handled inside their parent parsers.
+Parsers do not concern themselves with their surrounding whitespace. Their
+parent parsers are responsible for consuming whitespace.
 
 ```rust
 // Not this:
@@ -588,8 +608,8 @@ fn parse_b<T>(input: &str) -> ParseResult<T> {
 }
 ```
 
-High-level parsers do not concern themselves with EOF. This is handled in
-parsers like `char` and `literal`.
+High-level parsers do not concern themselves with EOF. Parsers like `char` and
+`literal` already handle EOF.
 
 ```rust
 // Not this:
