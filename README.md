@@ -433,9 +433,9 @@ lives in `ast::Ast::check`.
 
 Generation turns the AST into code:
 
-* `generator::graphql` generates GraphQL queries.
-* `generator::typescript` generates TypeScript code.
-* `generator::prisma` generates Prisma schemas.
+* `generator::graphql` prints GQL, converts Dragonfly => GraphQL queries.
+* `generator::typescript` prints TS, converts Dragonfly => TS types.
+* `generator::prisma` prints PSL, converts Dragonfly => PSL schema.
 * `generator::printer` contains pretty printing utilities.
 
 ### GraphQL
