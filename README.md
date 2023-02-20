@@ -1,7 +1,6 @@
 # Dragonfly
 
-Dragonfly is a toy DSL that explores ways to describe the structure of
-full-stack web applications. You should not use it in production.
+Dragonfly is a toy DSL that explores ways to describe the structure of full-stack web applications. You should not use it in production.
 
 For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 
@@ -24,8 +23,7 @@ Unimplemented:
 
 ## Models
 
-A model describes entities in an application by giving names to groups of
-fields. A field has a name and a type. A type can be an array or a scalar type.
+A model describes entities in an application by giving names to groups of fields. A field has a name and a type. A type can be an array or a scalar type.
 
 ### Types
 
@@ -40,9 +38,7 @@ Scalar types are:
 
 ### Relationships
 
-A reference points to an enumerated type or a model. A reference to a model
-implies a relationship between two models. Three three types of relationships
-exist: one-to-one, one-to-many, and many-to-many.
+A reference points to an enumerated type or a model. A reference to a model implies a relationship between two models. Three three types of relationships exist: one-to-one, one-to-many, and many-to-many.
 
 #### One-to-one, 1-1
 
@@ -51,8 +47,7 @@ A { B }
 B { A }
 ```
 
-An example of a 1-1 relationship is between a user and their profile. A user has
-one profile and a profile belongs to one user.
+An example of a 1-1 relationship is between a user and their profile. A user has one profile and a profile belongs to one user.
 
 ```dfly
 model User {
@@ -66,8 +61,7 @@ model Profile {
 
 #### One-to-many, 1-n
 
-An example of a 1-n relationship is a user and their posts. A user has many
-posts and a post belongs to one user.
+An example of a 1-n relationship is a user and their posts. A user has many posts and a post belongs to one user.
 
 ```
 A { [B] }
@@ -86,8 +80,7 @@ model Post {
 
 #### Many-to-many, n-n
 
-An example of a n-n relationship users and groups. A user belongs to many
-groups and a group has many users.
+An example of a n-n relationship users and groups. A user belongs to many groups and a group has many users.
 
 ```
 A { [B] }
@@ -201,18 +194,13 @@ A query describes what data can be retrieved from the database.
 - The name of a query must be unique.
 - The return type must be a known model or an array of such a type.
 - The root node of the schema must contain at least one field.
-- The schema fields must exist in the return type model or in the model
-referenced by the fields.
-- The content of the where clause must be a subset of the schema, except for the  
-conditions.
-- The name of the root node of the schema must match the name of the root node  
-of the content of the where clause.
-- The types of operands of a condition must be compatible with the condition
-and one another.
+- The schema fields must exist in the return type model or in the model referenced by the fields.
+- The content of the where clause must be a subset of the schema, except for the  conditions.
+- The name of the root node of the schema must match the name of the root node  of the content of the where clause.
+- The types of operands of a condition must be compatible with the condition and one another.
 - The right-hand side of a condition must refer to an existing argument.
 - The name of each argument must be unique.
-- The type of each argument must be a primitive scalar type, a reference to an
-enum, or an array of such a type. An argument may not reference a model.
+- The type of each argument must be a primitive scalar type, a reference to an enum, or an array of such a type. An argument may not reference a model.
 - Some condition must make use of each argument.
 
 ### EBNF
@@ -410,14 +398,11 @@ enum Category {
 
 # Technical overview
 
-The parser transforms Dragonfly syntax into an AST. The type checker validates
-the AST. The generator turns the AST into TypeScript code.
+The parser transforms Dragonfly syntax into an AST. The type checker validates the AST. The generator turns the AST into TypeScript code.
 
 ## Parser
 
-Parsing transforms a string into an AST. This step fails if the syntax is
-invalid or a declaration does not have a unique name. `ast::Ast` defines the
-AST type. The `parse` method defines the parser.
+Parsing transforms a string into an AST. This step fails if the syntax is invalid or a declaration does not have a unique name. `ast::Ast` defines the AST type. The `parse` method defines the parser.
 
 * `ast::Ast` contains the root AST type.
 * `ast::Ast::parse` defines the AST parser.
@@ -425,9 +410,7 @@ AST type. The `parse` method defines the parser.
 
 ## Type checker
 
-The type checker verifies the internal consistency of the AST. Some checks could
-be done during parsing but are done separately for simplicity. The type checker
-lives in `ast::Ast::check`.
+The type checker verifies the internal consistency of the AST. Some checks could be done during parsing but are done separately for simplicity. The type checker lives in `ast::Ast::check`.
 
 ## Generation
 
@@ -440,23 +423,17 @@ Generation turns the AST into code:
 
 ### GraphQL
 
-`generator::graphql` implements the GraphQL AST.
-
-`generator::graphql::type` converts dragonfly types to GraphQL types and
-prints them.
-
-`generator::graphql::Query` generates GraphQL queries from dragonfly queries and
-prints them.
+* GraphQL AST implementation: `generator::graphql`.
+* GraphQL types, printing, and conversion from Dragonfly types: `generator::graphql::type` 
+* GraphQL queries, printing, and conversion from Dragonfly queries: `generator::graphql::Query`
 
 ### TypeScript
 
-`generator::typescript` implements the TypeScript AST.
-
-`generator::typescript::type` converts dragonfly types to TypeScript types and
+* TypeScript AST implementation: `generator::typescript`.
+* TypeScript types, printing, and conversion from Dragonfly: `generator::typescript::type`
 prints them.
 
-`generator::typescript::Interface` generates TypeScript interfaces from
-dragonfly models and prints them.
+`generator::typescript::Interface` generates TypeScript interfaces from Dragonfly models and prints them.
 
 ```dfly
 model Country {
@@ -480,8 +457,7 @@ interface Country {
 }
 ```
 
-`generator::typescript::StringEnum` generates TypeScript enums from dragonfly
-enumerated types and prints them.
+`generator::typescript::StringEnum` generates TypeScript enums from Dragonfly enumerated types and prints them.
 
 ```dfly
 enum Category {
@@ -509,8 +485,7 @@ enum Category {
 
 `generator::prisma` implements the Prisma Schema Language AST.
 
-`generator::prisma::Model` generates Prisma models and enums from dragonfly
-models and enumerated types and prints them.
+`generator::prisma::Model` generates Prisma models and enums from Dragonfly models and enumerated types and prints them.
 
 ```dfly
 model User {
@@ -573,8 +548,7 @@ Rust nightly (1.69.0 or higher) is required.
 
 ## Parsing
 
-Parsers do not concern themselves with their surrounding whitespace. Their
-parent parsers are responsible for consuming whitespace.
+Parsers do not concern themselves with their surrounding whitespace. Their parent parsers are responsible for consuming whitespace.
 
 ```rust
 // Not this:
@@ -608,8 +582,7 @@ fn parse_b<T>(input: &str) -> ParseResult<T> {
 }
 ```
 
-High-level parsers do not concern themselves with EOF. Parsers like `char` and
-`literal` already handle EOF.
+High-level parsers do not concern themselves with EOF. Parsers like `char` and `literal` already handle EOF.
 
 ```rust
 // Not this:
