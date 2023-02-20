@@ -28,24 +28,14 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
-    /// Certain conditions only make sense for certain types. For example, the
-    /// `contains` condition does not make sense for a number, because the
-    /// meaning of a number another number is ambiguous. This query contains
-    /// a type of condition that is not compatible with the type of the field
-    /// it is applied to.
-    IncompatibleQueryCondition {
-        /// The name of the query.
-        query_name: String,
-        /// The condition that was not satisfied.
-        condition: QueryCondition,
-        /// The type of the condition as given by the argument.
-        expected: Type,
-    },
-    /// Condition operands must be compatible. For example, a string can only
-    /// equal another string, and an integer can only equal another integer.
-    /// This query contains a condition operand that is not compatible with
-    /// the type of the field.
-    IncompatibleQueryOperand {
+    /// Operand types must be compatible with their condition. For example, a
+    /// string can only equal another string, and an integer can only equal
+    /// another integer. This query contains a condition operand (either
+    /// the field or the argument) that is not compatible with the
+    /// condition.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_condition_types`.
+    IncompatibleQueryConditionType {
         /// The name of the query.
         query_name: String,
         /// The condition that was not satisfied.

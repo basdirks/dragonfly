@@ -1,7 +1,7 @@
 use {
     super::{
         r#type::Type,
-        Enum,
+        Model,
         Scalar,
         TypeError,
     },
@@ -13,7 +13,7 @@ use {
         comma,
         dollar,
         literal,
-        maybe,
+        option,
         paren_close,
         paren_open,
         spaces,
@@ -26,9 +26,15 @@ use {
 };
 pub use {
     argument::Argument,
-    condition::Condition,
+    condition::{
+        Condition,
+        Type as ConditionType,
+    },
     r#where::Where,
-    schema::Schema,
+    schema::{
+        Node as SchemaNode,
+        Schema,
+    },
 };
 
 /// Query arguments.
@@ -184,6 +190,7 @@ impl Query {
     /// use dragonfly::ast::{
     ///     Query,
     ///     QuerySchema,
+    ///     QuerySchemaNode,
     ///     Scalar,
     ///     Type,
     /// };
@@ -197,9 +204,9 @@ impl Query {
     /// let expected = Query {
     ///     name: "images".to_string(),
     ///     arguments: vec![],
-    ///     schema: QuerySchema::Model {
+    ///     schema: QuerySchema {
     ///         name: "image".to_string(),
-    ///         nodes: vec![QuerySchema::Field("title".to_string())],
+    ///         nodes: vec![QuerySchemaNode::Field("title".to_string())],
     ///     },
     ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
     ///     r#where: None,
@@ -213,7 +220,9 @@ impl Query {
     ///     Query,
     ///     QueryArgument,
     ///     QueryCondition,
+    ///     QueryConditionType,
     ///     QuerySchema,
+    ///     QuerySchemaNode,
     ///     QueryWhere,
     ///     Scalar,
     ///     Type,
@@ -247,27 +256,27 @@ impl Query {
     ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///     ],
-    ///     schema: QuerySchema::Model {
+    ///     schema: QuerySchema {
     ///         name: "image".to_string(),
-    ///         nodes: vec![QuerySchema::Field("title".to_string())],
+    ///         nodes: vec![QuerySchemaNode::Field("title".to_string())],
     ///     },
     ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
-    ///     r#where: Some(QueryWhere::Node {
+    ///     r#where: Some(QueryWhere {
     ///         name: "image".to_string(),
-    ///         nodes: vec![QueryWhere::Node {
-    ///             name: "title".to_string(),
-    ///             nodes: vec![
-    ///                 QueryWhere::Condition(QueryCondition::Equals(
-    ///                     "title".to_string(),
-    ///                 )),
-    ///                 QueryWhere::Node {
-    ///                     name: "tags".to_string(),
-    ///                     nodes: vec![QueryWhere::Condition(
-    ///                         QueryCondition::Contains("tag".to_string()),
-    ///                     )],
+    ///         conditions: vec![
+    ///             QueryCondition {
+    ///                 field: vec!["title".to_string()],
+    ///                 r#type: QueryConditionType::Equals {
+    ///                     argument: "title".to_string(),
     ///                 },
-    ///             ],
-    ///         }],
+    ///             },
+    ///             QueryCondition {
+    ///                 field: vec!["title".to_string(), "tags".to_string()],
+    ///                 r#type: QueryConditionType::Contains {
+    ///                     argument: "tag".to_string(),
+    ///                 },
+    ///             },
+    ///         ],
     ///     }),
     /// };
     ///
@@ -279,7 +288,9 @@ impl Query {
     ///     Query,
     ///     QueryArgument,
     ///     QueryCondition,
+    ///     QueryConditionType,
     ///     QuerySchema,
+    ///     QuerySchemaNode,
     ///     QueryWhere,
     ///     Scalar,
     ///     Type,
@@ -307,24 +318,21 @@ impl Query {
     ///         name: "name".to_string(),
     ///         r#type: Type::Scalar(Scalar::Reference("CountryName".to_string())),
     ///     }],
-    ///     schema: QuerySchema::Model {
+    ///     schema: QuerySchema {
     ///         name: "image".to_string(),
     ///         nodes: vec![
-    ///             QuerySchema::Field("title".to_string()),
-    ///             QuerySchema::Field("category".to_string()),
+    ///             QuerySchemaNode::Field("title".to_string()),
+    ///             QuerySchemaNode::Field("category".to_string()),
     ///         ],
     ///     },
     ///     r#type: Type::Array(Scalar::Reference("Image".to_string())),
-    ///     r#where: Some(QueryWhere::Node {
+    ///     r#where: Some(QueryWhere {
     ///         name: "image".to_string(),
-    ///         nodes: vec![QueryWhere::Node {
-    ///             name: "country".to_string(),
-    ///             nodes: vec![QueryWhere::Node {
-    ///                 name: "name".to_string(),
-    ///                 nodes: vec![QueryWhere::Condition(QueryCondition::Equals(
-    ///                     "name".to_string(),
-    ///                 ))],
-    ///             }],
+    ///         conditions: vec![QueryCondition {
+    ///             field: vec!["country".to_string(), "name".to_string()],
+    ///             r#type: QueryConditionType::Equals {
+    ///                 argument: "name".to_string(),
+    ///             },
     ///         }],
     ///     }),
     /// };
@@ -344,12 +352,8 @@ impl Query {
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
         let (schema, input) = Schema::parse(&input)?;
-
-        let (r#where, input) = maybe(&input, |input| {
-            let (_, input) = spaces(input)?;
-            Where::parse(&input)
-        })?;
-
+        let (_, input) = spaces(&input)?;
+        let (r#where, input) = option(&input, Where::parse)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
@@ -423,21 +427,13 @@ impl Query {
     /// );
     /// ```
     pub fn check_root_nodes(&self) -> Result<(), TypeError> {
-        if let Some(Where::Node {
-            name: where_root, ..
-        }) = &self.r#where
-        {
-            if let Schema::Model {
-                name: schema_root, ..
-            } = &self.schema
-            {
-                if where_root != schema_root {
-                    return Err(TypeError::IncompatibleQueryRootNodes {
-                        query_name: self.name.clone(),
-                        schema_root: schema_root.clone(),
-                        where_root: where_root.clone(),
-                    });
-                }
+        if let Some(Where { name, .. }) = &self.r#where {
+            if self.schema.name != *name {
+                return Err(TypeError::IncompatibleQueryRootNodes {
+                    query_name: self.name.clone(),
+                    schema_root: self.schema.name.clone(),
+                    where_root: name.clone(),
+                });
             }
         }
 
@@ -487,6 +483,11 @@ impl Query {
     ///
     /// Returns a `TypeError::UnusedQueryArgument` if any argument is not used
     /// in the where clause.
+    ///
+    /// # Panics
+    ///
+    /// Panics only if there is a bug in `alloc::vec::Vec::is_empty()` or
+    /// `core::slice::first()`.
     ///
     /// # Examples
     ///
@@ -580,17 +581,33 @@ impl Query {
     /// );
     /// ```
     pub fn check_unused_arguments(&self) -> Result<(), TypeError> {
-        let condition_references = self
-            .r#where
-            .as_ref()
-            .map(Where::references)
-            .unwrap_or_default();
+        if self.arguments.is_empty() {
+            return Ok(());
+        }
 
-        for argument in &self.arguments {
-            if !condition_references.contains(&argument.name) {
+        match &self.r#where {
+            Some(r#where) => {
+                let used_arguments = r#where
+                    .conditions
+                    .iter()
+                    .map(|condition| condition.argument().to_string())
+                    .collect::<HashSet<_>>();
+
+                println!("{used_arguments:?}");
+
+                for argument in &self.arguments {
+                    if !used_arguments.contains(&argument.name) {
+                        return Err(TypeError::UnusedQueryArgument {
+                            query_name: self.name.clone(),
+                            argument: argument.clone(),
+                        });
+                    }
+                }
+            }
+            None => {
                 return Err(TypeError::UnusedQueryArgument {
                     query_name: self.name.clone(),
-                    argument: argument.clone(),
+                    argument: self.arguments.first().unwrap().clone(),
                 });
             }
         }
@@ -636,6 +653,7 @@ impl Query {
     /// use dragonfly::ast::{
     ///     Query,
     ///     QueryCondition,
+    ///     QueryConditionType,
     ///     TypeError,
     /// };
     ///
@@ -658,7 +676,15 @@ impl Query {
     ///     Query::parse(input).unwrap().0.check_condition_references(),
     ///     Err(TypeError::UnknownQueryConditionReference {
     ///         query_name: "images".to_string(),
-    ///         condition: QueryCondition::Equals("tag".to_string()),
+    ///         condition: QueryCondition {
+    ///             field: ["country", "name"]
+    ///                 .into_iter()
+    ///                 .map(String::from)
+    ///                 .collect::<Vec<String>>(),
+    ///             r#type: QueryConditionType::Equals {
+    ///                 argument: "tag".to_string(),
+    ///             }
+    ///         }
     ///     }),
     /// );
     /// ```
@@ -670,8 +696,8 @@ impl Query {
                 .map(|argument| argument.name.clone())
                 .collect::<HashSet<String>>();
 
-            for condition in &r#where.conditions() {
-                if !argument_names.contains(condition.reference()) {
+            for condition in &r#where.conditions {
+                if !argument_names.contains(condition.argument()) {
                     return Err(TypeError::UnknownQueryConditionReference {
                         query_name: self.name.clone(),
                         condition: condition.clone(),
@@ -688,7 +714,7 @@ impl Query {
     ///
     /// # Arguments
     ///
-    /// * `enums` - A list of enums.
+    /// * `enum_names` - A list of enum names.
     ///
     /// # Errors
     ///
@@ -710,26 +736,15 @@ impl Query {
     /// }";
     ///
     /// let query = Query::parse(input).unwrap().0;
+    /// let enum_names = vec!["CountryName".to_string()].into_iter().collect();
     ///
-    /// let enums = vec![(
-    ///     "CountryName".to_string(),
-    ///     Enum {
-    ///         name: "CountryName".to_string(),
-    ///         variants: vec!["France".to_string(), "Germany".to_string()]
-    ///             .into_iter()
-    ///             .collect(),
-    ///     },
-    /// )]
-    /// .into_iter()
-    /// .collect();
-    ///
-    /// assert!(query.check_argument_types(&enums).is_ok());
+    /// assert!(query.check_argument_types(&enum_names).is_ok());
     /// ```
     ///
     /// ```rust
     /// use {
     ///     dragonfly::ast::Query,
-    ///     std::collections::HashMap,
+    ///     std::collections::HashSet,
     /// };
     ///
     /// let input = "query foo($p: Boolean, $date: DateTime, $rate: Float, \
@@ -741,7 +756,7 @@ impl Query {
     ///
     /// let query = Query::parse(input).unwrap().0;
     ///
-    /// assert!(query.check_argument_types(&HashMap::new()).is_ok());
+    /// assert!(query.check_argument_types(&HashSet::new()).is_ok());
     /// ```
     ///
     /// ```rust
@@ -761,21 +776,10 @@ impl Query {
     /// }";
     ///
     /// let query = Query::parse(input).unwrap().0;
-    ///
-    /// let enums = vec![(
-    ///     "ContinentName".to_string(),
-    ///     Enum {
-    ///         name: "ContinentName".to_string(),
-    ///         variants: vec!["Europe".to_string(), "Asia".to_string()]
-    ///             .into_iter()
-    ///             .collect(),
-    ///     },
-    /// )]
-    /// .into_iter()
-    /// .collect();
+    /// let enum_names = vec!["ContinentName".to_string()].into_iter().collect();
     ///
     /// assert_eq!(
-    ///     query.check_argument_types(&enums),
+    ///     query.check_argument_types(&enum_names),
     ///     Err(TypeError::InvalidQueryArgumentType {
     ///         query_name: "images".to_string(),
     ///         argument: QueryArgument {
@@ -789,11 +793,11 @@ impl Query {
     /// ```
     pub fn check_argument_types(
         &self,
-        enums: &HashMap<String, Enum>,
+        enum_names: &HashSet<String>,
     ) -> Result<(), TypeError> {
         for argument in &self.arguments {
             if let Scalar::Reference(name) = &argument.scalar() {
-                if !enums.contains_key(name) {
+                if !enum_names.contains(name) {
                     return Err(TypeError::InvalidQueryArgumentType {
                         query_name: self.name.clone(),
                         argument: argument.clone(),
@@ -878,5 +882,29 @@ impl Query {
         }
 
         Ok(())
+    }
+
+    /// Check that the types of the condition operands are valid.
+    ///
+    /// # Arguments
+    ///
+    /// * `models` - A list of models.
+    /// * `enum_names` - A list of enum names.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TypeError::IncompatibleQueryConditionType` if the
+    /// types of the condition operands are not compatible with one another or
+    /// with the type of condition.
+    ///
+    /// # Panics
+    ///
+    /// TODO
+    pub fn check_condition_types(
+        &self,
+        _models: &HashMap<String, Model>,
+        _enum_names: &HashSet<String>,
+    ) -> Result<(), TypeError> {
+        todo!();
     }
 }

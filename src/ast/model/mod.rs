@@ -108,6 +108,7 @@ impl Model {
             if fields.insert(field.name.clone(), field).is_some() {
                 return Err(ParseError::CustomError {
                     message: "duplicate model field".to_string(),
+                    input: input.to_string(),
                 });
             }
 

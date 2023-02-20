@@ -7,8 +7,10 @@ pub use self::{
     query::{
         Argument as QueryArgument,
         Condition as QueryCondition,
+        ConditionType as QueryConditionType,
         Query,
         Schema as QuerySchema,
+        SchemaNode as QuerySchemaNode,
         Where as QueryWhere,
     },
     r#enum::Enum,
@@ -222,7 +224,9 @@ impl Ast {
     ///     Query,
     ///     QueryArgument,
     ///     QueryCondition,
+    ///     QueryConditionType,
     ///     QuerySchema,
+    ///     QuerySchemaNode,
     ///     QueryWhere,
     ///     Route,
     ///     Scalar,
@@ -461,15 +465,15 @@ impl Ast {
     ///     Query {
     ///         name: "images".to_string(),
     ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
-    ///         schema: QuerySchema::Model {
+    ///         schema: QuerySchema {
     ///             name: "image".to_string(),
     ///             nodes: vec![
-    ///                 QuerySchema::Field("title".to_string()),
-    ///                 QuerySchema::Model {
+    ///                 QuerySchemaNode::Field("title".to_string()),
+    ///                 QuerySchemaNode::Model {
     ///                     name: "country".to_string(),
-    ///                     nodes: vec![QuerySchema::Field("name".to_string())],
+    ///                     nodes: vec![QuerySchemaNode::Field("name".to_string())],
     ///                 },
-    ///                 QuerySchema::Field("category".to_string()),
+    ///                 QuerySchemaNode::Field("category".to_string()),
     ///             ],
     ///         },
     ///         r#where: None,
@@ -482,23 +486,20 @@ impl Ast {
     ///     Query {
     ///         name: "imagesByCountryName".to_string(),
     ///         r#type: Type::Array(Scalar::Reference("Image".to_string())),
-    ///         schema: QuerySchema::Model {
+    ///         schema: QuerySchema {
     ///             name: "image".to_string(),
     ///             nodes: vec![
-    ///                 QuerySchema::Field("title".to_string()),
-    ///                 QuerySchema::Field("category".to_string()),
+    ///                 QuerySchemaNode::Field("title".to_string()),
+    ///                 QuerySchemaNode::Field("category".to_string()),
     ///             ],
     ///         },
-    ///         r#where: Some(QueryWhere::Node {
+    ///         r#where: Some(QueryWhere {
     ///             name: "image".to_string(),
-    ///             nodes: vec![QueryWhere::Node {
-    ///                 name: "country".to_string(),
-    ///                 nodes: vec![QueryWhere::Node {
-    ///                     name: "name".to_string(),
-    ///                     nodes: vec![QueryWhere::Condition(
-    ///                         QueryCondition::Equals("name".to_string()),
-    ///                     )],
-    ///                 }],
+    ///             conditions: vec![QueryCondition {
+    ///                 field: vec!["country".to_string(), "name".to_string()],
+    ///                 r#type: QueryConditionType::Equals {
+    ///                     argument: "name".to_string(),
+    ///                 },
     ///             }],
     ///         }),
     ///         arguments: vec![QueryArgument {
@@ -525,6 +526,7 @@ impl Ast {
                 if ast.components.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Component {name} already defined"),
+                        input,
                     });
                 }
 
@@ -537,6 +539,7 @@ impl Ast {
                 if ast.models.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Model {name} already defined"),
+                        input,
                     });
                 }
 
@@ -549,6 +552,7 @@ impl Ast {
                 if ast.queries.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Query {name} already defined"),
+                        input,
                     });
                 }
 
@@ -560,6 +564,7 @@ impl Ast {
                 if ast.enums.insert(name.clone(), declaration).is_some() {
                     return Err(ParseError::CustomError {
                         message: format!("Enum {name} already defined"),
+                        input,
                     });
                 }
 
@@ -574,6 +579,7 @@ impl Ast {
                         message: format!(
                             "Route with path {path} already defined"
                         ),
+                        input,
                     });
                 }
 
@@ -582,6 +588,7 @@ impl Ast {
                 return Err(ParseError::CustomError {
                     message: "Expected a component, model, query, enum or page"
                         .to_string(),
+                    input,
                 });
             }
 
@@ -648,21 +655,25 @@ impl Ast {
         // easier to understand if we do it separately.
 
         let model_names = self.models.keys().cloned().collect::<HashSet<_>>();
-        let component_names =
-            self.components.keys().cloned().collect::<HashSet<_>>();
         let enum_names = self.enums.keys().cloned().collect::<HashSet<_>>();
 
         for query in self.queries.values() {
-            query.check_argument_types(&self.enums)?;
+            query.check_argument_types(&enum_names)?;
             query.check_return_type(&model_names)?;
+            query.check_condition_types(&self.models, &enum_names)?;
         }
 
         for model in self.models.values() {
             model.check_field_types(&model_names, &enum_names)?;
         }
 
-        for route in self.routes.values() {
-            route.check_root(&component_names)?;
+        if !self.routes.is_empty() {
+            let component_names =
+                self.components.keys().cloned().collect::<HashSet<_>>();
+
+            for route in self.routes.values() {
+                route.check_root(&component_names)?;
+            }
         }
 
         Ok(())

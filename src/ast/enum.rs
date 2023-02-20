@@ -86,7 +86,8 @@ impl Enum {
     /// assert_eq!(
     ///     Enum::parse(input),
     ///     Err(ParseError::CustomError {
-    ///         message: "duplicate enum variant".to_string()
+    ///         message: "duplicate enum variant".to_string(),
+    ///         input: "\n}".to_string()
     ///     })
     /// );
     /// ```
@@ -107,6 +108,7 @@ impl Enum {
         if variants.len() != variants.iter().collect::<HashSet<_>>().len() {
             return Err(ParseError::CustomError {
                 message: "duplicate enum variant".to_string(),
+                input,
             });
         }
 

@@ -43,7 +43,12 @@ Scalar types are:
 A reference points to an enum or a model. A reference to a model implies a
 relationship between two models.
 
-#### One-to-one, 1-1, `A { B }, B { A }`.
+#### One-to-one, 1-1,
+
+```
+A { B }
+B { A }
+```
 
 An example of a 1-1 relationship is a user and their profile. A user has one
 profile and a profile belongs to one user.
@@ -58,9 +63,15 @@ model Profile {
 }
 ```
 
-#### One-to-many, 1-n, `A { [B] }, B { A }`.
+#### One-to-many, 1-n
+
 An example of a 1-n relationship is a user and their posts. A user has many
 posts and a post belongs to one user.
+
+```
+A { [B] }
+B { A }
+```
 
 ```dfly
 model User {
@@ -72,9 +83,15 @@ model Post {
 }
 ```
 
-#### Many-to-many, n-n, `A { [B] }, B { [A] }`.
+#### Many-to-many, n-n
+
 An example of a n-n relationship users and groups. A user belongs to many
 groups and a group has many users.
+
+```
+A { [B] }
+B { [A] }
+```
 
 ```dfly
 model User {

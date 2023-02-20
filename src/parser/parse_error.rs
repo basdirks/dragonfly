@@ -5,6 +5,8 @@ pub enum ParseError {
     CustomError {
         /// A description of the error.
         message: String,
+        /// The input that was being parsed.
+        input: String,
     },
     /// Unexpected end of file.
     UnexpectedEof,

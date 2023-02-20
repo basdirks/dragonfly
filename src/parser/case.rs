@@ -186,3 +186,54 @@ pub fn kebab(input: &str) -> ParseResult<String> {
         input,
     ))
 }
+
+/// Parse a camelCase ASCII identifier.
+///
+/// # Arguments
+///
+/// * `input` - The input string to parse.
+///
+/// # Errors
+///
+/// * `ParseError::UnexpectedEof`
+/// if the input is empty.
+///
+/// * `ParseError::UnmetPredicate`
+/// if an identifier segment does not start with a lowercase character.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::parser::{
+///     camel_case,
+///     ParseError,
+/// };
+///
+/// assert_eq!(camel_case("foo"), Ok(("foo".to_string(), "".to_string())));
+///
+/// assert_eq!(
+///     camel_case("fooBar"),
+///     Ok(("fooBar".to_string(), "".to_string()))
+/// );
+///
+/// assert_eq!(
+///     camel_case("FooBar"),
+///     Err(ParseError::UnmetPredicate {
+///         actual: 'F',
+///         message: "character is not lowercase".to_string(),
+///     })
+/// );
+/// ```
+pub fn camel(input: &str) -> ParseResult<String> {
+    let (head, input) = many1(input, lowercase)?;
+    let (tail, input) = many(&input, capitalized)?;
+
+    Ok((
+        if tail.is_empty() {
+            head.iter().collect::<String>()
+        } else {
+            format!("{}{}", head.iter().collect::<String>(), tail.join(""))
+        },
+        input,
+    ))
+}

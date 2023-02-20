@@ -2,6 +2,7 @@ use crate::parser::{
     alphabetics,
     brace_close,
     brace_open,
+    camel_case,
     choice,
     many1,
     map,
@@ -9,9 +10,9 @@ use crate::parser::{
     ParseResult,
 };
 
-/// The structure of the data that the query should return.
+/// A schema node.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Schema {
+pub enum Node {
     /// A leaf node: a field.
     Field(String),
     /// A node with children. Either the root node or a relation.
@@ -23,7 +24,7 @@ pub enum Schema {
     },
 }
 
-impl Schema {
+impl Node {
     /// Parse a schema node from the given input.
     ///
     /// # Arguments
@@ -38,29 +39,29 @@ impl Schema {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::QuerySchema;
+    /// use dragonfly::ast::QuerySchemaNode;
     ///
     /// assert_eq!(
-    ///     QuerySchema::parse("foo { bar baz }"),
+    ///     QuerySchemaNode::parse("foo { bar baz }"),
     ///     Ok((
-    ///         QuerySchema::Model {
+    ///         QuerySchemaNode::Model {
     ///             name: "foo".to_string(),
     ///             nodes: vec![
-    ///                 QuerySchema::Field("bar".to_string()),
-    ///                 QuerySchema::Field("baz".to_string()),
+    ///                 QuerySchemaNode::Field("bar".to_string()),
+    ///                 QuerySchemaNode::Field("baz".to_string()),
     ///             ],
     ///         },
     ///         "".to_string(),
     ///     )),
     /// );
     /// ```
-    pub fn parse_node(input: &str) -> ParseResult<Self> {
+    pub fn parse_model(input: &str) -> ParseResult<Self> {
         let (name, input) = alphabetics(input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
 
-        let (structure, input) = many1(&input, |input| {
+        let (nodes, input) = many1(&input, |input| {
             let (_, input) = spaces(input)?;
             let (schema, input) = Self::parse(&input)?;
             let (_, input) = spaces(&input)?;
@@ -71,19 +72,189 @@ impl Schema {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
-        Ok((
-            Self::Model {
-                name,
-                nodes: structure,
-            },
-            input,
-        ))
+        Ok((Self::Model { name, nodes }, input))
     }
 
-    fn parse_identifier(input: &str) -> ParseResult<Self> {
-        map(input, alphabetics, Self::Field)
+    /// Parse a schema field from the given input.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input to parse.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `ParseError` if the input does not start with a valid schema
+    /// field.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::QuerySchemaNode,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// assert_eq!(
+    ///     QuerySchemaNode::parse_field("foo"),
+    ///     Ok((QuerySchemaNode::Field("foo".to_string()), "".to_string())),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     QuerySchemaNode::parse_field("foo { bar }"),
+    ///     Ok((
+    ///         QuerySchemaNode::Field("foo".to_string()),
+    ///         " { bar }".to_string()
+    ///     )),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     QuerySchemaNode::parse_field("Foo { bar }"),
+    ///     Err(ParseError::UnmetPredicate {
+    ///         message: "character is not lowercase".to_string(),
+    ///         actual: 'F',
+    ///     }),
+    /// );
+    /// ```
+    pub fn parse_field(input: &str) -> ParseResult<Self> {
+        map(input, camel_case, Self::Field)
     }
 
+    /// Parse a schema node from the given input.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input to parse.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `ParseError` if the input does not start with a valid schema
+    /// node.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QuerySchemaNode;
+    ///
+    /// assert_eq!(
+    ///     QuerySchemaNode::parse("user"),
+    ///     Ok((QuerySchemaNode::Field("user".to_string()), "".to_string())),
+    /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QuerySchemaNode;
+    ///
+    /// let input = "user {
+    ///   name
+    /// }";
+    ///
+    /// assert_eq!(
+    ///     QuerySchemaNode::parse(input),
+    ///     Ok((
+    ///         QuerySchemaNode::Model {
+    ///             name: "user".to_string(),
+    ///             nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    ///         },
+    ///         "".to_string()
+    ///     )),
+    /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QuerySchemaNode;
+    ///
+    /// let input = "user {
+    ///   name {
+    ///     first
+    ///     last
+    ///   }
+    /// }";
+    ///
+    /// assert_eq!(
+    ///     QuerySchemaNode::parse(input),
+    ///     Ok((
+    ///         QuerySchemaNode::Model {
+    ///             name: "user".to_string(),
+    ///             nodes: vec![QuerySchemaNode::Model {
+    ///                 name: "name".to_string(),
+    ///                 nodes: vec![
+    ///                     QuerySchemaNode::Field("first".to_string()),
+    ///                     QuerySchemaNode::Field("last".to_string()),
+    ///                 ]
+    ///             }]
+    ///         },
+    ///         "".to_string()
+    ///     )),
+    /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QuerySchemaNode;
+    ///
+    /// let input = "user";
+    ///
+    /// assert_eq!(
+    ///     QuerySchemaNode::parse(input),
+    ///     Ok((QuerySchemaNode::Field("user".to_string()), "".to_string())),
+    /// );
+    /// ```
+    pub fn parse(input: &str) -> ParseResult<Self> {
+        choice(input, vec![Self::parse_model, Self::parse_field])
+    }
+
+    /// Check if the schema is empty. The schema is empty if the root node has
+    /// no children.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QuerySchemaNode;
+    ///
+    /// let schema = QuerySchemaNode::Field("user".to_string());
+    ///
+    /// assert!(schema.is_empty());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QuerySchemaNode;
+    ///
+    /// let schema = QuerySchemaNode::Model {
+    ///     name: "user".to_string(),
+    ///     nodes: vec![],
+    /// };
+    ///
+    /// assert!(schema.is_empty());
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QuerySchemaNode;
+    ///
+    /// let schema = QuerySchemaNode::Model {
+    ///     name: "user".to_string(),
+    ///     nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    /// };
+    ///
+    /// assert_eq!(schema.is_empty(), false);
+    /// ```
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Field(_) => true,
+            Self::Model { nodes: schema, .. } => schema.is_empty(),
+        }
+    }
+}
+
+/// The structure of the data that the query should return.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Schema {
+    /// The name of the root node.
+    pub name: String,
+    /// The children of the root node; fields or relations.
+    pub nodes: Vec<Node>,
+}
+
+impl Schema {
     /// Parse a schema from the given input.
     ///
     /// # Arguments
@@ -97,16 +268,19 @@ impl Schema {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::QuerySchema;
+    /// use dragonfly::{
+    ///     ast::QuerySchema,
+    ///     parser::ParseError,
+    /// };
     ///
-    /// assert_eq!(
-    ///     QuerySchema::parse("user"),
-    ///     Ok((QuerySchema::Field("user".to_string()), "".to_string())),
-    /// );
+    /// assert_eq!(QuerySchema::parse("user"), Err(ParseError::UnexpectedEof));
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::QuerySchema;
+    /// use dragonfly::ast::{
+    ///     QuerySchema,
+    ///     QuerySchemaNode,
+    /// };
     ///
     /// let input = "user {
     ///   name
@@ -115,9 +289,9 @@ impl Schema {
     /// assert_eq!(
     ///     QuerySchema::parse(input),
     ///     Ok((
-    ///         QuerySchema::Model {
+    ///         QuerySchema {
     ///             name: "user".to_string(),
-    ///             nodes: vec![QuerySchema::Field("name".to_string())],
+    ///             nodes: vec![QuerySchemaNode::Field("name".to_string())],
     ///         },
     ///         "".to_string()
     ///     )),
@@ -125,7 +299,10 @@ impl Schema {
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::QuerySchema;
+    /// use dragonfly::ast::{
+    ///     QuerySchema,
+    ///     QuerySchemaNode,
+    /// };
     ///
     /// let input = "user {
     ///   name {
@@ -137,13 +314,13 @@ impl Schema {
     /// assert_eq!(
     ///     QuerySchema::parse(input),
     ///     Ok((
-    ///         QuerySchema::Model {
+    ///         QuerySchema {
     ///             name: "user".to_string(),
-    ///             nodes: vec![QuerySchema::Model {
+    ///             nodes: vec![QuerySchemaNode::Model {
     ///                 name: "name".to_string(),
     ///                 nodes: vec![
-    ///                     QuerySchema::Field("first".to_string()),
-    ///                     QuerySchema::Field("last".to_string()),
+    ///                     QuerySchemaNode::Field("first".to_string()),
+    ///                     QuerySchemaNode::Field("last".to_string()),
     ///                 ]
     ///             }]
     ///         },
@@ -151,19 +328,22 @@ impl Schema {
     ///     )),
     /// );
     /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let input = "user";
-    ///
-    /// assert_eq!(
-    ///     QuerySchema::parse(input),
-    ///     Ok((QuerySchema::Field("user".to_string()), "".to_string())),
-    /// );
-    /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
-        choice(input, vec![Self::parse_node, Self::parse_identifier])
+        let (name, input) = alphabetics(input)?;
+        let (_, input) = spaces(&input)?;
+        let (_, input) = brace_open(&input)?;
+        let (_, input) = spaces(&input)?;
+
+        let (nodes, input) = many1(&input, |input| {
+            let (schema, input) = Node::parse(input)?;
+            let (_, input) = spaces(&input)?;
+
+            Ok((schema, input))
+        })?;
+
+        let (_, input) = brace_close(&input)?;
+
+        Ok((Self { name, nodes }, input))
     }
 
     /// Check if the schema is empty. The schema is empty if the root node has
@@ -174,26 +354,29 @@ impl Schema {
     /// ```rust
     /// use dragonfly::ast::QuerySchema;
     ///
-    /// let schema = QuerySchema::Field("user".to_string());
+    /// let schema = QuerySchema {
+    ///     name: "user".to_string(),
+    ///     nodes: vec![],
+    /// };
     ///
-    /// assert_eq!(schema.is_empty(), true);
+    /// assert!(schema.is_empty());
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let schema = QuerySchema::Model {
-    ///     name: "user".to_string(),
-    ///     nodes: vec![QuerySchema::Field("name".to_string())],
+    /// use dragonfly::ast::{
+    ///     QuerySchema,
+    ///     QuerySchemaNode,
     /// };
     ///
-    /// assert_eq!(schema.is_empty(), false);
+    /// let schema = QuerySchema {
+    ///     name: "user".to_string(),
+    ///     nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    /// };
+    ///
+    /// assert!(!schema.is_empty());
     /// ```
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        match self {
-            Self::Field(_) => true,
-            Self::Model { nodes: schema, .. } => schema.is_empty(),
-        }
+        self.nodes.is_empty()
     }
 }

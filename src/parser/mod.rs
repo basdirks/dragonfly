@@ -23,6 +23,7 @@ pub use {
         underscore,
     },
     case::{
+        camel as camel_case,
         capitalized,
         kebab as kebab_case,
         pascal as pascal_case,
@@ -457,21 +458,21 @@ pub fn choice<T>(
 /// ```rust
 /// use dragonfly::parser::{
 ///     literal,
-///     maybe,
+///     option,
 ///     ParseError,
 /// };
 ///
 /// assert_eq!(
-///     maybe("abc", |input| literal(input, "abc")),
+///     option("abc", |input| literal(input, "abc")),
 ///     Ok((Some("abc".to_string()), "".to_string())),
 /// );
 ///
 /// assert_eq!(
-///     maybe("def", |input| literal(input, "abc")),
+///     option("def", |input| literal(input, "abc")),
 ///     Ok((None, "def".to_string())),
 /// );
 /// ```
-pub fn maybe<T>(
+pub fn option<T>(
     input: &str,
     parser: ParseFn<T>,
 ) -> ParseResult<Option<T>> {
