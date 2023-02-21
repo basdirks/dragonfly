@@ -21,8 +21,8 @@ pub enum TypeError {
         query_name: String,
     },
     /// The structure of the schema of a query should match the structure of
-    /// of the model and its relations. This query schema includes a field
-    /// that is not defined in the model.
+    /// the model and its relations. This query schema includes a field that is
+    /// not defined in the model.
     IncompatibleQuerySchema {
         /// The inferred type of the query schema.
         actual: Type,
@@ -31,11 +31,10 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
-    /// Operand must be compatible with their condition. For example, a
-    /// string can only equal another string, and an integer can only equal
-    /// another integer. This query contains a condition operand (either
-    /// the field or the argument) that is not compatible with the
-    /// condition.
+    /// Operand must be compatible with their condition. For example, a string
+    /// can only equal another string, and an integer can only equal another
+    /// integer. This query contains a condition operand (either the field or
+    /// the argument) that is not compatible with the condition.
     ///
     /// Checked in `dragonfly::ast::Ast::check_query_condition_types`.
     IncompatibleQueryOperator {

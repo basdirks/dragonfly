@@ -21,3 +21,11 @@ macro_rules! map {
         |input| map(input, $parser, $f)
     };
 }
+
+/// Parse a character from the given input.
+#[macro_export]
+macro_rules! char {
+    ($predicate:expr) => {
+        |input| char(input, $predicate)
+    };
+}

@@ -23,6 +23,8 @@
 )]
 /// The Abstract Syntax Tree.
 pub mod ast;
+/// The command-line interface.
+pub mod cli;
 /// Source code generators.
 pub mod generator;
 /// Parser combinators.

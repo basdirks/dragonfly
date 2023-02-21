@@ -17,7 +17,7 @@ use {
 /// An interface property.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Property {
-    /// The name of the property. Usually camelCase.
+    /// The name of the property. Usually camel case.
     pub identifier: String,
     /// The type of the property.
     pub r#type: Type,
@@ -46,7 +46,7 @@ impl Print for Property {
 /// An expression with type arguments.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExpressionWithTypeArguments {
-    /// The name of the expression. Usually PascalCase.
+    /// The name of the expression. Usually pascal case.
     pub identifier: String,
     /// The type arguments of the expression.
     pub type_arguments: Vec<Type>,

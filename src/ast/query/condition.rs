@@ -30,7 +30,7 @@ impl Operator {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid
+    /// Returns `ParseError` if the input does not start with a valid
     /// condition type.
     ///
     /// # Examples

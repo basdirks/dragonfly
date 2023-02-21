@@ -11,11 +11,9 @@ use super::{
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not an opening brace.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not an
+///   opening brace.
 ///
 /// # Examples
 ///
@@ -29,8 +27,8 @@ use super::{
 ///
 /// assert_eq!(
 ///     brace_open("}"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: '{',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character '{', found '}'".to_string(),
 ///         actual: '}'
 ///     })
 /// );
@@ -47,11 +45,9 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not a closing brace.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not a
+///   closing brace.
 ///
 /// # Examples
 ///
@@ -65,8 +61,8 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     brace_close("{"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: '}',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character '}', found '{'".to_string(),
 ///         actual: '{'
 ///     })
 /// );
@@ -83,11 +79,9 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not a hyphen.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not a
+///   hyphen.
 ///
 /// # Examples
 ///
@@ -101,8 +95,8 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     hyphen("a"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: '-',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character '-', found 'a'".to_string(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -119,11 +113,9 @@ pub fn hyphen(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not a forward slash.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not a
+///   forward slash.
 ///
 /// # Examples
 ///
@@ -137,8 +129,8 @@ pub fn hyphen(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     forward_slash("a"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: '/',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character '/', found 'a'".to_string(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -155,11 +147,8 @@ pub fn forward_slash(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not a colon.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not a colon.
 ///
 /// # Examples
 ///
@@ -173,8 +162,8 @@ pub fn forward_slash(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     colon("a"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: ':',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character ':', found 'a'".to_string(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -191,11 +180,9 @@ pub fn colon(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not an opening parenthesis.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not an
+///   opening parenthesis.
 ///
 /// # Examples
 ///
@@ -209,8 +196,8 @@ pub fn colon(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     paren_open(")"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: '(',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character '(', found ')'".to_string(),
 ///         actual: ')'
 ///     })
 /// );
@@ -227,11 +214,9 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not a closing parenthesis.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not a
+///   closing parenthesis.
 ///
 /// # Examples
 ///
@@ -245,8 +230,8 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     paren_close("("),
-///     Err(ParseError::UnmatchedChar {
-///         expected: ')',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character ')', found '('".to_string(),
 ///         actual: '('
 ///     })
 /// );
@@ -263,11 +248,9 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not a dollar sign.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not a dollar
+///   sign.
 ///
 /// # Examples
 ///
@@ -281,8 +264,8 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     dollar("a"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: '$',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character '$', found 'a'".to_string(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -299,11 +282,9 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not an underscore.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not an
+///   underscore.
 ///
 /// # Examples
 ///
@@ -317,8 +298,8 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     underscore("a"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: '_',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character '_', found 'a'".to_string(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -335,11 +316,8 @@ pub fn underscore(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the next character is not a comma.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not a comma.
 ///
 /// # Examples
 ///
@@ -353,8 +331,8 @@ pub fn underscore(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     comma("a"),
-///     Err(ParseError::UnmatchedChar {
-///         expected: ',',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character ',', found 'a'".to_string(),
 ///         actual: 'a'
 ///     })
 /// );

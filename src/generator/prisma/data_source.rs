@@ -32,8 +32,6 @@ impl Display for RelationMode {
 }
 
 /// A data source provider.
-///
-/// TODO: support URL from environment variable.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Provider {
     /// A PostgreSQL database.

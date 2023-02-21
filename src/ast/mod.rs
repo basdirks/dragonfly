@@ -79,7 +79,7 @@ impl Declaration {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid
+    /// Returns `ParseError` if the input does not start with a valid
     /// declaration.
     ///
     /// # Examples
@@ -211,7 +211,7 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input is not a valid AST.
+    /// Returns `ParseError` if the input does not start with a valid AST.
     ///
     /// # Examples
     ///
@@ -521,6 +521,36 @@ impl Ast {
     ///
     /// assert_eq!(Ast::parse(&input), Ok((expected, "".to_string())));
     /// ```
+    ///
+    /// Component names must be unique:
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::Ast,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// component Home {
+    ///   path: Home
+    /// }
+    ///
+    /// component Home {
+    ///   path: Index
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input),
+    ///     Err(ParseError::CustomError {
+    ///         message: "Component Home already defined".to_string(),
+    ///         input: "component Home {\n  path: Index\n}".to_string(),
+    ///     })
+    /// );
+    /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let mut input = input.to_string();
         let mut ast = Self::new();
@@ -594,7 +624,7 @@ impl Ast {
                 input = new_input;
             } else {
                 return Err(ParseError::CustomError {
-                    message: "Expected a component, model, query, enum or page"
+                    message: "expected a component, model, query, enum or page"
                         .to_string(),
                     input,
                 });
@@ -614,30 +644,23 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::EmptyQuerySchema` if the schema of any query does
-    /// not contain any fields.
-    ///
-    /// Returns a `TypeError::UnusedQueryArgument` if any query argument is not
-    /// used in the query's `where` clause.
-    ///
-    /// Returns a `TypeError::IncompatibleQueryRootNodes` if the root nodes of
-    /// any query's schema and `where` clause do not match.
-    ///
-    /// Returns a `TypeError::UnknownQueryConditionReference` if any query
-    /// selector references an argument that does not exist.
-    ///
-    /// Returns a `TypeError::InvalidQueryArgumentType` if the type of any query
-    /// is not a primitive or a reference to an enum.
-    ///
-    /// Returns a `TypeError::InvalidQueryReturnType` if the return type of any
-    /// query is not a reference to a known model.
-    ///
-    /// Returns a `TypeError::UnknownRouteRoot` if the root of any route is not
-    /// a reference to a known component.
-    ///
-    /// Returns a `TypeError::InvalidModelFieldType` if the type of any model
-    /// field is not a primitive, a reference to a known enum or model, or an
-    /// array of any such a type.
+    /// * Returns `TypeError::EmptyQuerySchema` if the schema of any query does
+    ///   not contain any fields.
+    /// * Returns `TypeError::UnusedQueryArgument` if any query argument is not
+    ///   used in the query's `where` clause.
+    /// * Returns `TypeError::IncompatibleQueryRootNodes` if the root nodes of
+    ///   any query's schema and `where` clause do not match.
+    /// * Returns `TypeError::UnknownQueryConditionReference` if any query
+    ///   selector references an argument that does not exist.
+    /// * Returns `TypeError::InvalidQueryArgumentType` if the type of any query
+    ///   is not a primitive or a reference to an enum.
+    /// * Returns `TypeError::InvalidQueryReturnType` if the return type of any
+    ///   query is not a reference to a known model.
+    /// * Returns `TypeError::UnknownRouteRoot` if the root of any route is not
+    ///   a reference to a known component.
+    /// * Returns `TypeError::InvalidModelFieldType` if the type of any model
+    ///   field is not a primitive, a reference to a known enum or model, or an
+    ///   array of any such a type.
     pub fn check(&self) -> Result<(), TypeError> {
         self.check_entities()?;
         self.check_types()?;
@@ -649,17 +672,14 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::EmptyQuerySchema` if the schema of any query does
-    /// not contain any fields.
-    ///
-    /// Returns a `TypeError::UnusedQueryArgument` if any query argument is not
-    /// used in the query's `where` clause.
-    ///
-    /// Returns a `TypeError::IncompatibleQueryRootNodes` if the root nodes of
-    /// any query's schema and `where` clause do not match.
-    ///
-    /// Returns a `TypeError::UnknownQueryConditionReference` if any query
-    /// selector references an argument that does not exist.
+    /// * Returns `TypeError::EmptyQuerySchema` if the schema of any query does
+    ///   not contain any fields.
+    /// * Returns `TypeError::UnusedQueryArgument` if any query argument is not
+    ///   used in the query's `where` clause.
+    /// * Returns `TypeError::IncompatibleQueryRootNodes` if the root nodes of
+    ///   any query's schema and `where` clause do not match.
+    /// * Returns `TypeError::UnknownQueryConditionReference` if any query
+    ///   selector references an argument that does not exist.
     pub fn check_entities(&self) -> Result<(), TypeError> {
         // Many of these checks could be combined into a single pass over the
         // AST, but doing them separately is easier to understand.
@@ -678,18 +698,15 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::InvalidQueryArgumentType` if the type of any query
-    /// is not a primitive or a reference to an enum.
-    ///
-    /// Returns a `TypeError::InvalidQueryReturnType` if the return type of any
-    /// query is not a reference to a known model.
-    ///
-    /// Returns a `TypeError::UnknownRouteRoot` if the root of any route is not
-    /// a reference to a known component.
-    ///
-    /// Returns a `TypeError::InvalidModelFieldType` if the type of any model
-    /// field is not a primitive, a reference to a known enum or model, or an
-    /// array of any such a type.
+    /// * Returns `TypeError::InvalidQueryArgumentType` if the type of any query
+    ///   is not a primitive or a reference to an enum.
+    /// * Returns `TypeError::InvalidQueryReturnType` if the return type of any
+    ///   query is not a reference to a known model.
+    /// * Returns `TypeError::UnknownRouteRoot` if the root of any route is not
+    ///   a reference to a known component.
+    /// * Returns `TypeError::InvalidModelFieldType` if the type of any model
+    ///   field is not a primitive, a reference to a known enum or model, or an
+    ///   array of any such a type.
     pub fn check_types(&self) -> Result<(), TypeError> {
         // We could return the model relations during this pass, but it's
         // easier to understand if we do it separately.
@@ -727,13 +744,9 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::IncompatibleQueryOperator` if the
-    /// types of the condition operands are not compatible with one another or
-    /// with the type of condition.
-    ///
-    /// # Panics
-    ///
-    /// TODO
+    /// Returns `TypeError::IncompatibleQueryOperator` if the types of the
+    /// condition operands are not compatible with one another or with the type
+    /// of condition.
     #[allow(clippy::too_many_lines)]
     pub fn check_query_condition_types(
         &self,
@@ -756,6 +769,7 @@ impl Ast {
                 if let Some(argument) = argument_map.get(&condition.argument) {
                     let argument_type = argument.r#type.clone();
 
+                    // TODO: move to separate function
                     match (
                         (argument_type.clone(), field_type.clone()),
                         condition.operator
@@ -902,7 +916,7 @@ impl Ast {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::UnresolvedPath` if the path cannot be resolved.
+    /// Returns `TypeError::UnresolvedPath` if the path cannot be resolved.
     ///
     /// # Examples
     ///

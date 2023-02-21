@@ -39,8 +39,8 @@ impl Scalar {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid
-    /// scalar type.
+    /// Returns `ParseError` if the input does not start with a valid scalar
+    /// type.
     ///
     /// # Examples
     ///
@@ -117,7 +117,7 @@ impl Type {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid type.
+    /// Returns `ParseError` if the input does not start with a valid type.
     ///
     /// # Examples
     ///
@@ -186,7 +186,7 @@ impl Type {
     /// assert!(Type::parse("[[String]]").is_err());
     /// ```
     ///
-    /// A type name must start with an uppercase letter:
+    /// A type name must start with an uppercase character:
     ///
     /// ```rust
     /// use dragonfly::ast::Type;

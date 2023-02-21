@@ -60,7 +60,7 @@ pub type ParseFn<T> = fn(&str) -> ParseResult<T>;
 ///
 /// # Errors
 ///
-/// Returns a `ParseError` if the parser fails.
+/// Returns `ParseError` if the parser fails.
 pub fn map<T, U>(
     input: &str,
     parser: ParseFn<T>,
@@ -79,7 +79,7 @@ pub fn map<T, U>(
 ///
 /// # Errors
 ///
-/// Returns a `ParseError` if the parser fails.
+/// Returns `ParseError` if the parser fails.
 pub fn tag<T, U>(
     input: &str,
     parser: ParseFn<T>,
@@ -99,17 +99,12 @@ pub fn tag<T, U>(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedLiteral`
-/// if the input does not start with the specified string.
-///
-/// * `ParseError::UnmatchedLiteral`
-/// if the input does not end with the specified string.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
-///
-/// * `ParseError`
-/// if the parser fails.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnmatchedLiteral` if the input does not start with
+///   the specified string.
+/// * Returns `ParseError` if the parser fails.
+/// * Returns `ParseError::UnmatchedLiteral` if the input does not end with the
+///   specified string.
 ///
 /// # Examples
 ///
@@ -149,11 +144,9 @@ pub fn between<T>(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedChar`
-/// if the input does not start with the specified character.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the input does not start with the
+///   specified character.
 ///
 /// # Examples
 ///
@@ -168,8 +161,8 @@ pub fn between<T>(
 ///
 /// assert_eq!(
 ///     char("a", 'b'),
-///     Err(ParseError::UnmatchedChar {
-///         expected: 'b',
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character 'b', found 'a'".to_string(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -178,18 +171,20 @@ pub fn between<T>(
 /// ```
 pub fn char(
     input: &str,
-    char: char,
+    expected: char,
 ) -> ParseResult<char> {
     input
         .chars()
         .next()
-        .map_or(Err(ParseError::UnexpectedEof), |c| {
-            if c == char {
-                Ok((char, input[1..].to_string()))
+        .map_or(Err(ParseError::UnexpectedEof), |actual| {
+            if actual == expected {
+                Ok((expected, input[1..].to_string()))
             } else {
-                Err(ParseError::UnmatchedChar {
-                    actual: c,
-                    expected: char,
+                Err(ParseError::UnexpectedChar {
+                    message: format!(
+                        "expected character '{expected}', found '{actual}'"
+                    ),
+                    actual,
                 })
             }
         })
@@ -204,11 +199,9 @@ pub fn char(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmatchedLiteral`
-/// if the input does not start with the specified literal.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnmatchedLiteral` if the input does not start with
+///   the specified literal.
 ///
 /// # Examples
 ///
@@ -279,7 +272,6 @@ pub fn literal(
 /// use dragonfly::parser::{
 ///     alphabetic,
 ///     many,
-///     ParseError,
 /// };
 ///
 /// assert_eq!(
@@ -320,7 +312,7 @@ pub fn many<T>(
 ///
 /// # Errors
 ///
-/// Returns a `ParseError` if the parser fails to match at least once.
+/// Returns `ParseError` if the parser fails to match at least once.
 ///
 /// # Examples
 ///
@@ -342,12 +334,20 @@ pub fn many<T>(
 /// );
 ///
 /// assert_eq!(many1("a23", alphabetic), Ok((vec!['a'], "23".to_string())));
+/// ```
+///
+/// ```rust
+/// use dragonfly::parser::{
+///     alphabetic,
+///     many1,
+///     ParseError,
+/// };
 ///
 /// assert_eq!(
 ///     many1("123", alphabetic),
-///     Err(ParseError::UnmetPredicate {
-///         actual: '1',
+///     Err(ParseError::UnexpectedChar {
 ///         message: "character is not alphabetic".to_string(),
+///         actual: '1',
 ///     })
 /// );
 /// ```
@@ -372,7 +372,7 @@ pub fn many1<T>(
 ///
 /// # Errors
 ///
-/// Returns a `ParseError::UnmatchedChoice` if none of the parsers match.
+/// Returns `ParseError::UnmatchedChoice` if none of the parsers match.
 ///
 /// # Examples
 ///
@@ -394,11 +394,9 @@ pub fn many1<T>(
 ///     B,
 /// }
 ///
-/// let input = "abc";
-///
 /// assert_eq!(
 ///     choice(
-///         input,
+///         "abc",
 ///         vec![
 ///             tag!(literal!("abc"), Choice::A),
 ///             tag!(literal!("abc"), Choice::B),
@@ -409,7 +407,7 @@ pub fn many1<T>(
 ///
 /// assert_eq!(
 ///     choice(
-///         input,
+///         "abc",
 ///         vec![
 ///             tag!(literal!("abc"), Choice::B),
 ///             tag!(literal!("abc"), Choice::A),
@@ -419,7 +417,7 @@ pub fn many1<T>(
 /// );
 ///
 /// assert_eq!(
-///     choice(input, vec![tag!(literal!("def"), Choice::A)]),
+///     choice("abc", vec![tag!(literal!("def"), Choice::A)]),
 ///     Err(ParseError::UnmatchedChoice {
 ///         errors: vec![ParseError::UnmatchedLiteral {
 ///             expected: "def".to_string(),
@@ -441,6 +439,165 @@ pub fn choice<T>(
     }
 
     Err(ParseError::UnmatchedChoice { errors })
+}
+
+/// Apply a parser a specified number of times, returning a vector of the
+/// the results.
+///
+/// # Arguments
+///
+/// * `input` - The input string to parse.
+/// * `parser` - The parser to apply.
+/// * `count` - The number of times to apply the parser.
+///
+/// # Errors
+///
+/// Returns `ParseError` if the parser fails to match the specified number of
+/// times.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::{
+///     char,
+///     parser::{
+///         alphabetic,
+///         char,
+///         count,
+///         literal,
+///         ParseError,
+///     },
+/// };
+///
+/// assert_eq!(
+///     count("abc", char!('a'), 1),
+///     Ok((vec!['a'], "bc".to_string()))
+/// );
+///
+/// assert!(count("abc", char!('a'), 2).is_err());
+///
+/// assert_eq!(
+///     count("abc", alphabetic, 3),
+///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+/// );
+///
+/// assert!(count("abc", alphabetic, 4).is_err());
+///
+/// assert_eq!(count("abc", alphabetic, 0), Ok((vec![], "abc".to_string())));
+/// ```
+pub fn count<T>(
+    input: &str,
+    parser: ParseFn<T>,
+    count: usize,
+) -> ParseResult<Vec<T>> {
+    let mut input = input.to_string();
+    let mut result = vec![];
+
+    for _ in 0..count {
+        let (value, new_input) = parser(&input)?;
+
+        result.push(value);
+
+        input = new_input;
+    }
+
+    Ok((result, input))
+}
+
+/// Apply each parser exactly once, regardless of order. The results must be in
+/// the same order as the parsers, but the parsers may be applied in any order.
+///
+/// # Arguments
+///
+/// * `input` - The input string to parse.
+/// * `parsers` - The parsers to apply.
+///
+/// # Errors
+///
+/// Returns `ParseError` if any parser fails to match exactly once.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::{
+///     char,
+///     parser::{
+///         char,
+///         many_once,
+///         ParseError,
+///     },
+/// };
+///
+/// assert_eq!(
+///     many_once("abc", &[char!('a'), char!('b'), char!('c')]),
+///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+/// );
+///
+/// assert_eq!(
+///     many_once("abc", &[char!('a'), char!('b'), char!('d')]),
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character 'd', found 'c'".to_string(),
+///         actual: 'c',
+///     })
+/// );
+///
+/// assert_eq!(
+///     many_once("cba", &[char!('a'), char!('b'), char!('c')]),
+///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+/// );
+///
+/// assert_eq!(
+///     many_once("", &[char!('a'), char!('b'), char!('d')]),
+///     Err(ParseError::UnexpectedEof)
+/// );
+///
+/// assert_eq!(
+///     many_once::<String>("abc", &[]),
+///     Ok((vec![], "abc".to_string()))
+/// );
+///
+/// assert_eq!(
+///     many_once("abc", &[char!('a'), char!('a')]),
+///     Err(ParseError::UnexpectedChar {
+///         message: "expected character 'a', found 'b'".to_string(),
+///         actual: 'b',
+///     })
+/// );
+/// ```
+pub fn many_once<T: Clone>(
+    input: &str,
+    parsers: &[ParseFn<T>],
+) -> ParseResult<Vec<T>> {
+    let length = parsers.len();
+    let mut input = input.to_string();
+    let mut results = vec![None; length];
+    let mut last_error = None;
+
+    'outer: for _ in 0..length {
+        for (index, parser) in parsers.iter().enumerate() {
+            if results[index].is_some() {
+                continue;
+            }
+
+            match parser(&input) {
+                Ok((value, new_input)) => {
+                    results[index] = Some(value);
+                    input = new_input;
+                    continue 'outer;
+                }
+                err => {
+                    last_error = err.err();
+                    continue;
+                }
+            }
+        }
+
+        if let Some(error) = last_error {
+            return Err(error);
+        }
+    }
+
+    Ok((results.into_iter().map(Option::unwrap).collect(), input))
 }
 
 /// Optionally apply a parser.

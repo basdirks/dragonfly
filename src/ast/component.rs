@@ -29,8 +29,7 @@ impl Component {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid
-    /// component.
+    /// Returns `ParseError` if the input does not start with a valid component.
     ///
     /// # Examples
     ///

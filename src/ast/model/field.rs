@@ -1,7 +1,7 @@
 use crate::{
     ast::r#type::Type,
     parser::{
-        alphabetics,
+        camel_case,
         colon,
         spaces,
         ParseResult,
@@ -26,7 +26,7 @@ impl Field {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid field.
+    /// Returns `ParseError` if the input does not start with a valid field.
     ///
     /// # Examples
     ///
@@ -57,18 +57,41 @@ impl Field {
     ///     parser::ParseError,
     /// };
     ///
+    /// let input = "Baz: Int";
+    ///
+    /// assert_eq!(
+    ///     Field::parse(input),
+    ///     Err(ParseError::UnexpectedChar {
+    ///         message: "expected camelCase identifier to start with lowercase \
+    ///                   character"
+    ///             .to_string(),
+    ///         actual: 'B'
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::{
+    ///         Field,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     parser::ParseError,
+    /// };
+    ///
     /// let input = "baz= Int";
     ///
     /// assert_eq!(
     ///     Field::parse(input),
-    ///     Err(ParseError::UnmatchedChar {
-    ///         expected: ':',
+    ///     Err(ParseError::UnexpectedChar {
+    ///         message: "expected character ':', found '='".to_string(),
     ///         actual: '=',
     ///     })
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
-        let (name, input) = alphabetics(input)?;
+        let (name, input) = camel_case(input)?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
         let (r#type, input) = Type::parse(&input)?;

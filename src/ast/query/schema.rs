@@ -33,8 +33,7 @@ impl Node {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid schema
-    /// node.
+    /// Returns `ParseError` if the input does not start with a valid node.
     ///
     /// # Examples
     ///
@@ -83,8 +82,7 @@ impl Node {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid schema
-    /// field.
+    /// Returns `ParseError` if the input does not start with a valid field.
     ///
     /// # Examples
     ///
@@ -109,8 +107,10 @@ impl Node {
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse_field("Foo { bar }"),
-    ///     Err(ParseError::UnmetPredicate {
-    ///         message: "character is not lowercase".to_string(),
+    ///     Err(ParseError::UnexpectedChar {
+    ///         message: "expected camelCase identifier to start with lowercase \
+    ///                   character"
+    ///             .to_string(),
     ///         actual: 'F',
     ///     }),
     /// );
@@ -127,8 +127,7 @@ impl Node {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid schema
-    /// node.
+    /// Returns `ParseError` if the input does not start with a valid node.
     ///
     /// # Examples
     ///
@@ -263,7 +262,7 @@ impl Schema {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid schema.
+    /// Returns `ParseError` if the input does not start with a valid schema.
     ///
     /// # Examples
     ///

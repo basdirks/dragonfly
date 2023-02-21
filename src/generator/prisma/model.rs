@@ -57,7 +57,8 @@ impl From<AstScalar> for FieldType {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Field {
     /// The name of the field. Must adhere to the following regular expression:
-    /// [A-Za-z][A-Za-z0-9_]*. Must start with a letter. Usually camelCase.
+    /// [A-Za-z][A-Za-z0-9_]*. Must start with an alphabetic character. Usually
+    /// camel case.
     pub name: String,
     /// The type of the field.
     pub r#type: FieldType,
@@ -100,7 +101,7 @@ impl Display for Field {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Model {
     /// The name of the model. Must adhere to `[A-Za-z][A-Za-z0-9_]*`. Usually
-    /// PascalCase. May not be a reserved Prisma keyword or a JavaScript
+    /// pascal case. May not be a reserved Prisma keyword or a JavaScript
     /// reserved keyword. Should be singular.
     pub name: String,
     /// The fields of the model.

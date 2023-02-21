@@ -35,7 +35,7 @@ impl Where {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not contain valid conditions.
+    /// Returns `ParseError` if the input does not contain valid conditions.
     ///
     /// # Examples
     ///
@@ -194,7 +194,7 @@ impl Where {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid where
+    /// Returns `ParseError` if the input does not start with a valid where
     /// clause.
     ///
     /// # Examples
@@ -296,7 +296,7 @@ impl Where {
                 Ok((_, input)) => Ok(((), input)),
                 _ => {
                     Err(ParseError::CustomError {
-                        message: format!("Expected closing brace for {name}."),
+                        message: format!("expected closing brace for {name}."),
                         input: input.to_string(),
                     })
                 }

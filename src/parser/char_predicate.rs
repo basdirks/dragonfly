@@ -14,11 +14,9 @@ use super::{
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the character does not fulfill the predicate.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the character does not fulfill the
+///   predicate.
 ///
 /// # Examples
 ///
@@ -43,7 +41,7 @@ use super::{
 ///         |c| c.is_ascii_lowercase(),
 ///         "character is not lowercase"
 ///     ),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: 'A',
 ///         message: "character is not lowercase".to_string(),
 ///     }),
@@ -64,7 +62,7 @@ pub fn char_if(
             return Ok((char, input[1..].to_string()));
         }
 
-        return Err(ParseError::UnmetPredicate {
+        return Err(ParseError::UnexpectedChar {
             actual: char,
             message: description.to_string(),
         });
@@ -84,11 +82,9 @@ pub fn char_if(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the first character does not fulfill the predicate.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the first character does not
+///   fulfill the predicate.
 ///
 /// # Examples
 ///
@@ -113,7 +109,7 @@ pub fn char_if(
 ///         |c| c.is_ascii_alphabetic(),
 ///         "character is not alphabetic"
 ///     ),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
 ///         message: "character is not alphabetic".to_string(),
 ///     }),
@@ -143,11 +139,8 @@ pub fn chars_if(
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the character is not alphabetic.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the character is not alphabetic.
 ///
 /// # Examples
 ///
@@ -162,7 +155,7 @@ pub fn chars_if(
 ///
 /// assert_eq!(
 ///     alphabetic("1"),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
 ///         message: "character is not alphabetic".to_string(),
 ///     })
@@ -184,11 +177,9 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the first character is not alphabetic.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the first character is not
+///   alphabetic.
 ///
 /// # Examples
 ///
@@ -202,7 +193,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     alphabetics("123"),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
 ///         message: "character is not alphabetic".to_string(),
 ///     }),
@@ -224,11 +215,9 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the first character is not alphanumeric.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the first character is not
+///   alphanumeric.
 ///
 /// # Examples
 ///
@@ -245,7 +234,7 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///
 /// assert_eq!(
 ///     alphanumerics("_bc"),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: '_',
 ///         message: "character is not alphanumeric".to_string(),
 ///     }),
@@ -267,11 +256,9 @@ pub fn alphanumerics(input: &str) -> ParseResult<String> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the character is not alphanumeric.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the first character is not
+///   alphanumeric.
 ///
 /// # Examples
 ///
@@ -287,7 +274,7 @@ pub fn alphanumerics(input: &str) -> ParseResult<String> {
 ///
 /// assert_eq!(
 ///     alphanumeric(" "),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: ' ',
 ///         message: "character is not alphanumeric".to_string(),
 ///     }),
@@ -309,11 +296,9 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the character is not a digit.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the first character is not a
+///   digit.
 ///
 /// # Examples
 ///
@@ -327,7 +312,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     digit("a"),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
 ///         message: "character is not a decimal digit".to_string(),
 ///     }),
@@ -341,7 +326,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
     )
 }
 
-/// Parse an ASCII lowercase letter.
+/// Parse an ASCII lowercase character.
 ///
 /// # Arguments
 ///
@@ -349,11 +334,9 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the character is not lowercase.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not
+///   lowercase.
 ///
 /// # Examples
 ///
@@ -367,7 +350,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     lowercase("A"),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: 'A',
 ///         message: "character is not lowercase".to_string(),
 ///     })
@@ -381,7 +364,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
     )
 }
 
-/// Parse an ASCII uppercase letter.
+/// Parse an ASCII uppercase character.
 ///
 /// # Arguments
 ///
@@ -389,11 +372,9 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the character is not uppercase.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not
+///   uppercase.
 ///
 /// # Examples
 ///
@@ -407,7 +388,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     uppercase("a"),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
 ///         message: "character is not uppercase".to_string(),
 ///     })
@@ -429,11 +410,9 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// # Errors
 ///
-/// * `ParseError::UnmetPredicate`
-/// if the character is not whitespace.
-///
-/// * `ParseError::UnexpectedEof`
-/// if the input is empty.
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not
+///   whitespace.
 ///
 /// # Examples
 ///
@@ -450,7 +429,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     space("a"),
-///     Err(ParseError::UnmetPredicate {
+///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
 ///         message: "character is not whitespace".to_string(),
 ///     })

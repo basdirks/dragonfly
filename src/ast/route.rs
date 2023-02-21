@@ -5,9 +5,9 @@ use {
         brace_close,
         brace_open,
         chars_if,
-        choice,
         colon,
         literal,
+        many_once,
         pascal_case,
         spaces,
         ParseResult,
@@ -35,7 +35,7 @@ impl Route {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid root.
+    /// Returns `ParseError` if the input does not start with a valid root.
     ///
     /// # Examples
     ///
@@ -52,8 +52,8 @@ impl Route {
     ///
     /// assert_eq!(
     ///     Route::parse_root("root Foo"),
-    ///     Err(ParseError::UnmatchedChar {
-    ///         expected: ':',
+    ///     Err(ParseError::UnexpectedChar {
+    ///         message: "expected character ':', found ' '".to_string(),
     ///         actual: ' '
     ///     })
     /// );
@@ -66,10 +66,12 @@ impl Route {
     /// );
     /// ```
     pub fn parse_root(input: &str) -> ParseResult<String> {
-        let (_, input) = literal(input, "root")?;
+        let (_, input) = spaces(input)?;
+        let (_, input) = literal(&input, "root")?;
         let (_, input) = colon(&input)?;
         let (_, input) = spaces(&input)?;
         let (root, input) = pascal_case(&input)?;
+        let (_, input) = spaces(&input)?;
 
         Ok((root, input))
     }
@@ -82,7 +84,7 @@ impl Route {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid title.
+    /// Returns `ParseError` if the input does not start with a valid title.
     ///
     /// # Examples
     ///
@@ -99,8 +101,8 @@ impl Route {
     ///
     /// assert_eq!(
     ///     Route::parse_title("title Foo"),
-    ///     Err(ParseError::UnmatchedChar {
-    ///         expected: ':',
+    ///     Err(ParseError::UnexpectedChar {
+    ///         message: "expected character ':', found ' '".to_string(),
     ///         actual: ' '
     ///     })
     /// );
@@ -129,7 +131,7 @@ impl Route {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid route.
+    /// Returns `ParseError` if the input does not start with a valid route.
     ///
     /// # Examples
     ///
@@ -175,7 +177,6 @@ impl Route {
         let (_, input) = literal(input, "route")?;
         let (_, input) = spaces(&input)?;
 
-        // TODO: Replace with `path` parser.
         let (path, input) = chars_if(
             &input,
             |c| c.is_ascii_alphanumeric() || c == '/',
@@ -186,30 +187,20 @@ impl Route {
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
 
-        // TODO: Replace with variant of `choice` that applies each parser
-        // exactly once, regardless of order.
-        let ((root, title), input) = choice(
-            &input,
-            vec![
-                |input| {
-                    let (root, input) = Self::parse_root(input)?;
-                    let (_, input) = spaces(&input)?;
-                    let (title, input) = Self::parse_title(&input)?;
-                    Ok(((root, title), input))
-                },
-                |input| {
-                    let (title, input) = Self::parse_title(input)?;
-                    let (_, input) = spaces(&input)?;
-                    let (root, input) = Self::parse_root(&input)?;
-                    Ok(((root, title), input))
-                },
-            ],
-        )?;
+        let (results, input) =
+            many_once(&input, &[Self::parse_root, Self::parse_title])?;
 
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
-        Ok((Self { path, root, title }, input))
+        Ok((
+            Self {
+                path,
+                root: results[0].clone(),
+                title: results[1].clone(),
+            },
+            input,
+        ))
     }
 
     /// Check whether the root references a known component.
@@ -220,7 +211,7 @@ impl Route {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::UnknownComponent` if the root does not reference a
+    /// Returns `TypeError::UnknownComponent` if the root does not reference a
     /// known component.
     ///
     /// # Examples

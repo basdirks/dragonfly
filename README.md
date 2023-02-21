@@ -4,6 +4,66 @@ Dragonfly is a toy DSL that explores ways to describe the structure of full-stac
 
 For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 
+# Usage
+
+```sh
+$ dfly --help
+
+Dragonfly 0.1.0
+A DSL for describing web applications
+
+USAGE:
+    dfly [COMMAND] <FILE>
+
+COMMANDS:
+    compile    Compile a Dragonfly file
+    help       Prints this message or the help of the given subcommand(s)
+```
+
+```sh
+$ dfly compile --help
+
+Compile a Dragonfly file
+
+USAGE:
+    dfly compile <LANGUAGE> <FILE>     Compile a Dragonfly file
+
+LANGUAGE:
+    graphql     Generate GraphQL queries
+    typescript  Generate TypeScript types
+    prisma      Generate Prisma models
+```
+
+```sh
+$ dfly compile typescript examples/color.dfly
+
+Writing to examples/color.ts...
+
+$ cat examples/color.ts
+export enum Color {
+  Red = 'Red',
+  Green = 'Green',
+  Blue = 'Blue',
+}
+
+export interface RGB {
+  red: number;
+  green: number;
+  blue: number;
+}
+```
+
+# Roadmap
+
+- [ ] Consolidate the type system
+- [ ] Support additional useful types:
+  - [ ] `Email`
+  - [ ] `URL`
+  - [ ] `Currency`
+- [ ] Generate full GraphQL queries
+- [ ] CLI
+- [ ] Aggregate queries :)
+
 # Entities
 
 An application consists of:

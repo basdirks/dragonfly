@@ -32,7 +32,7 @@ impl Argument {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid
+    /// Returns `ParseError` if the input does not start with a valid
     /// argument.
     ///
     /// # Examples

@@ -26,7 +26,7 @@ use {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Variant {
     /// The name of the variant. Must be unique within the enum. Usually
-    /// PascalCase.
+    /// pascal case.
     name: String,
     /// The value of the variant. May differ from the name.
     value: String,

@@ -41,7 +41,7 @@ impl Model {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid model.
+    /// Returns `ParseError` if the input does not start with a valid model.
     ///
     /// # Examples
     ///
@@ -131,7 +131,7 @@ impl Model {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::UnknownModelFieldType` if the type of a field is
+    /// Returns `TypeError::UnknownModelFieldType` if the type of a field is
     /// not a primitive, a reference to an existing enum or model, or an
     /// array of such a type.
     ///

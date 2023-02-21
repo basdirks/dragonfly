@@ -2,9 +2,9 @@ use {
     crate::parser::{
         brace_close,
         brace_open,
-        capitalized,
         literal,
         many1,
+        pascal_case,
         spaces,
         ParseError,
         ParseResult,
@@ -30,7 +30,7 @@ impl Enum {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid enum.
+    /// Returns `ParseError` if the input does not start with a valid enum.
     ///
     /// # Examples
     ///
@@ -65,8 +65,10 @@ impl Enum {
     ///
     /// assert_eq!(
     ///     Enum::parse(input),
-    ///     Err(ParseError::UnmetPredicate {
-    ///         message: "character is not uppercase".to_string(),
+    ///     Err(ParseError::UnexpectedChar {
+    ///         message: "expected segment of PascalCase identifier to start with \
+    ///                   uppercase character"
+    ///             .to_string(),
     ///         actual: 'b'
     ///     })
     /// );
@@ -94,13 +96,13 @@ impl Enum {
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "enum")?;
         let (_, input) = spaces(&input)?;
-        let (name, input) = capitalized(&input)?;
+        let (name, input) = pascal_case(&input)?;
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
 
         let (variants, input) = many1(&input, |input| {
             let (_, input) = spaces(input)?;
-            let (variant, input) = capitalized(&input)?;
+            let (variant, input) = pascal_case(&input)?;
 
             Ok((variant, input))
         })?;

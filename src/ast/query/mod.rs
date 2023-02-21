@@ -63,7 +63,7 @@ impl ReturnType {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid return
+    /// Returns `ParseError` if the input does not start with a valid return
     /// type.
     ///
     /// # Examples
@@ -107,6 +107,15 @@ impl ReturnType {
     }
 
     /// Return the name of the model that the return type references.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QueryReturnType;
+    ///
+    /// assert_eq!(QueryReturnType::Model("Foo".to_string()).model(), "Foo");
+    /// assert_eq!(QueryReturnType::Array("Foo".to_string()).model(), "Foo");
+    /// ```
     #[must_use]
     pub fn model(&self) -> &str {
         match self {
@@ -140,7 +149,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid query
+    /// Returns `ParseError` if the input does not start with a valid query
     /// argument.
     ///
     /// # Examples
@@ -219,7 +228,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid
+    /// Returns `ParseError` if the input does not start with a valid
     /// reference.
     ///
     /// # Examples
@@ -252,7 +261,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `ParseError` if the input does not start with a valid query.
+    /// Returns `ParseError` if the input does not start with a valid query.
     ///
     /// # Examples
     ///
@@ -456,7 +465,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::IncompatibleQueryRootNodes` if the names of the
+    /// Returns `TypeError::IncompatibleQueryRootNodes` if the names of the
     /// root nodes of the schema and the where clause are not the same.
     ///
     /// # Examples
@@ -526,7 +535,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::EmptyQuerySchema` if the schema is empty.
+    /// Returns `TypeError::EmptyQuerySchema` if the schema is empty.
     ///
     /// # Examples
     ///
@@ -563,7 +572,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::UnusedQueryArgument` if any argument is not used
+    /// Returns `TypeError::UnusedQueryArgument` if any argument is not used
     /// in the where clause.
     ///
     /// # Panics
@@ -701,7 +710,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::UnknownQueryConditionReference` if any condition
+    /// Returns `TypeError::UnknownQueryConditionReference` if any condition
     /// references an argument that does not exist.
     ///
     /// # Examples
@@ -802,7 +811,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::InvalidQueryArgumentType` if any argument type is
+    /// Returns `TypeError::InvalidQueryArgumentType` if any argument type is
     /// not a primitive type or a reference to an existing enum.
     ///
     /// # Examples
@@ -902,7 +911,7 @@ impl Query {
     ///
     /// # Errors
     ///
-    /// Returns a `TypeError::InvalidQueryReturnType` if the return type is
+    /// Returns `TypeError::InvalidQueryReturnType` if the return type is
     /// not a reference to an existing model, or an array of such a type.
     ///
     /// # Examples
