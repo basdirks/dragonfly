@@ -26,7 +26,6 @@ use {
             parse_args,
             usage,
             version,
-            Error,
         },
         generator::{
             printer::Print,
@@ -83,46 +82,43 @@ fn generate(
 pub fn main() {
     let args = env::args().collect::<Vec<_>>();
 
-    match parse_args(&args) {
-        Ok(Command::Help) => println!("{}", usage()),
-        Ok(Command::Version) => println!("{}", version()),
-        Ok(Command::Compile { input, output }) => {
-            let input = Path::new(&input);
+    if let Some(command) = parse_args(&args) {
+        match command {
+            Command::Help => println!("{}", usage()),
+            Command::Version => println!("{}", version()),
+            Command::Compile { input, output } => {
+                let input = Path::new(&input);
 
-            if !input.is_file() {
-                println!("Input file does not exist.");
-            }
+                if !input.is_file() {
+                    println!("Input file does not exist.");
+                }
 
-            output.map_or_else(
-                || {
-                    let output = Path::new("./out");
+                output.map_or_else(
+                    || {
+                        let output = Path::new("./out");
 
-                    if !output.is_dir() {
-                        if let Err(error) = create_dir(output) {
-                            println!(
-                                "Could not create output directory: {error}"
-                            );
+                        if !output.is_dir() {
+                            if let Err(error) = create_dir(output) {
+                                println!(
+                                    "Could not create output directory: \
+                                     {error}"
+                                );
+                            }
                         }
-                    }
 
-                    generate(input, output);
-                },
-                |output| {
-                    let output = Path::new(&output);
+                        generate(input, output);
+                    },
+                    |output| {
+                        let output = Path::new(&output);
 
-                    if !output.is_dir() {
-                        println!("Output directory does not exist.");
-                    }
+                        if !output.is_dir() {
+                            println!("Output directory does not exist.");
+                        }
 
-                    generate(input, output);
-                },
-            );
-        }
-        Err(Error::ParseArgs) => {
-            println!("Could not parse arguments.\n\n{}", usage());
-        }
-        _ => {
-            println!("Unimplemented.\n{}", usage());
+                        generate(input, output);
+                    },
+                );
+            }
         }
     }
 }

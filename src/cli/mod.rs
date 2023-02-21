@@ -1,34 +1,7 @@
-pub use self::error::Error;
-use {
-    self::command::Command,
-    crate::ast::Ast,
-    std::{
-        fs::read_to_string,
-        path::Path,
-    },
-};
+use self::command::Command;
 
 /// Commands.
 pub mod command;
-/// CLI errors.
-pub mod error;
-
-/// Parse a file as a Dragonfly AST.
-///
-/// # Arguments
-///
-/// * `path` - The path to the file to parse.
-///
-/// # Errors
-///
-/// * Returns `Error::ReadFile` if the file could not be read.
-/// * Returns `Error::ParseError` if the file cannot be parsed as Dragonfly.
-pub fn parse_file(path: &Path) -> Result<Ast, Error> {
-    let source = read_to_string(path).map_err(|_| Error::ReadFile)?;
-    let (ast, _) = Ast::parse(&source).map_err(|_| Error::ParseFile)?;
-
-    Ok(ast)
-}
 
 /// Print usage summary.
 #[must_use]
@@ -62,10 +35,6 @@ pub fn version() -> String {
 ///
 /// * `args` - The command line arguments.
 ///
-/// # Errors
-///
-/// Returns `Error::ParseArgs` if the arguments could not be parsed.
-///
 /// # Examples
 ///
 /// If no arguments are given, show help message:
@@ -76,7 +45,7 @@ pub fn version() -> String {
 ///     parse_args,
 /// };
 ///
-/// assert_eq!(parse_args(&["dragonfly".to_string()]), Ok(Command::Help));
+/// assert_eq!(parse_args(&["dragonfly".to_string()]), Some(Command::Help));
 /// ```
 ///
 /// Show help message:
@@ -89,12 +58,12 @@ pub fn version() -> String {
 ///
 /// assert_eq!(
 ///     parse_args(&["dragonfly".to_string(), "-h".to_string()]),
-///     Ok(Command::Help)
+///     Some(Command::Help)
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&["dragonfly".to_string(), "--help".to_string()]),
-///     Ok(Command::Help)
+///     Some(Command::Help)
 /// );
 /// ```
 ///
@@ -108,12 +77,12 @@ pub fn version() -> String {
 ///
 /// assert_eq!(
 ///     parse_args(&["dragonfly".to_string(), "-v".to_string()]),
-///     Ok(Command::Version)
+///     Some(Command::Version)
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&["dragonfly".to_string(), "--version".to_string()]),
-///     Ok(Command::Version)
+///     Some(Command::Version)
 /// );
 /// ```
 ///
@@ -127,7 +96,7 @@ pub fn version() -> String {
 ///
 /// assert_eq!(
 ///     parse_args(&["dragonfly".to_string(), "file.dfly".to_string()]),
-///     Ok(Command::Compile {
+///     Some(Command::Compile {
 ///         input: "file.dfly".to_string(),
 ///         output: None,
 ///     })
@@ -140,7 +109,7 @@ pub fn version() -> String {
 ///         "output".to_string(),
 ///         "file.dfly".to_string(),
 ///     ]),
-///     Ok(Command::Compile {
+///     Some(Command::Compile {
 ///         input: "file.dfly".to_string(),
 ///         output: Some("output".to_string()),
 ///     })
@@ -153,28 +122,29 @@ pub fn version() -> String {
 ///         "output".to_string(),
 ///         "file.dfly".to_string(),
 ///     ]),
-///     Ok(Command::Compile {
+///     Some(Command::Compile {
 ///         input: "file.dfly".to_string(),
 ///         output: Some("output".to_string()),
 ///     })
 /// );
 /// ```
-pub fn parse_args(args: &[String]) -> Result<Command, Error> {
+#[must_use]
+pub fn parse_args(args: &[String]) -> Option<Command> {
     let mut args = args.iter().skip(1);
 
     if let Some(arg) = args.next() {
         match arg.as_str() {
             "-h" | "--help" => {
-                return Ok(Command::Help);
+                return Some(Command::Help);
             }
             "-v" | "--version" => {
-                return Ok(Command::Version);
+                return Some(Command::Version);
             }
             "-o" | "--output" => {
-                let output = args.next().ok_or(Error::ParseArgs)?;
-                let input = args.next().ok_or(Error::ParseArgs)?;
+                let output = args.next()?;
+                let input = args.next()?;
 
-                return Ok(Command::Compile {
+                return Some(Command::Compile {
                     input: input.to_string(),
                     output: Some(output.to_string()),
                 });
@@ -183,10 +153,10 @@ pub fn parse_args(args: &[String]) -> Result<Command, Error> {
                 let input = arg.to_string();
 
                 if args.next().is_some() {
-                    return Err(Error::ParseArgs);
+                    return None;
                 }
 
-                return Ok(Command::Compile {
+                return Some(Command::Compile {
                     input,
                     output: None,
                 });
@@ -194,5 +164,5 @@ pub fn parse_args(args: &[String]) -> Result<Command, Error> {
         }
     }
 
-    Ok(Command::Help)
+    Some(Command::Help)
 }
