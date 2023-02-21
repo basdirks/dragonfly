@@ -15,8 +15,7 @@ Options:
     -v, --version   Print the version number.
     -o, --output    Specify the output directory.
 
-If no output directory is specified, the program will write to a new directory 
-called \"out\" in the current directory.
+If no output directory is specified, the current directory is used.
 
 "
     .trim()

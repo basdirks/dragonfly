@@ -7,36 +7,24 @@ For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 # Usage
 
 ```sh
-$ dfly --help
+$ dragonfly --help
+Usage: dragonfly [options] [file]
 
-Dragonfly 0.1.0
-A DSL for describing web applications
+Options:
+    -h, --help      Print this help message.
+    -v, --version   Print the version number.
+    -o, --output    Specify the output directory.
 
-USAGE:
-    dfly [COMMAND] <FILE>
-
-COMMANDS:
-    compile    Compile a Dragonfly file
-    help       Prints this message or the help of the given subcommand(s)
+If no output directory is specified, the current directory is used.
 ```
 
 ```sh
-$ dfly compile --help
-
-Compile a Dragonfly file
-
-USAGE:
-    dfly compile <LANGUAGE> <FILE>     Compile a Dragonfly file
-
-LANGUAGE:
-    graphql     Generate GraphQL queries
-    typescript  Generate TypeScript types
-    prisma      Generate Prisma models
+$ dragonfly --version
+0.1.0
 ```
 
 ```sh
-$ dfly compile typescript examples/color.dfly
-
+$ dragonfly examples/color.dfly
 Writing to examples/color.ts...
 
 $ cat examples/color.ts
