@@ -1,11 +1,14 @@
-use crate::{
-    ast::r#type::Type,
-    parser::{
-        camel_case,
-        colon,
-        spaces,
-        ParseResult,
+use {
+    crate::{
+        ast::r#type::Type,
+        parser::{
+            camel_case,
+            colon,
+            spaces,
+            ParseResult,
+        },
     },
+    std::fmt::Display,
 };
 
 /// A field belonging to a model.
@@ -97,5 +100,16 @@ impl Field {
         let (r#type, input) = Type::parse(&input)?;
 
         Ok((Self { name, r#type }, input))
+    }
+}
+
+impl Display for Field {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        let Self { name, r#type } = self;
+
+        write!(f, "{name}: {type}")
     }
 }

@@ -1,16 +1,19 @@
-use crate::{
-    literal,
-    map,
-    parser::{
-        between,
-        capitalized,
-        choice,
+use {
+    crate::{
         literal,
         map,
+        parser::{
+            between,
+            capitalized,
+            choice,
+            literal,
+            map,
+            tag,
+            ParseResult,
+        },
         tag,
-        ParseResult,
     },
-    tag,
+    std::fmt::Display,
 };
 
 /// Scalar types.
@@ -89,6 +92,22 @@ impl Scalar {
     }
 }
 
+impl Display for Scalar {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            Self::Boolean => write!(f, "Boolean"),
+            Self::DateTime => write!(f, "DateTime"),
+            Self::Float => write!(f, "Float"),
+            Self::Int => write!(f, "Int"),
+            Self::Reference(name) => write!(f, "{name}"),
+            Self::String => write!(f, "String"),
+        }
+    }
+}
+
 /// A type: a scalar, a reference to a model or enum, or an array.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Type {
@@ -96,6 +115,18 @@ pub enum Type {
     Array(Scalar),
     /// A basic type.
     Scalar(Scalar),
+}
+
+impl Display for Type {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            Self::Array(scalar) => write!(f, "[{scalar}]"),
+            Self::Scalar(scalar) => write!(f, "{scalar}"),
+        }
+    }
 }
 
 impl Type {
@@ -223,5 +254,43 @@ impl Type {
         match self {
             Self::Scalar(scalar) | Self::Array(scalar) => scalar,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_scalar() {
+        assert_eq!(Scalar::Boolean.to_string(), "Boolean");
+        assert_eq!(Scalar::DateTime.to_string(), "DateTime");
+        assert_eq!(Scalar::Float.to_string(), "Float");
+        assert_eq!(Scalar::Int.to_string(), "Int");
+        assert_eq!(Scalar::String.to_string(), "String");
+        assert_eq!(Scalar::Reference("Foo".to_string()).to_string(), "Foo");
+    }
+
+    #[test]
+    fn test_display_type() {
+        assert_eq!(Type::Scalar(Scalar::String).to_string(), "String");
+        assert_eq!(Type::Scalar(Scalar::Int).to_string(), "Int");
+        assert_eq!(Type::Scalar(Scalar::Float).to_string(), "Float");
+        assert_eq!(Type::Scalar(Scalar::Boolean).to_string(), "Boolean");
+
+        assert_eq!(
+            Type::Scalar(Scalar::Reference("Foo".to_string())).to_string(),
+            "Foo"
+        );
+
+        assert_eq!(Type::Array(Scalar::String).to_string(), "[String]");
+        assert_eq!(Type::Array(Scalar::Int).to_string(), "[Int]");
+        assert_eq!(Type::Array(Scalar::Float).to_string(), "[Float]");
+        assert_eq!(Type::Array(Scalar::Boolean).to_string(), "[Boolean]");
+
+        assert_eq!(
+            Type::Array(Scalar::Reference("Foo".to_string())).to_string(),
+            "[Foo]"
+        );
     }
 }

@@ -11,6 +11,7 @@ use {
             ParseResult,
         },
     },
+    std::fmt::Display,
 };
 
 /// A query argument.
@@ -21,6 +22,17 @@ pub struct Argument {
     pub name: String,
     /// The type of the argument.
     pub r#type: Type,
+}
+
+impl Display for Argument {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        let Self { name, r#type } = self;
+
+        write!(f, "${name}: {type}")
+    }
 }
 
 impl Argument {
@@ -68,5 +80,27 @@ impl Argument {
     #[must_use]
     pub const fn scalar(&self) -> &Scalar {
         self.r#type.scalar()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        let argument = Argument {
+            name: "name".to_string(),
+            r#type: Type::Scalar(Scalar::String),
+        };
+
+        assert_eq!(argument.to_string(), "$name: String");
+
+        let argument = Argument {
+            name: "name".to_string(),
+            r#type: Type::Array(Scalar::String),
+        };
+
+        assert_eq!(argument.to_string(), "$name: [String]");
     }
 }

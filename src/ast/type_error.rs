@@ -5,7 +5,10 @@ use {
         QueryCondition,
         Type,
     },
-    std::collections::VecDeque,
+    std::{
+        collections::VecDeque,
+        fmt::Display,
+    },
 };
 
 /// Type checking errors.
@@ -136,4 +139,125 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
+}
+
+impl Display for TypeError {
+    #[allow(clippy::too_many_lines)]
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            Self::EmptyQuerySchema { query_name } => {
+                write!(f, "Query `{query_name}` has an empty schema.")
+            }
+            Self::IncompatibleQueryOperator {
+                query_name,
+                condition,
+                argument_type,
+                field_type,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains a condition with \
+                     incompatible operands. The condition is `{condition}`. \
+                     The type of the condition as given by the argument is \
+                     `{argument_type}`. The type of the field that the \
+                     condition is applied to is `{field_type}`.",
+                )
+            }
+            Self::IncompatibleQueryRootNodes {
+                schema_root,
+                where_root,
+                query_name,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains a where clause with a root \
+                     node that is incompatible with the root node of the \
+                     schema. The root node of the schema is `{schema_root}`. \
+                     The root node of the where clause is `{where_root}`.",
+                )
+            }
+            Self::IncompatibleQuerySchema {
+                actual,
+                expected,
+                query_name,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains a schema that is \
+                     incompatible with the return type of the query. The \
+                     inferred type of the query schema is `{actual}`. The \
+                     return type of the query is `{expected}`.",
+                )
+            }
+            Self::InvalidQueryArgumentType {
+                argument,
+                query_name,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains an argument with an \
+                     invalid type. The argument is `{argument}`.",
+                )
+            }
+            Self::UnknownModelFieldType { field, model_name } => {
+                write!(
+                    f,
+                    "Model `{model_name}` contains a field with an unknown \
+                     type. The field is `{field}`.",
+                )
+            }
+            Self::UnknownQueryConditionReference {
+                condition,
+                query_name,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains a condition that refers to \
+                     an undefined argument. The condition is `{condition}`.",
+                )
+            }
+            Self::UnknownQueryReturnType {
+                query_name,
+                model_name,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains a return type that refers \
+                     to an undefined model. The model is `{model_name}`.",
+                )
+            }
+            Self::UnknownRouteRoot { route_name, root } => {
+                write!(
+                    f,
+                    "Route `{route_name}` contains a root that refers to an \
+                     undefined component. The root is `{root}`.",
+                )
+            }
+            Self::UnresolvedPath {
+                path,
+                model_name,
+                query_name,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains a condition that refers to \
+                     an undefined field. The path is `{path:?}`. The model is \
+                     `{model_name}`.",
+                )
+            }
+            Self::UnusedQueryArgument {
+                argument,
+                query_name,
+            } => {
+                write!(
+                    f,
+                    "Query `{query_name}` contains an argument that is not \
+                     used. The argument is `{argument}`.",
+                )
+            }
+        }
+    }
 }

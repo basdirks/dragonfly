@@ -9,7 +9,10 @@ use {
         },
         tag,
     },
-    std::collections::VecDeque,
+    std::{
+        collections::VecDeque,
+        fmt::Display,
+    },
 };
 
 /// The type of a condition.
@@ -19,6 +22,18 @@ pub enum Operator {
     Contains,
     /// The value of the field must equal the value of the argument.
     Equals,
+}
+
+impl Display for Operator {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            Self::Contains => write!(f, "contains"),
+            Self::Equals => write!(f, "equals"),
+        }
+    }
 }
 
 impl Operator {
@@ -78,4 +93,71 @@ pub struct Condition {
     pub operator: Operator,
     /// The right-hand side of the condition.
     pub argument: String,
+}
+
+impl Display for Condition {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        let Self {
+            field_path,
+            operator,
+            argument,
+        } = self;
+
+        let mut path = String::new();
+
+        for (index, field) in field_path.iter().enumerate() {
+            if index > 0 {
+                path.push_str(&format!(" {{ {field} }}"));
+            } else {
+                path.push_str(field);
+            }
+        }
+
+        write!(f, "{path} {operator} {argument}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_condition_operator() {
+        assert_eq!(Operator::Contains.to_string(), "contains");
+        assert_eq!(Operator::Equals.to_string(), "equals");
+    }
+
+    #[test]
+    fn display_condition() {
+        assert_eq!(
+            Condition {
+                field_path: vec!["foo".to_string(), "bar".to_string()]
+                    .into_iter()
+                    .collect(),
+                operator: Operator::Contains,
+                argument: "$baz".to_string(),
+            }
+            .to_string(),
+            "foo { bar } contains $baz"
+        );
+
+        assert_eq!(
+            Condition {
+                field_path: vec![
+                    "foo".to_string(),
+                    "bar".to_string(),
+                    "baz".to_string()
+                ]
+                .into_iter()
+                .collect(),
+                operator: Operator::Equals,
+                argument: "$baz".to_string(),
+            }
+            .to_string(),
+            "foo { bar { baz } } equals $baz"
+        );
+    }
 }

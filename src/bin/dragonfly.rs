@@ -51,31 +51,121 @@ use {
 fn generate(
     input: &Path,
     output: &Path,
-) {
+) -> Result<(), String> {
     let input = match std::fs::read_to_string(input) {
         Ok(input) => input,
         Err(error) => {
-            println!("Could not read input file: {error}");
-            return;
+            return Err(format!("Could not read input file: {error}"));
         }
     };
 
     let (ast, _) = match dragonfly::ast::Ast::parse(&input) {
         Ok(ast) => ast,
         Err(error) => {
-            println!("Could not parse input file: {error}");
-            return;
+            return Err(format!("Could not parse input file: {error}"));
         }
     };
 
-    for (name, model) in ast.models {
-        let typescript_file = output.join(format!("{name}.ts"));
-        let typescript_source = Interface::from(model).print(0);
-
-        if let Err(error) = write(typescript_file, typescript_source) {
-            println!("Could not write TypeScript file: {error}");
-        }
+    if let Err(error) = ast.check() {
+        return Err(error.to_string());
     }
+
+    for (name, model) in ast.models {
+        let file = output.join(format!("{name}.ts"));
+        let file_clone = file.clone();
+        let file_display = file_clone.display();
+        let source = Interface::from(model).print(0);
+
+        if let Err(error) = write(file, source) {
+            return Err(format!(
+                "Could not write TypeScript file \"{file_display}\": {error}"
+            ));
+        }
+
+        println!("Wrote TypeScript interface to {file_display}");
+    }
+
+    Ok(())
+}
+
+/// Print usage information.
+fn print_usage() {
+    println!("{}", usage());
+}
+
+/// Print version information.
+fn print_version() {
+    println!("{}", version());
+}
+
+/// Compile an input file.
+///
+/// # Arguments
+///
+/// * `input` - The input file.
+/// * `output` - The output directory.
+fn compile(
+    input: &str,
+    output: Option<&str>,
+) -> Result<(), String> {
+    let input = determine_input(input)?;
+    let output = determine_output(output)?;
+
+    generate(input, output)?;
+
+    Ok(())
+}
+
+/// Determine the input file.
+///
+/// # Arguments
+///
+/// * `input` - The input file.
+///
+/// # Errors
+///
+/// Returns an error if the input file does not exist.
+fn determine_input(input: &str) -> Result<&Path, &str> {
+    let input = Path::new(input);
+
+    if input.is_file() {
+        Ok(input)
+    } else {
+        Err("Input file does not exist.")
+    }
+}
+
+/// Determine the output directory, creating it if necessary.
+///
+/// # Arguments
+///
+/// * `output` - The output directory.
+///
+/// # Errors
+///
+/// Returns an error if the output directory does not exist and could not be
+/// created.
+fn determine_output(output: Option<&str>) -> Result<&Path, &str> {
+    output.map_or_else(
+        || {
+            let path = Path::new("./out");
+
+            if !path.is_dir() && create_dir(path).is_err() {
+                return Err("Could not create output directory: \"./out\"");
+            }
+
+            Ok(path)
+        },
+        |output| {
+            let path = Path::new(output);
+
+            if !path.is_dir() {
+                println!("Output directory does not exist: \"{output}\"");
+            }
+
+            Ok(path)
+        },
+    )
 }
 
 /// The entry point for the command line interface.
@@ -84,41 +174,19 @@ pub fn main() {
 
     if let Some(command) = parse_args(&args) {
         match command {
-            Command::Help => println!("{}", usage()),
-            Command::Version => println!("{}", version()),
+            Command::Help => print_usage(),
+            Command::Version => print_version(),
             Command::Compile { input, output } => {
-                let input = Path::new(&input);
-
-                if !input.is_file() {
-                    println!("Input file does not exist.");
+                if let Err(error) = compile(&input, output.as_deref()) {
+                    println!("Could not compile: {error}");
+                } else {
+                    println!("Compiled successfully.");
                 }
 
-                output.map_or_else(
-                    || {
-                        let output = Path::new("./out");
-
-                        if !output.is_dir() {
-                            if let Err(error) = create_dir(output) {
-                                println!(
-                                    "Could not create output directory: \
-                                     {error}"
-                                );
-                            }
-                        }
-
-                        generate(input, output);
-                    },
-                    |output| {
-                        let output = Path::new(&output);
-
-                        if !output.is_dir() {
-                            println!("Output directory does not exist.");
-                        }
-
-                        generate(input, output);
-                    },
-                );
+                return;
             }
         }
     }
+
+    print_usage();
 }

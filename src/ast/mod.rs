@@ -714,14 +714,14 @@ impl Ast {
         let enum_names = self.enums.keys().cloned().collect::<HashSet<_>>();
         let model_names = self.models.keys().cloned().collect::<HashSet<_>>();
 
+        for model in self.models.values() {
+            model.check_field_types(&model_names, &enum_names)?;
+        }
+
         for query in self.queries.values() {
             self.check_query_condition_types(query)?;
             query.check_argument_types(&enum_names)?;
             query.check_return_type(&model_names)?;
-        }
-
-        for model in self.models.values() {
-            model.check_field_types(&model_names, &enum_names)?;
         }
 
         if !self.routes.is_empty() {
@@ -1000,15 +1000,11 @@ impl Ast {
     ) -> Result<Type, TypeError> {
         let path_clone = path.clone();
 
-        println!("Resolving path: {path:?}");
-
         if let Some(model) = self.models.get(model_name) {
             if let Some(segment) = path.pop_front() {
                 if let Some(Field { r#type, .. }) = model.fields.get(&segment) {
                     // The path is empty, we must return a type.
                     if path.is_empty() {
-                        println!("Path is empty, returning type: {type:?}");
-
                         match r#type.scalar() {
                             Scalar::Reference(reference) => {
                                 if self.models.contains_key(reference)

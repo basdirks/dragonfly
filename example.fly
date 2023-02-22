@@ -1,0 +1,64 @@
+route / {
+  root: Home
+  title: Home
+}
+
+component Home {
+  path: Home
+}
+
+model Image {
+  title: String
+  country: Country
+  category: [Category]
+}
+
+query images: [Image] {
+  image {
+    title
+    country {
+      name
+    }
+    category
+  }
+}
+
+query imagesByCountryName($name: CountryName): [Image] {
+  image {
+    title
+    category
+  }
+  where {
+    image {
+      country {
+        name {
+          equals: $name
+        }
+      }
+    }
+  }
+}
+
+enum DrivingSide {
+  Left
+  Right
+}
+
+model Country {
+  domain: String
+  drivingSide: DrivingSide
+  flag: String
+  name: CountryName
+}
+
+enum CountryName {
+  Albania
+  Andorra
+  Austria
+}
+
+enum Category {
+  Architecture
+  Bollard
+  Chevron
+}

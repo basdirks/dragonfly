@@ -684,8 +684,6 @@ impl Query {
                     .map(|condition| condition.argument.to_string())
                     .collect::<HashSet<_>>();
 
-                println!("{used_arguments:?}");
-
                 for argument in &self.arguments {
                     if !used_arguments.contains(&argument.name) {
                         return Err(TypeError::UnusedQueryArgument {
