@@ -21,6 +21,7 @@
 
 use {
     dragonfly::{
+        ast::Ast,
         cli::{
             command::Command,
             parse_args,
@@ -29,18 +30,50 @@ use {
         },
         generator::{
             printer::Print,
-            typescript::Interface,
+            typescript::{
+                Enum,
+                Interface,
+            },
         },
     },
     std::{
         env,
         fs::{
             create_dir,
+            read_to_string,
             write,
         },
         path::Path,
     },
 };
+
+/// Generate a file for one printable entity.
+///
+/// # Arguments
+///
+/// * `name` - The name of the entity.
+/// * `entity` - The entity to generate code from.
+/// * `output` - The output directory.
+fn print_to_file<T: Print>(
+    name: &str,
+    entity: &T,
+    output: &Path,
+) -> Result<(), String> {
+    let file = output.join(format!("{name}.ts"));
+    let file_clone = file.clone();
+    let file_display = file_clone.display();
+    let source = entity.print(0);
+
+    if let Err(error) = write(file, source) {
+        return Err(format!(
+            "Could not write file `{file_display}`: `{error}`"
+        ));
+    }
+
+    println!("Generated `{file_display}`");
+
+    Ok(())
+}
 
 /// Generate code from a file.
 ///
@@ -52,14 +85,14 @@ fn generate(
     input: &Path,
     output: &Path,
 ) -> Result<(), String> {
-    let input = match std::fs::read_to_string(input) {
+    let input = match read_to_string(input) {
         Ok(input) => input,
         Err(error) => {
             return Err(format!("Could not read input file: {error}"));
         }
     };
 
-    let (ast, _) = match dragonfly::ast::Ast::parse(&input) {
+    let (ast, _) = match Ast::parse(&input) {
         Ok(ast) => ast,
         Err(error) => {
             return Err(format!("Could not parse input file: {error}"));
@@ -71,18 +104,11 @@ fn generate(
     }
 
     for (name, model) in ast.models {
-        let file = output.join(format!("{name}.ts"));
-        let file_clone = file.clone();
-        let file_display = file_clone.display();
-        let source = Interface::from(model).print(0);
+        print_to_file(&name, &Interface::from(model), output)?;
+    }
 
-        if let Err(error) = write(file, source) {
-            return Err(format!(
-                "Could not write TypeScript file \"{file_display}\": {error}"
-            ));
-        }
-
-        println!("Wrote TypeScript interface to {file_display}");
+    for (name, r#enum) in ast.enums {
+        print_to_file(&name, &Enum::from(r#enum), output)?;
     }
 
     Ok(())
@@ -146,26 +172,14 @@ fn determine_input(input: &str) -> Result<&Path, &str> {
 /// Returns an error if the output directory does not exist and could not be
 /// created.
 fn determine_output(output: Option<&str>) -> Result<&Path, &str> {
-    output.map_or_else(
-        || {
-            let path = Path::new("./out");
+    let output = output.map_or_else(|| "out", |output| output);
+    let path = Path::new(output);
 
-            if !path.is_dir() && create_dir(path).is_err() {
-                return Err("Could not create output directory: \"./out\"");
-            }
-
-            Ok(path)
-        },
-        |output| {
-            let path = Path::new(output);
-
-            if !path.is_dir() {
-                println!("Output directory does not exist: \"{output}\"");
-            }
-
-            Ok(path)
-        },
-    )
+    if path.is_dir() || create_dir(path).is_ok() {
+        Ok(path)
+    } else {
+        Err("Could not create output directory.")
+    }
 }
 
 /// The entry point for the command line interface.
