@@ -8,7 +8,7 @@ See also:
 
 - [CLI](src/bin/README.md)
 - [AST](src/ast/README.md)
-- [Generators](src/generators/README.md)
+- [Generators](src/generator/README.md)
 
 # Roadmap
 
