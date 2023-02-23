@@ -3,19 +3,47 @@ use self::command::Command;
 /// Commands.
 pub mod command;
 
-/// Print usage summary.
+/// Print help message for the `check` command.
 #[must_use]
-pub fn usage() -> String {
+pub fn help_check_message() -> String {
     "
 
-Usage: dragonfly [options] [file]
+Usage: dragonfly check <source-file>
 
-Options:
-    -h, --help      Print this help message.
-    -v, --version   Print the version number.
-    -o, --output    Specify the output directory.
+"
+    .trim()
+    .to_string()
+}
 
-If no output directory is specified, the current directory is used.
+/// Print help message for the `build` command.
+#[must_use]
+pub fn help_build_message() -> String {
+    "
+
+Usage: dragonfly build [flags] <source-file>
+
+Flags:
+  -o, --output <output-directory>   The output directory. (default: `./out`)
+
+"
+    .trim()
+    .to_string()
+}
+
+/// Print help message.
+#[must_use]
+pub fn help_message() -> String {
+    "
+
+Usage: dragonfly [command] [command-args]
+
+Commands:
+  help                          Print this help message.
+  help <command>                Print help message for a command.
+  version                       Print the version number.
+  check <source-file>           Check a source file for errors.
+  build <flags> <source-file>   Generate code from a source file. (see `help \
+     build`).
 
 "
     .trim()
@@ -26,6 +54,48 @@ If no output directory is specified, the current directory is used.
 #[must_use]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+/// Parse a `help` command.
+///
+/// # Arguments
+///
+/// * `args` - The command line arguments.
+///
+/// # Examples
+///
+/// If no arguments are given, show general help message:
+///
+/// ```rust
+/// use dragonfly::cli::{
+///     command::Command,
+///     parse_help,
+/// };
+///
+/// assert_eq!(parse_help(&mut [].iter()), Command::Help);
+/// ```
+///
+/// Show help message for a specific command:
+///
+/// ```rust
+/// use dragonfly::cli::{
+///     command::Command,
+///     parse_help,
+/// };
+///
+/// assert_eq!(
+///     parse_help(&mut ["check".to_string()].iter()),
+///     Command::HelpCommand {
+///         command: "check".to_string(),
+///     }
+/// );
+/// ```
+pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
+    args.next().map_or(Command::Help, |command| {
+        Command::HelpCommand {
+            command: command.to_string(),
+        }
+    })
 }
 
 /// Parse command line arguments.
@@ -44,7 +114,7 @@ pub fn version() -> String {
 ///     parse_args,
 /// };
 ///
-/// assert_eq!(parse_args(&["dragonfly".to_string()]), Some(Command::Help));
+/// assert_eq!(parse_args(&["dragonfly".to_string()]), Command::Help);
 /// ```
 ///
 /// Show help message:
@@ -56,13 +126,30 @@ pub fn version() -> String {
 /// };
 ///
 /// assert_eq!(
-///     parse_args(&["dragonfly".to_string(), "-h".to_string()]),
-///     Some(Command::Help)
+///     parse_args(&["dragonfly".to_string(), "help".to_string()]),
+///     Command::Help
 /// );
 ///
 /// assert_eq!(
-///     parse_args(&["dragonfly".to_string(), "--help".to_string()]),
-///     Some(Command::Help)
+///     parse_args(&[
+///         "dragonfly".to_string(),
+///         "help".to_string(),
+///         "check".to_string()
+///     ]),
+///     Command::HelpCommand {
+///         command: "check".to_string(),
+///     }
+/// );
+///
+/// assert_eq!(
+///     parse_args(&[
+///         "dragonfly".to_string(),
+///         "help".to_string(),
+///         "build".to_string()
+///     ]),
+///     Command::HelpCommand {
+///         command: "build".to_string(),
+///     }
 /// );
 /// ```
 ///
@@ -75,17 +162,12 @@ pub fn version() -> String {
 /// };
 ///
 /// assert_eq!(
-///     parse_args(&["dragonfly".to_string(), "-v".to_string()]),
-///     Some(Command::Version)
-/// );
-///
-/// assert_eq!(
-///     parse_args(&["dragonfly".to_string(), "--version".to_string()]),
-///     Some(Command::Version)
+///     parse_args(&["dragonfly".to_string(), "version".to_string()]),
+///     Command::Version
 /// );
 /// ```
 ///
-/// Compile a file:
+/// Check a source file for errors:
 ///
 /// ```rust
 /// use dragonfly::cli::{
@@ -94,74 +176,116 @@ pub fn version() -> String {
 /// };
 ///
 /// assert_eq!(
-///     parse_args(&["dragonfly".to_string(), "file.dfly".to_string()]),
-///     Some(Command::Compile {
+///     parse_args(&[
+///         "dragonfly".to_string(),
+///         "check".to_string(),
+///         "file.dfly".to_string()
+///     ]),
+///     Command::Check {
+///         input: "file.dfly".to_string(),
+///     }
+/// );
+/// ```
+///
+/// Build from a source file:
+///
+/// ```rust
+/// use dragonfly::cli::{
+///     command::Command,
+///     parse_args,
+/// };
+///
+/// assert_eq!(
+///     parse_args(&[
+///         "dragonfly".to_string(),
+///         "build".to_string(),
+///         "file.dfly".to_string()
+///     ]),
+///     Command::Build {
 ///         input: "file.dfly".to_string(),
 ///         output: None,
-///     })
+///     }
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&[
 ///         "dragonfly".to_string(),
+///         "build".to_string(),
 ///         "-o".to_string(),
 ///         "output".to_string(),
 ///         "file.dfly".to_string(),
 ///     ]),
-///     Some(Command::Compile {
+///     Command::Build {
 ///         input: "file.dfly".to_string(),
 ///         output: Some("output".to_string()),
-///     })
+///     }
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&[
 ///         "dragonfly".to_string(),
+///         "build".to_string(),
 ///         "--output".to_string(),
 ///         "output".to_string(),
 ///         "file.dfly".to_string(),
 ///     ]),
-///     Some(Command::Compile {
+///     Command::Build {
 ///         input: "file.dfly".to_string(),
 ///         output: Some("output".to_string()),
-///     })
+///     }
 /// );
 /// ```
 #[must_use]
-pub fn parse_args(args: &[String]) -> Option<Command> {
+pub fn parse_args(args: &[String]) -> Command {
     let mut args = args.iter().skip(1);
 
-    if let Some(arg) = args.next() {
-        match arg.as_str() {
-            "-h" | "--help" => {
-                return Some(Command::Help);
-            }
-            "-v" | "--version" => {
-                return Some(Command::Version);
-            }
-            "-o" | "--output" => {
-                let output = args.next()?;
-                let input = args.next()?;
-
-                return Some(Command::Compile {
-                    input: input.to_string(),
-                    output: Some(output.to_string()),
-                });
-            }
-            _ => {
-                let input = arg.to_string();
-
-                if args.next().is_some() {
-                    return None;
+    match args.next().map(String::as_str) {
+        Some("help") => parse_help(&mut args),
+        Some("version") => Command::Version,
+        Some("check") => {
+            args.next().map_or_else(
+                || {
+                    Command::HelpCommand {
+                        command: "check".to_string(),
+                    }
+                },
+                |input| {
+                    Command::Check {
+                        input: input.to_string(),
+                    }
+                },
+            )
+        }
+        Some("build") => {
+            match args.next().map(String::as_str) {
+                Some("-o" | "--output") => {
+                    match (args.next(), args.next()) {
+                        (Some(output), Some(input)) => {
+                            Command::Build {
+                                input: input.to_string(),
+                                output: Some(output.to_string()),
+                            }
+                        }
+                        _ => {
+                            Command::HelpCommand {
+                                command: "build".to_string(),
+                            }
+                        }
+                    }
                 }
-
-                return Some(Command::Compile {
-                    input,
-                    output: None,
-                });
+                Some(input) => {
+                    Command::Build {
+                        input: input.to_string(),
+                        output: None,
+                    }
+                }
+                None => {
+                    Command::HelpCommand {
+                        command: "build".to_string(),
+                    }
+                }
             }
         }
+        _ => Command::Help,
     }
-
-    Some(Command::Help)
 }

@@ -24,6 +24,7 @@ Rust nightly (1.69.0 or higher) is required.
 - [ ] Generate full GraphQL queries.
 - [ ] Support aggregate queries :)
 - [ ] Create `Path` values as soon as possible.
+- [ ] Wrap `ParseError` in `SyntaxError`.
 
 # Example application
 

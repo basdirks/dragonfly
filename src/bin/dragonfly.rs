@@ -24,8 +24,10 @@ use {
         ast::Ast,
         cli::{
             command::Command,
+            help_build_message,
+            help_check_message,
+            help_message,
             parse_args,
-            usage,
             version,
         },
         generator::{
@@ -75,7 +77,32 @@ fn print_to_file<T: Print>(
     Ok(())
 }
 
-/// Generate code from a file.
+/// Check a source file for errors.
+///
+/// # Arguments
+///
+/// * `input` - The input file.
+///
+/// # Errors
+///
+/// Returns an error if the input file does not exist or contains errors.
+fn check(input: &str) -> Result<(), String> {
+    let input = determine_input(input)?;
+
+    let input = read_to_string(input)
+        .map_err(|error| format!("Could not read input file: {error}"))?;
+
+    let (ast, _) = Ast::parse(&input)
+        .map_err(|error| format!("Could not parse input file: {error}"))?;
+
+    if let Err(error) = ast.check() {
+        return Err(error.to_string());
+    }
+
+    Ok(())
+}
+
+/// Generate code from a source file.
 ///
 /// # Arguments
 ///
@@ -106,16 +133,6 @@ fn generate(
     Ok(())
 }
 
-/// Print usage information.
-fn print_usage() {
-    println!("{}", usage());
-}
-
-/// Print version information.
-fn print_version() {
-    println!("{}", version());
-}
-
 /// Compile an input file.
 ///
 /// # Arguments
@@ -143,13 +160,13 @@ fn compile(
 /// # Errors
 ///
 /// Returns an error if the input file does not exist.
-fn determine_input(input: &str) -> Result<&Path, &str> {
-    let input = Path::new(input);
+fn determine_input(input: &str) -> Result<&Path, String> {
+    let path = Path::new(input);
 
-    if input.is_file() {
-        Ok(input)
+    if path.is_file() {
+        Ok(path)
     } else {
-        Err("Input file does not exist.")
+        Err(format!("input file `{input}` does not exist."))
     }
 }
 
@@ -163,36 +180,51 @@ fn determine_input(input: &str) -> Result<&Path, &str> {
 ///
 /// Returns an error if the output directory does not exist and could not be
 /// created.
-fn determine_output(output: Option<&str>) -> Result<&Path, &str> {
+fn determine_output(output: Option<&str>) -> Result<&Path, String> {
     let output = output.map_or_else(|| "out", |output| output);
     let path = Path::new(output);
 
     if path.is_dir() || create_dir(path).is_ok() {
         Ok(path)
     } else {
-        Err("Could not create output directory.")
+        Err(format!("failed to create output directory `{output}`."))
     }
 }
 
-/// The entry point for the command line interface.
+/// Parse the arguments, execute the command, and print the result.
 pub fn main() {
     let args = env::args().collect::<Vec<_>>();
 
-    if let Some(command) = parse_args(&args) {
-        match command {
-            Command::Help => print_usage(),
-            Command::Version => print_version(),
-            Command::Compile { input, output } => {
-                if let Err(error) = compile(&input, output.as_deref()) {
-                    println!("Could not compile: {error}");
-                } else {
-                    println!("Compiled successfully.");
-                }
-
-                return;
+    match parse_args(&args) {
+        Command::Help => {
+            println!("{}", help_message());
+        }
+        Command::HelpCommand { command } => {
+            if command.as_str() == "build" {
+                println!("{}", help_build_message());
+            } else if command.as_str() == "check" {
+                println!("{}", help_check_message());
+            } else {
+                println!("Unknown command `{command}`.");
+                println!("{}", help_message());
+            }
+        }
+        Command::Version => {
+            println!("{}", version());
+        }
+        Command::Build { input, output } => {
+            if let Err(error) = compile(&input, output.as_deref()) {
+                println!("An error occurred during compilation: {error}");
+            } else {
+                println!("Compiled successfully.");
+            }
+        }
+        Command::Check { input } => {
+            if let Err(error) = check(&input) {
+                println!("Error while checking `{input}`:\n{error}");
+            } else {
+                println!("Checked `{input}` successfully.");
             }
         }
     }
-
-    print_usage();
 }

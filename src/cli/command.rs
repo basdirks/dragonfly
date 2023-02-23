@@ -1,12 +1,22 @@
 /// A command.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Command {
-    /// Show the help message.
+    /// Show the general help message.
     Help,
+    /// Show the help message for a specific command.
+    HelpCommand {
+        /// The command to show the help message for.
+        command: String,
+    },
     /// Show the version number.
     Version,
-    /// Compile a file.
-    Compile {
+    /// Check a source file for errors.
+    Check {
+        /// The input file.
+        input: String,
+    },
+    /// Compile a source file and generate code.
+    Build {
         /// The input file.
         input: String,
         /// The output directory.
