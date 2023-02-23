@@ -3,9 +3,13 @@ use {
         ast::Ast,
         generator::{
             printer::Print,
+            prisma::{
+                Enum as PrismaEnum,
+                Model as PrismaModel,
+            },
             typescript::{
-                Enum,
-                Interface,
+                Enum as TypescriptEnum,
+                Interface as TypescriptInterface,
             },
         },
     },
@@ -19,26 +23,33 @@ use {
     },
 };
 
-/// Generate a file for one printable entity.
+/// The output sub-directory for generated Prisma files.
+const PRISMA_OUTPUT_DIR: &str = "prisma";
+
+/// The output sub-directory for generated TypeScript files.
+const TYPESCRIPT_OUTPUT_DIR: &str = "typescript";
+
+/// The file extension for generated Prisma files.
+const PRISMA_FILE_EXTENSION: &str = "prisma";
+
+/// The file extension for generated TypeScript files.
+const TYPESCRIPT_FILE_EXTENSION: &str = "ts";
+
+/// Write a string to a file.
 ///
 /// # Arguments
 ///
-/// * `name` - The name of the entity.
-/// * `entity` - The entity to generate code from.
-/// * `output` - The output directory.
+/// * `file` - The file to write to.
+/// * `source` - The source code to write.
 ///
 /// # Errors
 ///
 /// Returns an error if the file could not be written.
-pub fn print_to_file<T: Print>(
-    name: &str,
-    entity: &T,
-    output: &Path,
+fn write_to_file(
+    file: &Path,
+    source: String,
 ) -> Result<(), String> {
-    let file = output.join(format!("{name}.ts"));
-    let file_clone = file.clone();
-    let file_display = file_clone.display();
-    let source = entity.print(0);
+    let file_display = file.display();
 
     if let Err(error) = write(file, source) {
         return Err(format!(
@@ -49,6 +60,29 @@ pub fn print_to_file<T: Print>(
     println!("Generated `{file_display}`");
 
     Ok(())
+}
+
+/// Generate a file for one printable entity.
+///
+/// # Arguments
+///
+/// * `name` - The name of the entity.
+/// * `entity` - The entity to generate code from.
+/// * `output` - The output directory.
+/// * `extension` - The file extension.
+///
+/// # Errors
+///
+/// Returns an error if the file could not be written.
+pub fn print_to_file<T: Print>(
+    name: &str,
+    entity: &T,
+    output: &Path,
+    extension: &str,
+) -> Result<(), String> {
+    let path = output.join(format!("{name}.{extension}"));
+
+    write_to_file(&path, entity.print(0))
 }
 
 /// Check a source file for errors.
@@ -76,6 +110,47 @@ pub fn check_file(input: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Generate Prisma model and enums from an AST.
+///
+/// # Arguments
+///
+/// * `ast` - The AST to generate code from.
+/// * `output` - The output directory.
+///
+/// # Errors
+///
+/// * Returns an error if the output directory does not exist and could not be
+///   created.
+/// * Returns an error if a file could not be written.
+pub fn generate_prisma(
+    ast: &Ast,
+    output: &Path,
+) -> Result<(), String> {
+    let path = output.join(PRISMA_OUTPUT_DIR);
+
+    if !path.is_dir() {
+        create_dir(&path).map_err(|error| {
+            format!("Could not create prisma output directory: {error}")
+        })?;
+    }
+
+    let mut source = String::new();
+
+    for model in ast.models.values() {
+        source.push_str(&PrismaModel::from(model).print(0));
+        source.push_str("\n\n");
+    }
+
+    for r#enum in ast.enums.values() {
+        source.push_str(&PrismaEnum::from(r#enum).print(0));
+        source.push_str("\n\n");
+    }
+
+    let file = path.join("application.prisma");
+
+    write_to_file(&file, source)
+}
+
 /// Generate TypeScript interfaces and enums from an AST.
 ///
 /// # Arguments
@@ -92,20 +167,30 @@ pub fn generate_typescript(
     ast: &Ast,
     output: &Path,
 ) -> Result<(), String> {
-    let typescript_path = output.join("typescript");
+    let path = output.join(TYPESCRIPT_OUTPUT_DIR);
 
-    if !typescript_path.is_dir() {
-        create_dir(&typescript_path).map_err(|error| {
+    if !path.is_dir() {
+        create_dir(&path).map_err(|error| {
             format!("Could not create typescript output directory: {error}")
         })?;
     }
 
     for (name, model) in &ast.models {
-        print_to_file(name, &Interface::from(model), &typescript_path)?;
+        print_to_file(
+            name,
+            &TypescriptInterface::from(model),
+            &path,
+            TYPESCRIPT_FILE_EXTENSION,
+        )?;
     }
 
     for (name, r#enum) in &ast.enums {
-        print_to_file(name, &Enum::from(r#enum), &typescript_path)?;
+        print_to_file(
+            name,
+            &TypescriptEnum::from(r#enum),
+            &path,
+            PRISMA_FILE_EXTENSION,
+        )?;
     }
 
     Ok(())
@@ -121,7 +206,8 @@ pub fn generate_typescript(
 /// # Errors
 ///
 /// * Returns an error if the input file does not exist or contains errors.
-/// * Returns an error if TypeScript code could not be generated.
+/// * Returns an error if TypeScript files could not be generated.
+/// * Returns an error if Prisma files could not be generated.
 pub fn generate_all(
     input: &Path,
     output: &Path,
@@ -137,6 +223,7 @@ pub fn generate_all(
     }
 
     generate_typescript(&ast, output)?;
+    generate_prisma(&ast, output)?;
 
     Ok(())
 }

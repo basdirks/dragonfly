@@ -14,6 +14,7 @@ use {
             indent,
             newline_separated,
             space_separated,
+            Print,
         },
     },
     std::fmt::Display,
@@ -68,6 +69,47 @@ pub struct Field {
     pub array: bool,
     /// Field attributes.
     pub attributes: Vec<attribute::Field>,
+}
+
+impl Field {
+    /// Standard `id` field.
+    #[must_use]
+    pub fn id() -> Self {
+        Self {
+            name: "id".to_string(),
+            r#type: FieldType::Name("Int".to_string()),
+            required: true,
+            array: false,
+            attributes: vec![
+                attribute::Field::id(),
+                attribute::Field::default_auto_increment(),
+            ],
+        }
+    }
+
+    /// Standard `createdAt` field.
+    #[must_use]
+    pub fn created_at() -> Self {
+        Self {
+            name: "createdAt".to_string(),
+            r#type: FieldType::Name("DateTime".to_string()),
+            required: true,
+            array: false,
+            attributes: vec![],
+        }
+    }
+
+    /// Standard `updatedAt` field.
+    #[must_use]
+    pub fn updated_at() -> Self {
+        Self {
+            name: "updatedAt".to_string(),
+            r#type: FieldType::Name("DateTime".to_string()),
+            required: true,
+            array: false,
+            attributes: vec![],
+        }
+    }
 }
 
 impl Display for Field {
@@ -133,31 +175,53 @@ impl Display for Model {
     }
 }
 
-impl From<AstModel> for Model {
-    fn from(AstModel { name, fields }: AstModel) -> Self {
-        let fields = fields
-            .into_iter()
-            .map(|(_, AstField { r#type, name })| {
-                let (array, scalar) = match r#type {
-                    AstType::Array(scalar) => (true, scalar),
-                    AstType::Scalar(scalar) => (false, scalar),
-                };
+impl Print for Model {
+    fn print(
+        &self,
+        _: usize,
+    ) -> String {
+        self.to_string()
+    }
+}
 
-                Field {
-                    name,
-                    array,
-                    required: true,
-                    r#type: scalar.into(),
-                    attributes: vec![],
-                }
-            })
-            .collect();
+impl From<AstModel> for Model {
+    fn from(
+        AstModel {
+            name,
+            fields: ast_fields,
+        }: AstModel
+    ) -> Self {
+        let mut fields =
+            vec![Field::id(), Field::created_at(), Field::updated_at()];
+
+        for AstField { r#type, name } in ast_fields.values() {
+            let (array, scalar) = match r#type.clone() {
+                AstType::Array(scalar) => (true, scalar),
+                AstType::Scalar(scalar) => (false, scalar),
+            };
+
+            let field = Field {
+                name: name.clone(),
+                array,
+                required: true,
+                r#type: scalar.into(),
+                attributes: vec![],
+            };
+
+            fields.push(field);
+        }
 
         Self {
             name,
             fields,
             attributes: vec![],
         }
+    }
+}
+
+impl From<&AstModel> for Model {
+    fn from(model: &AstModel) -> Self {
+        model.clone().into()
     }
 }
 

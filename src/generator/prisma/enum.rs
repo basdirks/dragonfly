@@ -1,5 +1,8 @@
 use {
-    crate::ast::Enum as AstEnum,
+    crate::{
+        ast::Enum as AstEnum,
+        generator::printer::Print,
+    },
     std::fmt::Display,
 };
 
@@ -29,6 +32,15 @@ impl Display for Enum {
     }
 }
 
+impl Print for Enum {
+    fn print(
+        &self,
+        _: usize,
+    ) -> String {
+        self.to_string()
+    }
+}
+
 impl From<AstEnum> for Enum {
     fn from(
         AstEnum {
@@ -37,6 +49,12 @@ impl From<AstEnum> for Enum {
         }: AstEnum
     ) -> Self {
         Self { name, enumerators }
+    }
+}
+
+impl From<&AstEnum> for Enum {
+    fn from(ast_enum: &AstEnum) -> Self {
+        Self::from(ast_enum.clone())
     }
 }
 

@@ -102,6 +102,31 @@ impl Display for Field {
     }
 }
 
+impl Field {
+    /// Standard `@id` attribute.
+    #[must_use]
+    pub fn id() -> Self {
+        Self {
+            group: None,
+            name: "id".to_string(),
+            arguments: vec![],
+        }
+    }
+
+    /// Standard `@default(autoincrement())` attribute.
+    #[must_use]
+    pub fn default_auto_increment() -> Self {
+        Self {
+            group: None,
+            name: "default".to_string(),
+            arguments: vec![Argument::Function(Function {
+                name: "autoincrement".to_string(),
+                parameters: vec![],
+            })],
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
