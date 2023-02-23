@@ -17,10 +17,10 @@ Commands:
 Run `dragonfly help <command>` to see help for a specific command.
 
 ```console
-$ help check
+$ dragonfly help check
 Usage: dragonfly check <source-file>
 
-$ help build
+$ dragonfly help build
 Usage: dragonfly build [flags] <source-file>
 
 Flags:
