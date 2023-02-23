@@ -47,10 +47,18 @@ impl Display for ParseError {
                 write!(f, "Unexpected character '{actual}': {message}")
             }
             Self::UnmatchedChoice { errors } => {
+                let error_count = errors.len();
+
                 writeln!(f, "Unmatched choice:")?;
 
-                for error in errors {
-                    write!(f, "\n{error}")?;
+                for (i, error) in errors.iter().enumerate() {
+                    let i = i + 1;
+
+                    if i == error_count {
+                        write!(f, "{i}. {error}")?;
+                    } else {
+                        writeln!(f, "{i}. {error}")?;
+                    }
                 }
 
                 Ok(())
@@ -59,5 +67,77 @@ impl Display for ParseError {
                 write!(f, "Unmatched literal: {expected}")
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_custom_error() {
+        assert_eq!(
+            ParseError::CustomError {
+                message: "foo".to_string(),
+                input: "bar".to_string(),
+            }
+            .to_string(),
+            "foo: bar"
+        );
+    }
+
+    #[test]
+    fn test_display_unexpected_eof_error() {
+        assert_eq!(
+            ParseError::UnexpectedEof.to_string(),
+            "Unexpected end of file"
+        );
+    }
+
+    #[test]
+    fn test_display_unexpected_char_error() {
+        assert_eq!(
+            ParseError::UnexpectedChar {
+                actual: 'a',
+                message: "foo".to_string(),
+            }
+            .to_string(),
+            "Unexpected character 'a': foo"
+        );
+    }
+
+    #[test]
+    fn test_display_unmatched_choice_error() {
+        assert_eq!(
+            ParseError::UnmatchedChoice {
+                errors: vec![
+                    ParseError::CustomError {
+                        message: "foo".to_string(),
+                        input: "bar".to_string(),
+                    },
+                    ParseError::UnexpectedEof,
+                ],
+            }
+            .to_string(),
+            "
+            
+Unmatched choice:
+1. foo: bar
+2. Unexpected end of file
+
+"
+            .trim()
+        );
+    }
+
+    #[test]
+    fn test_display_unmatched_literal_error() {
+        assert_eq!(
+            ParseError::UnmatchedLiteral {
+                expected: "foo".to_string(),
+            }
+            .to_string(),
+            "Unmatched literal: foo"
+        );
     }
 }

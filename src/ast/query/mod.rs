@@ -25,6 +25,7 @@ pub use {
     argument::Argument,
     condition::{
         Condition,
+        FieldPath,
         Operator,
     },
     r#where::Where,
@@ -296,20 +297,18 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Query,
-    ///         QueryArgument,
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         QueryReturnType,
-    ///         QuerySchema,
-    ///         QuerySchemaNode,
-    ///         QueryWhere,
-    ///         Scalar,
-    ///         Type,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     FieldPath,
+    ///     Query,
+    ///     QueryArgument,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     QueryReturnType,
+    ///     QuerySchema,
+    ///     QuerySchemaNode,
+    ///     QueryWhere,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "query images($tag: String, $title: String): [Image] {
@@ -349,15 +348,12 @@ impl Query {
     ///         name: "image".to_string(),
     ///         conditions: vec![
     ///             QueryCondition {
-    ///                 field_path: VecDeque::from(vec!["title".to_string()]),
+    ///                 field_path: FieldPath::new(&["title"]),
     ///                 operator: QueryOperator::Equals,
     ///                 argument: "title".to_string(),
     ///             },
     ///             QueryCondition {
-    ///                 field_path: VecDeque::from(vec![
-    ///                     "title".to_string(),
-    ///                     "tags".to_string(),
-    ///                 ]),
+    ///                 field_path: FieldPath::new(&["title", "tags"]),
     ///                 operator: QueryOperator::Contains,
     ///                 argument: "tag".to_string(),
     ///             },
@@ -369,20 +365,18 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Query,
-    ///         QueryArgument,
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         QueryReturnType,
-    ///         QuerySchema,
-    ///         QuerySchemaNode,
-    ///         QueryWhere,
-    ///         Scalar,
-    ///         Type,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     FieldPath,
+    ///     Query,
+    ///     QueryArgument,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     QueryReturnType,
+    ///     QuerySchema,
+    ///     QuerySchemaNode,
+    ///     QueryWhere,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "query imagesByCountryName($name: CountryName): [Image] {
@@ -418,10 +412,7 @@ impl Query {
     ///     r#where: Some(QueryWhere {
     ///         name: "image".to_string(),
     ///         conditions: vec![QueryCondition {
-    ///             field_path: VecDeque::from(vec![
-    ///                 "country".to_string(),
-    ///                 "name".to_string(),
-    ///             ]),
+    ///             field_path: FieldPath::new(&["country", "name"]),
     ///             operator: QueryOperator::Equals,
     ///             argument: "name".to_string(),
     ///         }],
@@ -739,14 +730,12 @@ impl Query {
     /// ```
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Query,
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         TypeError,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     FieldPath,
+    ///     Query,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     TypeError,
     /// };
     ///
     /// let input = "query images($name: CountryName): [Image] {
@@ -769,10 +758,7 @@ impl Query {
     ///     Err(TypeError::UnknownQueryConditionReference {
     ///         query_name: "images".to_string(),
     ///         condition: QueryCondition {
-    ///             field_path: VecDeque::from(vec![
-    ///                 "country".to_string(),
-    ///                 "name".to_string()
-    ///             ]),
+    ///             field_path: FieldPath::new(&["country", "name",]),
     ///             operator: QueryOperator::Equals,
     ///             argument: "tag".to_string(),
     ///         }

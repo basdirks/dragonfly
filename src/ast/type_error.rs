@@ -1,14 +1,12 @@
 use {
     super::{
+        query::condition::FieldPath,
         Field,
         QueryArgument,
         QueryCondition,
         Type,
     },
-    std::{
-        collections::VecDeque,
-        fmt::Display,
-    },
+    std::fmt::Display,
 };
 
 /// Type checking errors.
@@ -23,18 +21,7 @@ pub enum TypeError {
         /// The name of the empty query.
         query_name: String,
     },
-    /// The structure of the schema of a query should match the structure of
-    /// the model and its relations. This query schema includes a field that is
-    /// not defined in the model.
-    IncompatibleQuerySchema {
-        /// The inferred type of the query schema.
-        actual: Type,
-        /// The return type of the query.
-        expected: Type,
-        /// The name of the query.
-        query_name: String,
-    },
-    /// Operand must be compatible with their condition. For example, a string
+    /// Operands must be compatible with their condition. For example, a string
     /// can only equal another string, and an integer can only equal another
     /// integer. This query contains a condition operand (either the field or
     /// the argument) that is not compatible with the condition.
@@ -64,6 +51,17 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
+    /// The structure of the schema of a query should match the structure of
+    /// the model and its relations. This query schema includes a field that is
+    /// not defined in the model.
+    IncompatibleQuerySchema {
+        /// The inferred type of the query schema.
+        actual: Type,
+        /// The return type of the query.
+        expected: Type,
+        /// The name of the query.
+        query_name: String,
+    },
     /// The type of a query argument must be a primitive, a reference to an
     /// existing enum, or an array of such a type. The type of an argument of
     /// this query is unknown.
@@ -74,16 +72,6 @@ pub enum TypeError {
         argument: QueryArgument,
         /// The name of the query.
         query_name: String,
-    },
-    /// The return type of a query must reference an existing model. The model
-    /// that this return type references does not exist.
-    ///
-    /// Checked in `dragonfly::ast::Query::check_return_type`.
-    UnknownQueryReturnType {
-        /// The name of the query.
-        query_name: String,
-        /// The name of the model.
-        model_name: String,
     },
     /// The type of a field in a model must be a primitive, a reference to an
     /// existing enum or model, or an array of such a type. The type of a field
@@ -106,6 +94,16 @@ pub enum TypeError {
         /// The name of the query.
         query_name: String,
     },
+    /// The return type of a query must reference an existing model. The model
+    /// that this return type references does not exist.
+    ///
+    /// Checked in `dragonfly::ast::Query::check_return_type`.
+    UnknownQueryReturnType {
+        /// The name of the query.
+        query_name: String,
+        /// The name of the model.
+        model_name: String,
+    },
     /// The root of a route must be a reference to a known component. The root
     /// of this route is unknown.
     ///
@@ -123,7 +121,7 @@ pub enum TypeError {
     /// Checked in `dragonfly::ast::Ast::check_query_condition_types`.
     UnresolvedPath {
         /// The path that can not be resolved.
-        path: VecDeque<String>,
+        path: FieldPath,
         /// The name of the model.
         model_name: String,
         /// The name of the query.
@@ -244,7 +242,7 @@ impl Display for TypeError {
                 write!(
                     f,
                     "Query `{query_name}` contains a condition that refers to \
-                     an undefined field. The path is `{path:?}`. The model is \
+                     an undefined field. The path is `{path}`. The model is \
                      `{model_name}`.",
                 )
             }
@@ -259,5 +257,181 @@ impl Display for TypeError {
                 )
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_empty_schema_error() {
+        assert_eq!(
+            TypeError::EmptyQuerySchema {
+                query_name: "foo".to_string(),
+            }
+            .to_string(),
+            "Query `foo` has an empty schema."
+        );
+    }
+
+    #[test]
+    fn test_display_incompatible_query_operator_error() {
+        use crate::ast::{
+            QueryCondition,
+            QueryOperator,
+            Scalar,
+        };
+
+        assert_eq!(
+            TypeError::IncompatibleQueryOperator {
+                query_name: "foo".to_string(),
+                condition: QueryCondition {
+                    operator: QueryOperator::Equals,
+                    field_path: FieldPath::new(&["foo", "bar", "baz",]),
+                    argument: "baz".to_string(),
+                },
+                argument_type: Type::Scalar(Scalar::String),
+                field_type: Type::Scalar(Scalar::Int),
+            }
+            .to_string(),
+            "Query `foo` contains a condition with incompatible operands. The \
+             condition is `foo { bar { baz } } equals $baz`. The type of the \
+             condition as given by the argument is `String`. The type of the \
+             field that the condition is applied to is `Int`."
+        );
+    }
+
+    #[test]
+    fn test_display_incompatible_query_root_nodes_error() {
+        assert_eq!(
+            TypeError::IncompatibleQueryRootNodes {
+                schema_root: "foo".to_string(),
+                where_root: "bar".to_string(),
+                query_name: "baz".to_string(),
+            }
+            .to_string(),
+            "Query `baz` contains a where clause with a root node that is \
+             incompatible with the root node of the schema. The root node of \
+             the schema is `foo`. The root node of the where clause is `bar`."
+        );
+    }
+
+    #[test]
+    fn test_display_incompatible_query_schema_error() {
+        use crate::ast::{
+            Scalar,
+            Type,
+        };
+
+        assert_eq!(
+            TypeError::IncompatibleQuerySchema {
+                actual: Type::Array(Scalar::Reference("foo".to_string())),
+                expected: Type::Array(Scalar::Reference("bar".to_string())),
+                query_name: "baz".to_string(),
+            }
+            .to_string(),
+            "Query `baz` contains a schema that is incompatible with the \
+             return type of the query. The inferred type of the query schema \
+             is `[foo]`. The return type of the query is `[bar]`."
+        );
+    }
+
+    #[test]
+    fn test_display_invalid_query_argument_type_error() {
+        use crate::ast::Scalar;
+
+        assert_eq!(
+            TypeError::InvalidQueryArgumentType {
+                argument: QueryArgument {
+                    name: "foo".to_string(),
+                    r#type: Type::Scalar(Scalar::String),
+                },
+                query_name: "bar".to_string(),
+            }
+            .to_string(),
+            "Query `bar` contains an argument with an invalid type. The \
+             argument is `$foo: String`."
+        );
+    }
+
+    #[test]
+    fn test_display_unknown_model_field_type_error() {
+        use crate::ast::Scalar;
+
+        assert_eq!(
+            TypeError::UnknownModelFieldType {
+                field: Field {
+                    name: "foo".to_string(),
+                    r#type: Type::Scalar(Scalar::String),
+                },
+                model_name: "bar".to_string(),
+            }
+            .to_string(),
+            "Model `bar` contains a field with an unknown type. The field is \
+             `foo: String`."
+        );
+    }
+
+    #[test]
+    fn test_display_unknown_query_condition_reference_error() {
+        use crate::ast::{
+            QueryCondition,
+            QueryOperator,
+        };
+
+        assert_eq!(
+            TypeError::UnknownQueryConditionReference {
+                condition: QueryCondition {
+                    operator: QueryOperator::Equals,
+                    field_path: FieldPath::new(&["foo", "bar", "baz",]),
+                    argument: "baz".to_string(),
+                },
+                query_name: "bar".to_string(),
+            }
+            .to_string(),
+            "Query `bar` contains a condition that refers to an undefined \
+             argument. The condition is `foo { bar { baz } } equals $baz`."
+        );
+    }
+
+    #[test]
+    fn test_display_unknown_query_return_type_error() {
+        assert_eq!(
+            TypeError::UnknownQueryReturnType {
+                query_name: "foo".to_string(),
+                model_name: "bar".to_string(),
+            }
+            .to_string(),
+            "Query `foo` contains a return type that refers to an undefined \
+             model. The model is `bar`."
+        );
+    }
+
+    #[test]
+    fn test_display_unknown_route_root_error() {
+        assert_eq!(
+            TypeError::UnknownRouteRoot {
+                route_name: "foo".to_string(),
+                root: "bar".to_string(),
+            }
+            .to_string(),
+            "Route `foo` contains a root that refers to an undefined \
+             component. The root is `bar`."
+        );
+    }
+
+    #[test]
+    fn test_display_unresolved_path_error() {
+        assert_eq!(
+            TypeError::UnresolvedPath {
+                path: FieldPath::new(&["foo", "bar", "baz",]),
+                model_name: "foo".to_string(),
+                query_name: "bar".to_string(),
+            }
+            .to_string(),
+            "Query `bar` contains a condition that refers to an undefined \
+             field. The path is `foo { bar { baz } }`. The model is `foo`."
+        );
     }
 }

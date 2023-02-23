@@ -7,6 +7,7 @@ pub use self::{
     query::{
         Argument as QueryArgument,
         Condition as QueryCondition,
+        FieldPath,
         Operator as QueryOperator,
         Query,
         ReturnType as QueryReturnType,
@@ -36,7 +37,6 @@ use {
     std::collections::{
         HashMap,
         HashSet,
-        VecDeque,
     },
 };
 
@@ -216,27 +216,25 @@ impl Ast {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Ast,
-    ///         Component,
-    ///         Declaration,
-    ///         Enum,
-    ///         Field,
-    ///         Model,
-    ///         Query,
-    ///         QueryArgument,
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         QueryReturnType,
-    ///         QuerySchema,
-    ///         QuerySchemaNode,
-    ///         QueryWhere,
-    ///         Route,
-    ///         Scalar,
-    ///         Type,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     Ast,
+    ///     Component,
+    ///     Declaration,
+    ///     Enum,
+    ///     Field,
+    ///     FieldPath,
+    ///     Model,
+    ///     Query,
+    ///     QueryArgument,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     QueryReturnType,
+    ///     QuerySchema,
+    ///     QuerySchemaNode,
+    ///     QueryWhere,
+    ///     Route,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "route / {
@@ -502,10 +500,7 @@ impl Ast {
     ///         r#where: Some(QueryWhere {
     ///             name: "image".to_string(),
     ///             conditions: vec![QueryCondition {
-    ///                 field_path: VecDeque::from(vec![
-    ///                     "country".to_string(),
-    ///                     "name".to_string(),
-    ///                 ]),
+    ///                 field_path: FieldPath::new(&["country", "name"]),
     ///                 operator: QueryOperator::Equals,
     ///                 argument: "name".to_string(),
     ///             }],
@@ -921,13 +916,11 @@ impl Ast {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Ast,
-    ///         Scalar,
-    ///         Type,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     Ast,
+    ///     FieldPath,
+    ///     Scalar,
+    ///     Type,
     /// };
     ///
     /// let input = "
@@ -948,10 +941,15 @@ impl Ast {
     /// let ast = Ast::parse(input).unwrap().0;
     ///
     /// assert_eq!(
+    ///     ast.resolve_path("Foo", "User", &mut FieldPath::new(&["name"])),
+    ///     Ok(Type::Scalar(Scalar::String)),
+    /// );
+    ///
+    /// assert_eq!(
     ///     ast.resolve_path(
     ///         "Foo",
     ///         "User",
-    ///         &mut VecDeque::from(vec!["name".to_string()])
+    ///         &mut FieldPath::new(&["country", "name"])
     ///     ),
     ///     Ok(Type::Scalar(Scalar::String)),
     /// );
@@ -960,10 +958,7 @@ impl Ast {
     ///     ast.resolve_path(
     ///         "Foo",
     ///         "User",
-    ///         &mut VecDeque::from(vec![
-    ///             "country".to_string(),
-    ///             "name".to_string()
-    ///         ])
+    ///         &mut FieldPath::new(&["friends", "name"])
     ///     ),
     ///     Ok(Type::Scalar(Scalar::String)),
     /// );
@@ -972,22 +967,7 @@ impl Ast {
     ///     ast.resolve_path(
     ///         "Foo",
     ///         "User",
-    ///         &mut VecDeque::from(vec![
-    ///             "friends".to_string(),
-    ///             "name".to_string()
-    ///         ])
-    ///     ),
-    ///     Ok(Type::Scalar(Scalar::String)),
-    /// );
-    ///
-    /// assert_eq!(
-    ///     ast.resolve_path(
-    ///         "Foo",
-    ///         "User",
-    ///         &mut VecDeque::from(vec![
-    ///             "friends".to_string(),
-    ///             "country".to_string()
-    ///         ])
+    ///         &mut FieldPath::new(&["friends", "country"])
     ///     ),
     ///     Ok(Type::Scalar(Scalar::Reference("Country".to_string()))),
     /// );
@@ -996,10 +976,8 @@ impl Ast {
         &self,
         query_name: &str,
         model_name: &str,
-        path: &mut VecDeque<String>,
+        path: &mut FieldPath,
     ) -> Result<Type, TypeError> {
-        let path_clone = path.clone();
-
         if let Some(model) = self.models.get(model_name) {
             if let Some(segment) = path.pop_front() {
                 if let Some(Field { r#type, .. }) = model.fields.get(&segment) {
@@ -1026,7 +1004,7 @@ impl Ast {
         }
 
         Err(TypeError::UnresolvedPath {
-            path: path_clone,
+            path: path.clone(),
             query_name: query_name.to_string(),
             model_name: model_name.to_string(),
         })

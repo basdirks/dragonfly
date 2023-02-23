@@ -1,6 +1,9 @@
 use {
     super::{
-        condition::Operator,
+        condition::{
+            FieldPath,
+            Operator,
+        },
         Condition,
     },
     crate::parser::{
@@ -14,7 +17,6 @@ use {
         ParseError,
         ParseResult,
     },
-    std::collections::VecDeque,
 };
 
 /// The conditions that queried data must meet.
@@ -40,13 +42,11 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         QueryWhere,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     FieldPath,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     QueryWhere,
     /// };
     ///
     /// let input = "foo {
@@ -57,6 +57,9 @@ impl Where {
     ///     baz {
     ///       contains: $baz
     ///     }
+    ///     qux {
+    ///       contains: $qux
+    ///     }
     ///   }
     /// }";
     ///
@@ -66,25 +69,24 @@ impl Where {
     ///     conditions,
     ///     vec![
     ///         QueryCondition {
-    ///             field_path: VecDeque::from(vec!["foo".to_string()]),
+    ///             field_path: FieldPath::new(&["foo"]),
     ///             operator: QueryOperator::Contains,
     ///             argument: "foo".to_string(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: VecDeque::from(vec![
-    ///                 "foo".to_string(),
-    ///                 "bar".to_string()
-    ///             ]),
+    ///             field_path: FieldPath::new(&["foo", "bar",]),
     ///             operator: QueryOperator::Equals,
     ///             argument: "bar".to_string(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: VecDeque::from(vec![
-    ///                 "foo".to_string(),
-    ///                 "baz".to_string()
-    ///             ]),
+    ///             field_path: FieldPath::new(&["foo", "baz",]),
     ///             operator: QueryOperator::Contains,
     ///             argument: "baz".to_string(),
+    ///         },
+    ///         QueryCondition {
+    ///             field_path: FieldPath::new(&["foo", "qux",]),
+    ///             operator: QueryOperator::Contains,
+    ///             argument: "qux".to_string(),
     ///         }
     ///     ]
     /// );
@@ -110,7 +112,7 @@ impl Where {
     /// ```
     pub fn parse_conditions(input: &str) -> ParseResult<Vec<Condition>> {
         let mut input = input.to_string();
-        let mut path = VecDeque::new();
+        let mut field_path = FieldPath::new(&[]);
         let mut conditions: Vec<Condition> = vec![];
 
         loop {
@@ -124,7 +126,7 @@ impl Where {
                 Ok::<(String, String), ParseError>((segment, input))
             })(&input)
             {
-                path.push_back(segment);
+                field_path.push(segment);
 
                 input = new_input;
 
@@ -146,7 +148,7 @@ impl Where {
                 ))
             })(&input)
             {
-                if path.is_empty() {
+                if field_path.is_empty() {
                     return Err(ParseError::CustomError {
                         message: "a condition must refer to a field"
                             .to_string(),
@@ -155,7 +157,7 @@ impl Where {
                 }
 
                 conditions.push(Condition {
-                    field_path: path.clone(),
+                    field_path: field_path.clone(),
                     operator,
                     argument,
                 });
@@ -166,7 +168,7 @@ impl Where {
             }
 
             // Parse `}`.
-            if !path.is_empty() {
+            if !field_path.is_empty() {
                 if let Ok((_, new_input)) = (|input: &str| {
                     let (_, input) = brace_close(input)?;
                     let (_, input) = spaces(&input)?;
@@ -176,7 +178,7 @@ impl Where {
                 {
                     input = new_input;
 
-                    let _ = path.pop_back();
+                    let _ = field_path.pop_back();
 
                     continue;
                 }
@@ -200,13 +202,11 @@ impl Where {
     /// # Examples
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         QueryWhere,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     FieldPath,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     QueryWhere,
     /// };
     ///
     /// let input = "where {
@@ -223,7 +223,7 @@ impl Where {
     ///         QueryWhere {
     ///             name: "foo".to_string(),
     ///             conditions: vec![QueryCondition {
-    ///                 field_path: VecDeque::from(vec!["bar".to_string()]),
+    ///                 field_path: FieldPath::new(&["bar"]),
     ///                 operator: QueryOperator::Contains,
     ///                 argument: "foo".to_string(),
     ///             }]
@@ -234,13 +234,11 @@ impl Where {
     /// ```
     ///
     /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         QueryWhere,
-    ///     },
-    ///     std::collections::VecDeque,
+    /// use dragonfly::ast::{
+    ///     FieldPath,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     QueryWhere,
     /// };
     ///
     /// let input = "where {
@@ -261,15 +259,12 @@ impl Where {
     ///             name: "image".to_string(),
     ///             conditions: vec![
     ///                 QueryCondition {
-    ///                     field_path: VecDeque::from(vec!["title".to_string()]),
+    ///                     field_path: FieldPath::new(&["title"]),
     ///                     operator: QueryOperator::Equals,
     ///                     argument: "title".to_string(),
     ///                 },
     ///                 QueryCondition {
-    ///                     field_path: VecDeque::from(vec![
-    ///                         "title".to_string(),
-    ///                         "tags".to_string(),
-    ///                     ]),
+    ///                     field_path: FieldPath::new(&["title", "tags",]),
     ///                     operator: QueryOperator::Contains,
     ///                     argument: "tag".to_string(),
     ///                 }
