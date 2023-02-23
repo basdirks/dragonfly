@@ -189,7 +189,7 @@ pub fn generate_typescript(
             name,
             &TypescriptEnum::from(r#enum),
             &path,
-            PRISMA_FILE_EXTENSION,
+            TYPESCRIPT_FILE_EXTENSION,
         )?;
     }
 
