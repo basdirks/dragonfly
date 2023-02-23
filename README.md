@@ -10,16 +10,19 @@ See also:
 - [AST](src/ast/README.md)
 - [Generators](src/generator/README.md)
 
+Rust nightly (1.69.0 or higher) is required.
+
 # Roadmap
 
-- [ ] Consolidate the type system
+- [ ] CLI: sub-commands for each generator
+- [ ] CLI: generate PSL
+- [ ] CLI: generate GQL
 - [ ] Support additional useful types:
   - [ ] `Email`
   - [ ] `URL`
   - [ ] `Currency`
 - [ ] Generate full GraphQL queries
-- [ ] CLI
-- [ ] Aggregate queries :)
+- [ ] Support aggregate queries :)
 
 # Example application
 
@@ -93,65 +96,5 @@ enum Category {
   TrafficLight
   TrafficSign
   UtilityPole
-}
-```
-
-# Development
-
-## Rust version
-
-Rust nightly (1.69.0 or higher) is required.
-
-## Parsing
-
-Parsers do not concern themselves with their surrounding whitespace. Their parent parsers are responsible for consuming whitespace.
-
-```rust
-// Not this:
-fn parse_a<T>(input: &str) -> ParseResult<T> {
-    let (b, input) = parse_b(input)?;
-    // ...
-    Ok((foo, input))
-}
-
-fn parse_b<T>(input: &str) -> ParseResult<T> {
-    let (_, input) = spaces(input)?;
-    let (b, input) = do_parse_b(input)?;
-    let (_, input) = spaces(input)?;
-    // ...
-    Ok((parsed, input))
-}
-
-// But this:
-fn parse_a<T>(input: &str) -> ParseResult<T> {
-    let (_, input) = spaces(input)?;
-    let (b, input) = parse_b(input)?;
-    let (_, input) = spaces(input)?;
-    // ...
-    Ok((foo, input))
-}
-
-fn parse_b<T>(input: &str) -> ParseResult<T> {
-    let (b, input) = do_parse_b(input)?;
-    // ...
-    Ok((b, input))
-}
-```
-
-High-level parsers do not concern themselves with EOF. Parsers like `char` and `literal` already handle EOF.
-
-```rust
-// Not this:
-fn parse<T>(input: &str) -> ParseResult<T> {
-    if input.is_empty() {
-        return Err(ParseError::UnexpectedEof);
-    }
-
-    let (b, input) = char(input, 'a')?;
-}
-
-// But this:
-fn parse<T>(input: &str) -> ParseResult<T> {
-    let (b, input) = char(input, 'a')?;
 }
 ```

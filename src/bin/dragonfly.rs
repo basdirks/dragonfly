@@ -85,19 +85,11 @@ fn generate(
     input: &Path,
     output: &Path,
 ) -> Result<(), String> {
-    let input = match read_to_string(input) {
-        Ok(input) => input,
-        Err(error) => {
-            return Err(format!("Could not read input file: {error}"));
-        }
-    };
+    let input = read_to_string(input)
+        .map_err(|error| format!("Could not read input file: {error}"))?;
 
-    let (ast, _) = match Ast::parse(&input) {
-        Ok(ast) => ast,
-        Err(error) => {
-            return Err(format!("Could not parse input file: {error}"));
-        }
-    };
+    let (ast, _) = Ast::parse(&input)
+        .map_err(|error| format!("Could not parse input file: {error}"))?;
 
     if let Err(error) = ast.check() {
         return Err(error.to_string());
