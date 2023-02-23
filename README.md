@@ -14,7 +14,6 @@ Rust nightly (1.69.0 or higher) is required.
 
 # Roadmap
 
-- [ ] CLI: sub-commands for each generator.
 - [ ] CLI: generate PSL.
 - [ ] CLI: generate GQL.
 - [ ] Support additional useful types:
