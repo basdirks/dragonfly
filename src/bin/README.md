@@ -44,13 +44,13 @@ Run `dragonfly build <flags> <source-file>` to generate code from a source file.
 
 ```sh
 $ dragonfly build example.dfy
-Generated `out/Country.ts`
-Generated `out/Image.ts`
-Generated `out/DrivingSide.ts`
-Generated `out/CountryName.ts`
-Generated `out/Category.ts`
+Generated `out/typescript/Country.ts`
+Generated `out/typescript/Image.ts`
+Generated `out/typescript/DrivingSide.ts`
+Generated `out/typescript/CountryName.ts`
+Generated `out/typescript/Category.ts`
 
-$ cat out/Country.ts
+$ cat out/typescript/Country.ts
 interface Country {
     domain: string;
     drivingSide: DrivingSide;

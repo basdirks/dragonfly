@@ -100,12 +100,20 @@ pub fn generate_all(
         return Err(error.to_string());
     }
 
+    let typescript_path = output.join("typescript");
+
+    if !typescript_path.is_dir() {
+        create_dir(&typescript_path).map_err(|error| {
+            format!("Could not create typescript output directory: {error}")
+        })?;
+    }
+
     for (name, model) in ast.models {
-        print_to_file(&name, &Interface::from(model), output)?;
+        print_to_file(&name, &Interface::from(model), &typescript_path)?;
     }
 
     for (name, r#enum) in ast.enums {
-        print_to_file(&name, &Enum::from(r#enum), output)?;
+        print_to_file(&name, &Enum::from(r#enum), &typescript_path)?;
     }
 
     Ok(())
