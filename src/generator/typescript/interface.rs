@@ -218,6 +218,12 @@ impl From<Model> for Interface {
     }
 }
 
+impl From<&Model> for Interface {
+    fn from(value: &Model) -> Self {
+        Self::from(value.clone())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use {

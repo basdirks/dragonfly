@@ -76,6 +76,41 @@ pub fn check_file(input: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Generate TypeScript interfaces and enums from an AST.
+///
+/// # Arguments
+///
+/// * `ast` - The AST to generate code from.
+/// * `output` - The output directory.
+///
+/// # Errors
+///
+/// * Returns an error if the output directory does not exist and could not be
+///   created.
+/// * Returns an error if a file could not be written.
+pub fn generate_typescript(
+    ast: &Ast,
+    output: &Path,
+) -> Result<(), String> {
+    let typescript_path = output.join("typescript");
+
+    if !typescript_path.is_dir() {
+        create_dir(&typescript_path).map_err(|error| {
+            format!("Could not create typescript output directory: {error}")
+        })?;
+    }
+
+    for (name, model) in &ast.models {
+        print_to_file(name, &Interface::from(model), &typescript_path)?;
+    }
+
+    for (name, r#enum) in &ast.enums {
+        print_to_file(name, &Enum::from(r#enum), &typescript_path)?;
+    }
+
+    Ok(())
+}
+
 /// Generate code from a source file.
 ///
 /// # Arguments
@@ -85,7 +120,8 @@ pub fn check_file(input: &str) -> Result<(), String> {
 ///
 /// # Errors
 ///
-/// Returns an error if the input file does not exist or contains errors.
+/// * Returns an error if the input file does not exist or contains errors.
+/// * Returns an error if TypeScript code could not be generated.
 pub fn generate_all(
     input: &Path,
     output: &Path,
@@ -100,21 +136,7 @@ pub fn generate_all(
         return Err(error.to_string());
     }
 
-    let typescript_path = output.join("typescript");
-
-    if !typescript_path.is_dir() {
-        create_dir(&typescript_path).map_err(|error| {
-            format!("Could not create typescript output directory: {error}")
-        })?;
-    }
-
-    for (name, model) in ast.models {
-        print_to_file(&name, &Interface::from(model), &typescript_path)?;
-    }
-
-    for (name, r#enum) in ast.enums {
-        print_to_file(&name, &Enum::from(r#enum), &typescript_path)?;
-    }
+    generate_typescript(&ast, output)?;
 
     Ok(())
 }

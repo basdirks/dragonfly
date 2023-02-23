@@ -49,7 +49,6 @@ Generated `out/typescript/Image.ts`
 Generated `out/typescript/DrivingSide.ts`
 Generated `out/typescript/CountryName.ts`
 Generated `out/typescript/Category.ts`
-
 $ cat out/typescript/Country.ts
 interface Country {
     domain: string;

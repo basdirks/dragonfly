@@ -126,6 +126,12 @@ impl From<AstEnum> for StringEnum {
     }
 }
 
+impl From<&AstEnum> for StringEnum {
+    fn from(value: &AstEnum) -> Self {
+        Self::from(value.clone())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
