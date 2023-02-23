@@ -44,17 +44,122 @@ No errors found in `example.dfy`.
 Run `dragonfly build <flags> <source-file>` to generate code from a source file.
 
 ```console
+$ cat example.dfy
+route / {
+  root: Home
+  title: Home
+}
+
+component Home {
+  path: Home
+}
+
+model Image {
+  title: String
+  country: Country
+  category: [Category]
+}
+
+query images: [Image] {
+  image {
+    title
+    country {
+      name
+    }
+    category
+  }
+}
+
+query imagesByCountryName($name: CountryName): [Image] {
+  image {
+    title
+    category
+  }
+  where {
+    image {
+      country {
+        name {
+          equals: $name
+        }
+      }
+    }
+  }
+}
+
+enum DrivingSide {
+  Left
+  Right
+}
+
+model Country {
+  domain: String
+  drivingSide: DrivingSide
+  flag: String
+  name: CountryName
+}
+
+enum CountryName {
+  Albania
+  Andorra
+  Austria
+}
+
+enum Category {
+  Architecture
+  Bollard
+  Chevron
+}%
+
 $ dragonfly build example.dfy
-Generated `out/typescript/Country.ts`
 Generated `out/typescript/Image.ts`
+Generated `out/typescript/Country.ts`
 Generated `out/typescript/DrivingSide.ts`
 Generated `out/typescript/CountryName.ts`
 Generated `out/typescript/Category.ts`
+Generated `out/prisma/application.prisma`
+
 $ cat out/typescript/Country.ts
 interface Country {
     domain: string;
     drivingSide: DrivingSide;
     flag: string;
     name: CountryName;
-}% 
+} 
+
+$ cat out/prisma/application.prisma
+model Country {
+  id Int @id @default(autoincrement())
+  createdAt DateTime
+  updatedAt DateTime
+  flag String
+  domain String
+  drivingSide DrivingSide
+  name CountryName
+}
+
+model Image {
+  id Int @id @default(autoincrement())
+  createdAt DateTime
+  updatedAt DateTime
+  title String
+  country Country
+  category Category[]
+}
+
+enum CountryName {
+  Albania
+  Andorra
+  Austria
+}
+
+enum DrivingSide {
+  Left
+  Right
+}
+
+enum Category {
+  Architecture
+  Bollard
+  Chevron
+}
 ```

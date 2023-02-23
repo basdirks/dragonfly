@@ -14,7 +14,8 @@ Rust nightly (1.69.0 or higher) is required.
 
 # Roadmap
 
-- [ ] CLI: generate PSL.
+- [ ] Align columns in PSL output.
+- [ ] Generate foreign keys in PSL.
 - [ ] CLI: generate GQL.
 - [ ] Support additional useful types:
   - [ ] `Email`

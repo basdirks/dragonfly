@@ -146,7 +146,7 @@ pub fn generate_prisma(
         source.push_str("\n\n");
     }
 
-    let file = path.join("application.prisma");
+    let file = path.join(format!("application.{PRISMA_FILE_EXTENSION}"));
 
     write_to_file(&file, source)
 }
