@@ -2,7 +2,7 @@
 
 Run `dragonfly help` to see a list of commands and options.
 
-```sh
+```console
 $ dragonfly help
 Usage: dragonfly [command] [command-args]
 
@@ -16,7 +16,7 @@ Commands:
 
 Run `dragonfly help <command>` to see help for a specific command.
 
-```sh
+```console
 $ help check
 Usage: dragonfly check <source-file>
 
@@ -29,20 +29,20 @@ Flags:
 
 Run `dragonfly version` to see the version number.
 
-```sh
+```console
 $ dragonfly --version
 0.1.0
 ```
 
 Run `dragonfly check <source-file>` to check a source file for errors.
 
-```sh
+```console
 No errors found in `example.dfy`.
 ```
 
 Run `dragonfly build <flags> <source-file>` to generate code from a source file.
 
-```sh
+```console
 $ dragonfly build example.dfy
 Generated `out/typescript/Country.ts`
 Generated `out/typescript/Image.ts`
