@@ -37,6 +37,7 @@ $ dragonfly --version
 Run `dragonfly check <source-file>` to check a source file for errors.
 
 ```console
+$ dragonfly check example.dfy
 No errors found in `example.dfy`.
 ```
 
