@@ -2,6 +2,8 @@ use self::command::Command;
 
 /// Commands.
 pub mod command;
+/// I/O.
+pub mod io;
 
 /// Print help message for the `check` command.
 #[must_use]

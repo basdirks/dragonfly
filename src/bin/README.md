@@ -1,36 +1,60 @@
 # Usage
 
+Run `dragonfly help` to see a list of commands and options.
+
 ```sh
-$ dragonfly --help
-Usage: dragonfly [options] [file]
+$ dragonfly help
+Usage: dragonfly [command] [command-args]
 
-Options:
-    -h, --help      Print this help message.
-    -v, --version   Print the version number.
-    -o, --output    Specify the output directory.
-
-If no output directory is specified, the current directory is used.
+Commands:
+  help                          Print this help message.
+  help <command>                Print help message for a command.
+  version                       Print the version number.
+  check <source-file>           Check a source file for errors.
+  build <flags> <source-file>   Generate code from a source file. (see `help build`).
 ```
+
+Run `dragonfly help <command>` to see help for a specific command.
+
+```sh
+$ help check
+Usage: dragonfly check <source-file>
+
+$ help build
+Usage: dragonfly build [flags] <source-file>
+
+Flags:
+  -o, --output <output-directory>   The output directory. (default: `./out`)
+```
+
+Run `dragonfly version` to see the version number.
 
 ```sh
 $ dragonfly --version
 0.1.0
 ```
 
+Run `dragonfly check <source-file>` to check a source file for errors.
+
 ```sh
-$ dragonfly examples/color.dfly
-Writing to examples/color.ts...
+No errors found in `example.dfy`.
+```
 
-$ cat examples/color.ts
-export enum Color {
-  Red = 'Red',
-  Green = 'Green',
-  Blue = 'Blue',
-}
+Run `dragonfly build <flags> <source-file>` to generate code from a source file.
 
-export interface RGB {
-  red: number;
-  green: number;
-  blue: number;
-}
+```sh
+$ dragonfly build example.dfy
+Generated `out/Country.ts`
+Generated `out/Image.ts`
+Generated `out/DrivingSide.ts`
+Generated `out/CountryName.ts`
+Generated `out/Category.ts`
+
+$ cat out/Country.ts
+interface Country {
+    domain: string;
+    drivingSide: DrivingSide;
+    flag: string;
+    name: CountryName;
+}% 
 ```
