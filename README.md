@@ -14,15 +14,16 @@ Rust nightly (1.69.0 or higher) is required.
 
 # Roadmap
 
-- [ ] CLI: sub-commands for each generator
-- [ ] CLI: generate PSL
-- [ ] CLI: generate GQL
+- [ ] CLI: sub-commands for each generator.
+- [ ] CLI: generate PSL.
+- [ ] CLI: generate GQL.
 - [ ] Support additional useful types:
   - [ ] `Email`
   - [ ] `URL`
   - [ ] `Currency`
-- [ ] Generate full GraphQL queries
+- [ ] Generate full GraphQL queries.
 - [ ] Support aggregate queries :)
+- [ ] Create `Path` values as soon as possible.
 
 # Example application
 
