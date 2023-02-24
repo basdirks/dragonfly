@@ -119,7 +119,7 @@ pub fn tag<T, U>(
 ///
 /// assert_eq!(
 ///     between(input, "f", |input| char(input, 'o'), "o"),
-///     Ok(('o', "".to_string())),
+///     Ok(('o', "".to_owned())),
 /// );
 /// ```
 pub fn between<T>(
@@ -156,13 +156,13 @@ pub fn between<T>(
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(char("a", 'a'), Ok(('a', "".to_string())));
-/// assert_eq!(char("ab", 'a'), Ok(('a', "b".to_string())));
+/// assert_eq!(char("a", 'a'), Ok(('a', "".to_owned())));
+/// assert_eq!(char("ab", 'a'), Ok(('a', "b".to_owned())));
 ///
 /// assert_eq!(
 ///     char("a", 'b'),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character 'b', found 'a'".to_string(),
+///         message: "expected character 'b', found 'a'".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -211,26 +211,23 @@ pub fn char(
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(
-///     literal("foo", "foo"),
-///     Ok(("foo".to_string(), "".to_string()))
-/// );
+/// assert_eq!(literal("foo", "foo"), Ok(("foo".to_owned(), "".to_owned())));
 /// assert_eq!(
 ///     literal("foobar", "foo"),
-///     Ok(("foo".to_string(), "bar".to_string()))
+///     Ok(("foo".to_owned(), "bar".to_owned()))
 /// );
 ///
 /// assert_eq!(
 ///     literal("foo", "bar"),
 ///     Err(ParseError::UnmatchedLiteral {
-///         expected: "bar".to_string()
+///         expected: "bar".to_owned()
 ///     })
 /// );
 ///
 /// assert_eq!(
 ///     literal("bbar", "bar"),
 ///     Err(ParseError::UnmatchedLiteral {
-///         expected: "bar".to_string()
+///         expected: "bar".to_owned()
 ///     })
 /// );
 ///
@@ -247,10 +244,10 @@ pub fn literal(
     input.strip_prefix(literal).map_or_else(
         || {
             Err(ParseError::UnmatchedLiteral {
-                expected: literal.to_string(),
+                expected: literal.to_owned(),
             })
         },
-        |input| Ok((literal.to_string(), input.to_string())),
+        |input| Ok((literal.to_owned(), input.to_owned())),
     )
 }
 
@@ -276,22 +273,22 @@ pub fn literal(
 ///
 /// assert_eq!(
 ///     many("abc", alphabetic),
-///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
 /// );
 ///
 /// assert_eq!(
 ///     many("ab3", alphabetic),
-///     Ok((vec!['a', 'b'], "3".to_string()))
+///     Ok((vec!['a', 'b'], "3".to_owned()))
 /// );
 ///
-/// assert_eq!(many("a23", alphabetic), Ok((vec!['a'], "23".to_string())));
-/// assert_eq!(many("123", alphabetic), Ok((vec![], "123".to_string())));
+/// assert_eq!(many("a23", alphabetic), Ok((vec!['a'], "23".to_owned())));
+/// assert_eq!(many("123", alphabetic), Ok((vec![], "123".to_owned())));
 /// ```
 pub fn many<T>(
     input: &str,
     parser: ParseFn<T>,
 ) -> ParseResult<Vec<T>> {
-    let mut input = input.to_string();
+    let mut input = input.to_owned();
     let mut result = vec![];
 
     while let Ok((value, new_input)) = parser(&input) {
@@ -325,15 +322,15 @@ pub fn many<T>(
 ///
 /// assert_eq!(
 ///     many1("abc", alphabetic),
-///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
 /// );
 ///
 /// assert_eq!(
 ///     many1("ab3", alphabetic),
-///     Ok((vec!['a', 'b'], "3".to_string()))
+///     Ok((vec!['a', 'b'], "3".to_owned()))
 /// );
 ///
-/// assert_eq!(many1("a23", alphabetic), Ok((vec!['a'], "23".to_string())));
+/// assert_eq!(many1("a23", alphabetic), Ok((vec!['a'], "23".to_owned())));
 /// ```
 ///
 /// ```rust
@@ -346,7 +343,7 @@ pub fn many<T>(
 /// assert_eq!(
 ///     many1("123", alphabetic),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "character is not alphabetic".to_string(),
+///         message: "character is not alphabetic".to_owned(),
 ///         actual: '1',
 ///     })
 /// );
@@ -402,7 +399,7 @@ pub fn many1<T>(
 ///             tag!(literal!("abc"), Choice::B),
 ///         ]
 ///     ),
-///     Ok((Choice::A, "".to_string())),
+///     Ok((Choice::A, "".to_owned())),
 /// );
 ///
 /// assert_eq!(
@@ -413,14 +410,14 @@ pub fn many1<T>(
 ///             tag!(literal!("abc"), Choice::A),
 ///         ]
 ///     ),
-///     Ok((Choice::B, "".to_string())),
+///     Ok((Choice::B, "".to_owned())),
 /// );
 ///
 /// assert_eq!(
 ///     choice("abc", vec![tag!(literal!("def"), Choice::A)]),
 ///     Err(ParseError::UnmatchedChoice {
 ///         errors: vec![ParseError::UnmatchedLiteral {
-///             expected: "def".to_string(),
+///             expected: "def".to_owned(),
 ///         }]
 ///     })
 /// );
@@ -471,26 +468,26 @@ pub fn choice<T>(
 ///
 /// assert_eq!(
 ///     count("abc", char!('a'), 1),
-///     Ok((vec!['a'], "bc".to_string()))
+///     Ok((vec!['a'], "bc".to_owned()))
 /// );
 ///
 /// assert!(count("abc", char!('a'), 2).is_err());
 ///
 /// assert_eq!(
 ///     count("abc", alphabetic, 3),
-///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
 /// );
 ///
 /// assert!(count("abc", alphabetic, 4).is_err());
 ///
-/// assert_eq!(count("abc", alphabetic, 0), Ok((vec![], "abc".to_string())));
+/// assert_eq!(count("abc", alphabetic, 0), Ok((vec![], "abc".to_owned())));
 /// ```
 pub fn count<T>(
     input: &str,
     parser: ParseFn<T>,
     count: usize,
 ) -> ParseResult<Vec<T>> {
-    let mut input = input.to_string();
+    let mut input = input.to_owned();
     let mut result = vec![];
 
     for _ in 0..count {
@@ -530,20 +527,20 @@ pub fn count<T>(
 ///
 /// assert_eq!(
 ///     many_once("abc", &[char!('a'), char!('b'), char!('c')]),
-///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
 /// );
 ///
 /// assert_eq!(
 ///     many_once("abc", &[char!('a'), char!('b'), char!('d')]),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character 'd', found 'c'".to_string(),
+///         message: "expected character 'd', found 'c'".to_owned(),
 ///         actual: 'c',
 ///     })
 /// );
 ///
 /// assert_eq!(
 ///     many_once("cba", &[char!('a'), char!('b'), char!('c')]),
-///     Ok((vec!['a', 'b', 'c'], "".to_string()))
+///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
 /// );
 ///
 /// assert_eq!(
@@ -553,13 +550,13 @@ pub fn count<T>(
 ///
 /// assert_eq!(
 ///     many_once::<String>("abc", &[]),
-///     Ok((vec![], "abc".to_string()))
+///     Ok((vec![], "abc".to_owned()))
 /// );
 ///
 /// assert_eq!(
 ///     many_once("abc", &[char!('a'), char!('a')]),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character 'a', found 'b'".to_string(),
+///         message: "expected character 'a', found 'b'".to_owned(),
 ///         actual: 'b',
 ///     })
 /// );
@@ -569,7 +566,7 @@ pub fn many_once<T: Clone>(
     parsers: &[ParseFn<T>],
 ) -> ParseResult<Vec<T>> {
     let length = parsers.len();
-    let mut input = input.to_string();
+    let mut input = input.to_owned();
     let mut results = vec![None; length];
     let mut last_error = None;
 
@@ -621,12 +618,12 @@ pub fn many_once<T: Clone>(
 ///
 /// assert_eq!(
 ///     option("abc", |input| literal(input, "abc")),
-///     Ok((Some("abc".to_string()), "".to_string())),
+///     Ok((Some("abc".to_owned()), "".to_owned())),
 /// );
 ///
 /// assert_eq!(
 ///     option("def", |input| literal(input, "abc")),
-///     Ok((None, "def".to_string())),
+///     Ok((None, "def".to_owned())),
 /// );
 /// ```
 pub fn option<T>(
@@ -635,6 +632,6 @@ pub fn option<T>(
 ) -> ParseResult<Option<T>> {
     match parser(input) {
         Ok((value, input)) => Ok((Some(value), input)),
-        Err(_) => Ok((None, input.to_string())),
+        Err(_) => Ok((None, input.to_owned())),
     }
 }

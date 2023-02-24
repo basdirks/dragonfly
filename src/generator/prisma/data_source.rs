@@ -144,12 +144,12 @@ impl Provider {
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = DataSourceProvider::PostgreSql {
-    ///     user: "user".to_string(),
-    ///     password: "password".to_string(),
-    ///     host: "localhost".to_string(),
+    ///     user: "user".to_owned(),
+    ///     password: "password".to_owned(),
+    ///     host: "localhost".to_owned(),
     ///     port: 5432,
-    ///     database: "database".to_string(),
-    ///     schema: "public".to_string(),
+    ///     database: "database".to_owned(),
+    ///     schema: "public".to_owned(),
     ///     extensions: vec![],
     /// };
     ///
@@ -165,11 +165,11 @@ impl Provider {
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = DataSourceProvider::MySql {
-    ///     user: "user".to_string(),
-    ///     password: "password".to_string(),
-    ///     host: "localhost".to_string(),
+    ///     user: "user".to_owned(),
+    ///     password: "password".to_owned(),
+    ///     host: "localhost".to_owned(),
     ///     port: 3306,
-    ///     database: "database".to_string(),
+    ///     database: "database".to_owned(),
     /// };
     ///
     /// assert_eq!(
@@ -184,7 +184,7 @@ impl Provider {
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = DataSourceProvider::Sqlite {
-    ///     path: "path/to/database.db".to_string(),
+    ///     path: "path/to/database.db".to_owned(),
     /// };
     ///
     /// assert_eq!(provider.url(), "file:./path/to/database.db");
@@ -196,11 +196,11 @@ impl Provider {
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = DataSourceProvider::MongoDb {
-    ///     user: "user".to_string(),
-    ///     password: "password".to_string(),
-    ///     host: "localhost".to_string(),
+    ///     user: "user".to_owned(),
+    ///     password: "password".to_owned(),
+    ///     host: "localhost".to_owned(),
     ///     port: 27017,
-    ///     database: "database".to_string(),
+    ///     database: "database".to_owned(),
     /// };
     ///
     /// assert_eq!(
@@ -216,11 +216,11 @@ impl Provider {
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = DataSourceProvider::SqlServer {
-    ///     user: "user".to_string(),
-    ///     password: "password".to_string(),
-    ///     host: "localhost".to_string(),
+    ///     user: "user".to_owned(),
+    ///     password: "password".to_owned(),
+    ///     host: "localhost".to_owned(),
     ///     port: 1433,
-    ///     database: "database".to_string(),
+    ///     database: "database".to_owned(),
     /// };
     ///
     /// assert_eq!(
@@ -236,12 +236,12 @@ impl Provider {
     /// use dragonfly::generator::prisma::DataSourceProvider;
     ///
     /// let provider = DataSourceProvider::CockroachDb {
-    ///     user: "user".to_string(),
-    ///     password: "password".to_string(),
-    ///     host: "localhost".to_string(),
+    ///     user: "user".to_owned(),
+    ///     password: "password".to_owned(),
+    ///     host: "localhost".to_owned(),
     ///     port: 26257,
-    ///     database: "database".to_string(),
-    ///     schema: "public".to_string(),
+    ///     database: "database".to_owned(),
+    ///     schema: "public".to_owned(),
     /// };
     ///
     /// assert_eq!(
@@ -387,12 +387,12 @@ mod tests {
     fn test_display_provider() {
         assert_eq!(
             Provider::PostgreSql {
-                user: "user".to_string(),
-                password: "password".to_string(),
-                host: "localhost".to_string(),
+                user: "user".to_owned(),
+                password: "password".to_owned(),
+                host: "localhost".to_owned(),
                 port: 5432,
-                database: "database".to_string(),
-                schema: "public".to_string(),
+                database: "database".to_owned(),
+                schema: "public".to_owned(),
                 extensions: vec![],
             }
             .to_string(),
@@ -401,11 +401,11 @@ mod tests {
 
         assert_eq!(
             Provider::MySql {
-                user: "user".to_string(),
-                password: "password".to_string(),
-                host: "localhost".to_string(),
+                user: "user".to_owned(),
+                password: "password".to_owned(),
+                host: "localhost".to_owned(),
                 port: 3306,
-                database: "database".to_string(),
+                database: "database".to_owned(),
             }
             .to_string(),
             "\"mysql\""
@@ -413,7 +413,7 @@ mod tests {
 
         assert_eq!(
             Provider::Sqlite {
-                path: "path".to_string(),
+                path: "path".to_owned(),
             }
             .to_string(),
             "\"sqlite\""
@@ -421,11 +421,11 @@ mod tests {
 
         assert_eq!(
             Provider::MongoDb {
-                user: "user".to_string(),
-                password: "password".to_string(),
-                host: "localhost".to_string(),
+                user: "user".to_owned(),
+                password: "password".to_owned(),
+                host: "localhost".to_owned(),
                 port: 27017,
-                database: "database".to_string(),
+                database: "database".to_owned(),
             }
             .to_string(),
             "\"mongodb\""
@@ -433,11 +433,11 @@ mod tests {
 
         assert_eq!(
             Provider::SqlServer {
-                user: "user".to_string(),
-                password: "password".to_string(),
-                host: "localhost".to_string(),
+                user: "user".to_owned(),
+                password: "password".to_owned(),
+                host: "localhost".to_owned(),
                 port: 1433,
-                database: "database".to_string(),
+                database: "database".to_owned(),
             }
             .to_string(),
             "\"sqlserver\""
@@ -445,12 +445,12 @@ mod tests {
 
         assert_eq!(
             Provider::CockroachDb {
-                user: "user".to_string(),
-                password: "password".to_string(),
-                host: "localhost".to_string(),
+                user: "user".to_owned(),
+                password: "password".to_owned(),
+                host: "localhost".to_owned(),
                 port: 26257,
-                database: "database".to_string(),
-                schema: "public".to_string(),
+                database: "database".to_owned(),
+                schema: "public".to_owned(),
             }
             .to_string(),
             "\"cockroachdb\""
@@ -460,22 +460,22 @@ mod tests {
     #[test]
     fn test_display_data_source() {
         let data_source = DataSource {
-            name: "db".to_string(),
+            name: "db".to_owned(),
             provider: Provider::PostgreSql {
-                user: "user".to_string(),
-                password: "password".to_string(),
-                host: "localhost".to_string(),
+                user: "user".to_owned(),
+                password: "password".to_owned(),
+                host: "localhost".to_owned(),
                 port: 5432,
-                database: "database".to_string(),
-                schema: "public".to_string(),
+                database: "database".to_owned(),
+                schema: "public".to_owned(),
                 extensions: vec![
-                    "uuidOssp(map: \"uuid-ossp\")".to_string(),
-                    "pg_trgm".to_string(),
-                    "postgis(version: \"2.1\")".to_string(),
+                    "uuidOssp(map: \"uuid-ossp\")".to_owned(),
+                    "pg_trgm".to_owned(),
+                    "postgis(version: \"2.1\")".to_owned(),
                 ],
             },
-            shadow_database_url: Some("shadow_database_url".to_string()),
-            direct_url: Some("direct_url".to_string()),
+            shadow_database_url: Some("shadow_database_url".to_owned()),
+            direct_url: Some("direct_url".to_owned()),
             relation_mode: Some(RelationMode::ForeignKeys),
         };
 

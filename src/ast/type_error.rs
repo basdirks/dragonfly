@@ -268,7 +268,7 @@ mod tests {
     fn test_display_empty_schema_error() {
         assert_eq!(
             TypeError::EmptyQuerySchema {
-                query_name: "foo".to_string(),
+                query_name: "foo".to_owned(),
             }
             .to_string(),
             "Query `foo` has an empty schema."
@@ -285,11 +285,11 @@ mod tests {
 
         assert_eq!(
             TypeError::IncompatibleQueryOperator {
-                query_name: "foo".to_string(),
+                query_name: "foo".to_owned(),
                 condition: QueryCondition {
                     operator: QueryOperator::Equals,
                     field_path: FieldPath::new(&["foo", "bar", "baz",]),
-                    argument: "baz".to_string(),
+                    argument: "baz".to_owned(),
                 },
                 argument_type: Type::Scalar(Scalar::String),
                 field_type: Type::Scalar(Scalar::Int),
@@ -306,9 +306,9 @@ mod tests {
     fn test_display_incompatible_query_root_nodes_error() {
         assert_eq!(
             TypeError::IncompatibleQueryRootNodes {
-                schema_root: "foo".to_string(),
-                where_root: "bar".to_string(),
-                query_name: "baz".to_string(),
+                schema_root: "foo".to_owned(),
+                where_root: "bar".to_owned(),
+                query_name: "baz".to_owned(),
             }
             .to_string(),
             "Query `baz` contains a where clause with a root node that is \
@@ -326,9 +326,9 @@ mod tests {
 
         assert_eq!(
             TypeError::IncompatibleQuerySchema {
-                actual: Type::Array(Scalar::Reference("foo".to_string())),
-                expected: Type::Array(Scalar::Reference("bar".to_string())),
-                query_name: "baz".to_string(),
+                actual: Type::Array(Scalar::Reference("foo".to_owned())),
+                expected: Type::Array(Scalar::Reference("bar".to_owned())),
+                query_name: "baz".to_owned(),
             }
             .to_string(),
             "Query `baz` contains a schema that is incompatible with the \
@@ -344,10 +344,10 @@ mod tests {
         assert_eq!(
             TypeError::InvalidQueryArgumentType {
                 argument: QueryArgument {
-                    name: "foo".to_string(),
+                    name: "foo".to_owned(),
                     r#type: Type::Scalar(Scalar::String),
                 },
-                query_name: "bar".to_string(),
+                query_name: "bar".to_owned(),
             }
             .to_string(),
             "Query `bar` contains an argument with an invalid type. The \
@@ -362,10 +362,10 @@ mod tests {
         assert_eq!(
             TypeError::UnknownModelFieldType {
                 field: Field {
-                    name: "foo".to_string(),
+                    name: "foo".to_owned(),
                     r#type: Type::Scalar(Scalar::String),
                 },
-                model_name: "bar".to_string(),
+                model_name: "bar".to_owned(),
             }
             .to_string(),
             "Model `bar` contains a field with an unknown type. The field is \
@@ -385,9 +385,9 @@ mod tests {
                 condition: QueryCondition {
                     operator: QueryOperator::Equals,
                     field_path: FieldPath::new(&["foo", "bar", "baz",]),
-                    argument: "baz".to_string(),
+                    argument: "baz".to_owned(),
                 },
-                query_name: "bar".to_string(),
+                query_name: "bar".to_owned(),
             }
             .to_string(),
             "Query `bar` contains a condition that refers to an undefined \
@@ -399,8 +399,8 @@ mod tests {
     fn test_display_unknown_query_return_type_error() {
         assert_eq!(
             TypeError::UnknownQueryReturnType {
-                query_name: "foo".to_string(),
-                model_name: "bar".to_string(),
+                query_name: "foo".to_owned(),
+                model_name: "bar".to_owned(),
             }
             .to_string(),
             "Query `foo` contains a return type that refers to an undefined \
@@ -412,8 +412,8 @@ mod tests {
     fn test_display_unknown_route_root_error() {
         assert_eq!(
             TypeError::UnknownRouteRoot {
-                route_name: "foo".to_string(),
-                root: "bar".to_string(),
+                route_name: "foo".to_owned(),
+                root: "bar".to_owned(),
             }
             .to_string(),
             "Route `foo` contains a root that refers to an undefined \
@@ -426,8 +426,8 @@ mod tests {
         assert_eq!(
             TypeError::UnresolvedPath {
                 path: FieldPath::new(&["foo", "bar", "baz",]),
-                model_name: "foo".to_string(),
-                query_name: "bar".to_string(),
+                model_name: "foo".to_owned(),
+                query_name: "bar".to_owned(),
             }
             .to_string(),
             "Query `bar` contains a condition that refers to an undefined \

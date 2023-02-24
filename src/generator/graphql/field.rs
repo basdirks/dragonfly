@@ -9,6 +9,7 @@ use {
         indent,
         Print,
     },
+    std::fmt::Write,
 };
 
 /// A selection field.
@@ -33,11 +34,11 @@ impl Print for Field {
             format!("{}{}", indent::graphql(level), self.name.clone());
 
         if !self.arguments.is_empty() {
-            output.push_str(&format!("({})", comma_separated(&self.arguments)));
+            let _ = write!(output, "({})", comma_separated(&self.arguments));
         }
 
         for directive in &self.directives {
-            output.push_str(&format!(" {directive}"));
+            let _ = write!(output, " {directive}");
         }
 
         if !self.selections.is_empty() {
@@ -59,40 +60,40 @@ mod tests {
     #[test]
     fn test_print_field() {
         let field = Field {
-            name: "images".to_string(),
+            name: "images".to_owned(),
             arguments: vec![Argument {
-                name: "after".to_string(),
-                value: Value::Variable("endCursor".to_string()),
+                name: "after".to_owned(),
+                value: Value::Variable("endCursor".to_owned()),
             }],
             directives: vec![],
             selections: vec![],
         };
 
-        assert_eq!(field.print(0), "images(after: $endCursor)".to_string());
+        assert_eq!(field.print(0), "images(after: $endCursor)".to_owned());
     }
 
     #[test]
     fn test_print_field_with_selections() {
         let field = Field {
-            name: "images".to_string(),
+            name: "images".to_owned(),
             arguments: vec![Argument {
-                name: "after".to_string(),
-                value: Value::Variable("endCursor".to_string()),
+                name: "after".to_owned(),
+                value: Value::Variable("endCursor".to_owned()),
             }],
             directives: vec![],
             selections: vec![Selection::Field(Field {
-                name: "edges".to_string(),
+                name: "edges".to_owned(),
                 arguments: vec![],
                 directives: vec![],
                 selections: vec![Selection::Field(Field {
-                    name: "node".to_string(),
+                    name: "node".to_owned(),
                     arguments: vec![],
                     directives: vec![],
                     selections: vec![Selection::Field(Field {
-                        name: "id".to_string(),
+                        name: "id".to_owned(),
                         arguments: vec![],
                         directives: vec![Directive {
-                            name: "id".to_string(),
+                            name: "id".to_owned(),
                             arguments: vec![],
                         }],
                         selections: vec![],
@@ -111,7 +112,7 @@ images(after: $endCursor) {
     }
   }
 }"
-            .to_string()
+            .to_owned()
         );
     }
 }

@@ -14,7 +14,10 @@ use {
             Print,
         },
     },
-    std::fmt::Display,
+    std::fmt::{
+        Display,
+        Write,
+    },
 };
 
 /// A variable definition.
@@ -81,11 +84,11 @@ impl Print for Query {
         let mut query = format!("query {}", self.name);
 
         if !self.variables.is_empty() {
-            query.push_str(&format!("({})", comma_separated(&self.variables)));
+            let _ = write!(query, "({})", comma_separated(&self.variables));
         }
 
         if !self.directives.is_empty() {
-            query.push_str(&format!(" {}", space_separated(&self.directives)));
+            let _ = write!(query, " {}", space_separated(&self.directives));
         }
 
         if !self.selections.is_empty() {
@@ -118,13 +121,13 @@ mod tests {
     fn test_variable_from_ast() {
         assert_eq!(
             Variable::from(AstQueryArgument {
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 r#type: AstType::Array(AstScalar::String),
             }),
             Variable {
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 r#type: Type::NonNull(Box::new(Type::List(Box::new(
-                    Type::Name("String".to_string())
+                    Type::Name("String".to_owned())
                 )))),
                 default_value: None,
                 directives: vec![],
@@ -136,8 +139,8 @@ mod tests {
     fn test_display_variable() {
         assert_eq!(
             Variable {
-                name: "foo".to_string(),
-                r#type: Type::Name("String".to_string()),
+                name: "foo".to_owned(),
+                r#type: Type::Name("String".to_owned()),
                 default_value: None,
                 directives: vec![],
             }
@@ -147,9 +150,9 @@ mod tests {
 
         assert_eq!(
             Variable {
-                name: "foo".to_string(),
-                r#type: Type::Name("String".to_string()),
-                default_value: Some(ConstValue::String("bar".to_string())),
+                name: "foo".to_owned(),
+                r#type: Type::Name("String".to_owned()),
+                default_value: Some(ConstValue::String("bar".to_owned())),
                 directives: vec![],
             }
             .to_string(),
@@ -158,18 +161,18 @@ mod tests {
 
         assert_eq!(
             Variable {
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 r#type: Type::NonNull(Box::new(Type::List(Box::new(
-                    Type::NonNull(Box::new(Type::Name("String".to_string())))
+                    Type::NonNull(Box::new(Type::Name("String".to_owned())))
                 )))),
                 default_value: None,
                 directives: vec![
                     ConstDirective {
-                        name: "bar".to_string(),
+                        name: "bar".to_owned(),
                         arguments: vec![],
                     },
                     ConstDirective {
-                        name: "baz".to_string(),
+                        name: "baz".to_owned(),
                         arguments: vec![],
                     },
                 ],
@@ -183,47 +186,47 @@ mod tests {
     fn test_print_query() {
         assert_eq!(
             Query {
-                name: "imagesByCountryName".to_string(),
+                name: "imagesByCountryName".to_owned(),
                 directives: vec![
                     Directive {
-                        name: "bar".to_string(),
+                        name: "bar".to_owned(),
                         arguments: vec![],
                     },
                     Directive {
-                        name: "baz".to_string(),
+                        name: "baz".to_owned(),
                         arguments: vec![],
                     },
                 ],
                 selections: vec![Selection::Field(Field {
-                    name: "images".to_string(),
+                    name: "images".to_owned(),
                     arguments: vec![Argument {
-                        name: "country".to_string(),
-                        value: Value::Variable("country".to_string()),
+                        name: "country".to_owned(),
+                        value: Value::Variable("country".to_owned()),
                     }],
                     directives: vec![],
                     selections: vec![
                         Selection::Field(Field {
-                            name: "url".to_string(),
+                            name: "url".to_owned(),
                             arguments: vec![],
                             directives: vec![Directive {
-                                name: "deprecated".to_string(),
+                                name: "deprecated".to_owned(),
                                 arguments: vec![Argument {
-                                    name: "reason".to_string(),
+                                    name: "reason".to_owned(),
                                     value: Value::String(
-                                        "Use `link` instead.".to_string()
+                                        "Use `link` instead.".to_owned()
                                     ),
                                 }],
                             }],
                             selections: vec![],
                         }),
                         Selection::Field(Field {
-                            name: "link".to_string(),
+                            name: "link".to_owned(),
                             arguments: vec![],
                             directives: vec![],
                             selections: vec![],
                         }),
                         Selection::Field(Field {
-                            name: "title".to_string(),
+                            name: "title".to_owned(),
                             arguments: vec![],
                             directives: vec![],
                             selections: vec![],
@@ -232,17 +235,17 @@ mod tests {
                 })],
                 variables: vec![
                     Variable {
-                        name: "country".to_string(),
+                        name: "country".to_owned(),
                         r#type: Type::NonNull(Box::new(Type::Name(
-                            "String".to_string()
+                            "String".to_owned()
                         ))),
                         default_value: None,
                         directives: vec![],
                     },
                     Variable {
-                        name: "limit".to_string(),
-                        r#type: Type::Name("Int".to_string()),
-                        default_value: Some(ConstValue::Int("10".to_string())),
+                        name: "limit".to_owned(),
+                        r#type: Type::Name("Int".to_owned()),
+                        default_value: Some(ConstValue::Int("10".to_owned())),
                         directives: vec![],
                     },
                 ],

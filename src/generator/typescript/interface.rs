@@ -238,7 +238,7 @@ mod tests {
     fn test_display_type_parameter() {
         assert_eq!(
             TypeParameter {
-                identifier: "T".to_string(),
+                identifier: "T".to_owned(),
                 type_references: vec![],
             }
             .to_string(),
@@ -247,7 +247,7 @@ mod tests {
 
         assert_eq!(
             TypeParameter {
-                identifier: "U".to_string(),
+                identifier: "U".to_owned(),
                 type_references: vec![Type::Keyword(Keyword::String)],
             }
             .to_string(),
@@ -256,7 +256,7 @@ mod tests {
 
         assert_eq!(
             TypeParameter {
-                identifier: "V".to_string(),
+                identifier: "V".to_owned(),
                 type_references: vec![
                     Type::Keyword(Keyword::String),
                     Type::Keyword(Keyword::Number),
@@ -271,7 +271,7 @@ mod tests {
     fn test_display_expression_with_type_arguments() {
         assert_eq!(
             ExpressionWithTypeArguments {
-                identifier: "Foo".to_string(),
+                identifier: "Foo".to_owned(),
                 type_arguments: vec![],
             }
             .to_string(),
@@ -280,7 +280,7 @@ mod tests {
 
         assert_eq!(
             ExpressionWithTypeArguments {
-                identifier: "Foo".to_string(),
+                identifier: "Foo".to_owned(),
                 type_arguments: vec![Type::Keyword(Keyword::String)],
             }
             .to_string(),
@@ -289,7 +289,7 @@ mod tests {
 
         assert_eq!(
             ExpressionWithTypeArguments {
-                identifier: "Foo".to_string(),
+                identifier: "Foo".to_owned(),
                 type_arguments: vec![
                     Type::Keyword(Keyword::String),
                     Type::Keyword(Keyword::Number),
@@ -304,7 +304,7 @@ mod tests {
     fn test_print_property() {
         assert_eq!(
             Property {
-                identifier: "foo".to_string(),
+                identifier: "foo".to_owned(),
                 r#type: Type::Keyword(Keyword::String),
                 optional: false,
             }
@@ -314,7 +314,7 @@ mod tests {
 
         assert_eq!(
             Property {
-                identifier: "foo".to_string(),
+                identifier: "foo".to_owned(),
                 r#type: Type::Keyword(Keyword::String),
                 optional: true,
             }
@@ -328,35 +328,35 @@ mod tests {
         assert_eq!(
             Interface {
                 extends: vec![ExpressionWithTypeArguments {
-                    identifier: "Resource".to_string(),
+                    identifier: "Resource".to_owned(),
                     type_arguments: vec![Type::TypeReference {
-                        identifier: "T".to_string(),
+                        identifier: "T".to_owned(),
                         type_references: vec![],
                     }],
                 }],
-                identifier: "Image".to_string(),
+                identifier: "Image".to_owned(),
                 type_parameters: vec![TypeParameter {
-                    identifier: "T".to_string(),
+                    identifier: "T".to_owned(),
                     type_references: vec![],
                 }],
                 properties: vec![
                     Property {
-                        identifier: "title".to_string(),
+                        identifier: "title".to_owned(),
                         r#type: Type::Keyword(Keyword::String),
                         optional: false,
                     },
                     Property {
-                        identifier: "countryName".to_string(),
+                        identifier: "countryName".to_owned(),
                         r#type: Type::TypeReference {
-                            identifier: "CountryName".to_string(),
+                            identifier: "CountryName".to_owned(),
                             type_references: vec![],
                         },
                         optional: true,
                     },
                     Property {
-                        identifier: "tags".to_string(),
+                        identifier: "tags".to_owned(),
                         r#type: Type::Array(Box::new(Type::TypeReference {
-                            identifier: "Tag".to_string(),
+                            identifier: "Tag".to_owned(),
                             type_references: vec![],
                         })),
                         optional: false,

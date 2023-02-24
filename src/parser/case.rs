@@ -31,17 +31,17 @@ use super::{
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(capitalized("Foo"), Ok(("Foo".to_string(), "".to_string())));
-/// assert_eq!(capitalized("F0o"), Ok(("F".to_string(), "0o".to_string())));
+/// assert_eq!(capitalized("Foo"), Ok(("Foo".to_owned(), "".to_owned())));
+/// assert_eq!(capitalized("F0o"), Ok(("F".to_owned(), "0o".to_owned())));
 ///
 /// assert_eq!(
 ///     capitalized("Foo Bar"),
-///     Ok(("Foo".to_string(), " Bar".to_string()))
+///     Ok(("Foo".to_owned(), " Bar".to_owned()))
 /// );
 ///
 /// assert_eq!(
 ///     capitalized("FooBar"),
-///     Ok(("FooBar".to_string(), "".to_string()))
+///     Ok(("FooBar".to_owned(), "".to_owned()))
 /// );
 ///
 /// assert_eq!(
@@ -60,7 +60,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
             actual: input.chars().next().map_or('\0', |c| c),
             message: "expected capitalized identifier to start with uppercase \
                       character"
-                .to_string(),
+                .to_owned(),
         }
     })?;
 
@@ -92,7 +92,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(pascal("FooBar"), Ok(("FooBar".to_string(), "".to_string())));
+/// assert_eq!(pascal("FooBar"), Ok(("FooBar".to_owned(), "".to_owned())));
 ///
 /// assert_eq!(
 ///     pascal("foobar"),
@@ -134,7 +134,7 @@ pub fn pascal(input: &str) -> ParseResult<String> {
                         actual: input.chars().next().map_or('\0', |c| c),
                         message: "expected segment of PascalCase identifier \
                                   to start with uppercase character"
-                            .to_string(),
+                            .to_owned(),
                     }
                 }
                 _ => e,
@@ -166,11 +166,11 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(kebab_case("foo"), Ok(("foo".to_string(), "".to_string())));
+/// assert_eq!(kebab_case("foo"), Ok(("foo".to_owned(), "".to_owned())));
 ///
 /// assert_eq!(
 ///     kebab_case("foo-bar"),
-///     Ok(("foo-bar".to_string(), "".to_string()))
+///     Ok(("foo-bar".to_owned(), "".to_owned()))
 /// );
 ///
 /// assert_eq!(
@@ -227,7 +227,7 @@ pub fn kebab(input: &str) -> ParseResult<String> {
                     actual: input.chars().next().map_or('\0', |c| c),
                     message: "expected kebab-case identifier to start with a \
                               lowercase character"
-                        .to_string(),
+                        .to_owned(),
                 }
             }
             _ => e,
@@ -244,7 +244,7 @@ pub fn kebab(input: &str) -> ParseResult<String> {
                         actual: input.chars().next().map_or('\0', |c| c),
                         message: "expected kebab-case identifier segment to \
                                   start with lowercase character"
-                            .to_string(),
+                            .to_owned(),
                     }
                 }
                 _ => e,
@@ -258,7 +258,7 @@ pub fn kebab(input: &str) -> ParseResult<String> {
         return Err(ParseError::UnexpectedChar {
             actual: input.chars().next().map_or('\0', |c| c),
             message: "unexpected character at end of kebab-case identifier"
-                .to_string(),
+                .to_owned(),
         });
     }
 
@@ -292,11 +292,11 @@ pub fn kebab(input: &str) -> ParseResult<String> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(camel_case("foo"), Ok(("foo".to_string(), "".to_string())));
+/// assert_eq!(camel_case("foo"), Ok(("foo".to_owned(), "".to_owned())));
 ///
 /// assert_eq!(
 ///     camel_case("fooBar"),
-///     Ok(("fooBar".to_string(), "".to_string()))
+///     Ok(("fooBar".to_owned(), "".to_owned()))
 /// );
 ///
 /// assert_eq!(
@@ -316,7 +316,7 @@ pub fn camel(input: &str) -> ParseResult<String> {
                 ParseError::UnexpectedChar {
                     message: "expected camelCase identifier to start with \
                               lowercase character"
-                        .to_string(),
+                        .to_owned(),
                     actual: input.chars().next().map_or('\0', |c| c),
                 }
             }

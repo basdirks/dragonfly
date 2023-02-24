@@ -44,13 +44,13 @@ impl Node {
     ///     QuerySchemaNode::parse("foo { bar baz }"),
     ///     Ok((
     ///         QuerySchemaNode::Model {
-    ///             name: "foo".to_string(),
+    ///             name: "foo".to_owned(),
     ///             nodes: vec![
-    ///                 QuerySchemaNode::Field("bar".to_string()),
-    ///                 QuerySchemaNode::Field("baz".to_string()),
+    ///                 QuerySchemaNode::Field("bar".to_owned()),
+    ///                 QuerySchemaNode::Field("baz".to_owned()),
     ///             ],
     ///         },
-    ///         "".to_string(),
+    ///         "".to_owned(),
     ///     )),
     /// );
     /// ```
@@ -94,14 +94,14 @@ impl Node {
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse_field("foo"),
-    ///     Ok((QuerySchemaNode::Field("foo".to_string()), "".to_string())),
+    ///     Ok((QuerySchemaNode::Field("foo".to_owned()), "".to_owned())),
     /// );
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse_field("foo { bar }"),
     ///     Ok((
-    ///         QuerySchemaNode::Field("foo".to_string()),
-    ///         " { bar }".to_string()
+    ///         QuerySchemaNode::Field("foo".to_owned()),
+    ///         " { bar }".to_owned()
     ///     )),
     /// );
     ///
@@ -136,7 +136,7 @@ impl Node {
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse("user"),
-    ///     Ok((QuerySchemaNode::Field("user".to_string()), "".to_string())),
+    ///     Ok((QuerySchemaNode::Field("user".to_owned()), "".to_owned())),
     /// );
     /// ```
     ///
@@ -151,10 +151,10 @@ impl Node {
     ///     QuerySchemaNode::parse(input),
     ///     Ok((
     ///         QuerySchemaNode::Model {
-    ///             name: "user".to_string(),
-    ///             nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    ///             name: "user".to_owned(),
+    ///             nodes: vec![QuerySchemaNode::Field("name".to_owned())],
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     )),
     /// );
     /// ```
@@ -173,16 +173,16 @@ impl Node {
     ///     QuerySchemaNode::parse(input),
     ///     Ok((
     ///         QuerySchemaNode::Model {
-    ///             name: "user".to_string(),
+    ///             name: "user".to_owned(),
     ///             nodes: vec![QuerySchemaNode::Model {
-    ///                 name: "name".to_string(),
+    ///                 name: "name".to_owned(),
     ///                 nodes: vec![
-    ///                     QuerySchemaNode::Field("first".to_string()),
-    ///                     QuerySchemaNode::Field("last".to_string()),
+    ///                     QuerySchemaNode::Field("first".to_owned()),
+    ///                     QuerySchemaNode::Field("last".to_owned()),
     ///                 ]
     ///             }]
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     )),
     /// );
     /// ```
@@ -194,7 +194,7 @@ impl Node {
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse(input),
-    ///     Ok((QuerySchemaNode::Field("user".to_string()), "".to_string())),
+    ///     Ok((QuerySchemaNode::Field("user".to_owned()), "".to_owned())),
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -209,7 +209,7 @@ impl Node {
     /// ```rust
     /// use dragonfly::ast::QuerySchemaNode;
     ///
-    /// let schema = QuerySchemaNode::Field("user".to_string());
+    /// let schema = QuerySchemaNode::Field("user".to_owned());
     ///
     /// assert!(schema.is_empty());
     /// ```
@@ -218,7 +218,7 @@ impl Node {
     /// use dragonfly::ast::QuerySchemaNode;
     ///
     /// let schema = QuerySchemaNode::Model {
-    ///     name: "user".to_string(),
+    ///     name: "user".to_owned(),
     ///     nodes: vec![],
     /// };
     ///
@@ -229,8 +229,8 @@ impl Node {
     /// use dragonfly::ast::QuerySchemaNode;
     ///
     /// let schema = QuerySchemaNode::Model {
-    ///     name: "user".to_string(),
-    ///     nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    ///     name: "user".to_owned(),
+    ///     nodes: vec![QuerySchemaNode::Field("name".to_owned())],
     /// };
     ///
     /// assert_eq!(schema.is_empty(), false);
@@ -289,10 +289,10 @@ impl Schema {
     ///     QuerySchema::parse(input),
     ///     Ok((
     ///         QuerySchema {
-    ///             name: "user".to_string(),
-    ///             nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    ///             name: "user".to_owned(),
+    ///             nodes: vec![QuerySchemaNode::Field("name".to_owned())],
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     )),
     /// );
     /// ```
@@ -314,16 +314,16 @@ impl Schema {
     ///     QuerySchema::parse(input),
     ///     Ok((
     ///         QuerySchema {
-    ///             name: "user".to_string(),
+    ///             name: "user".to_owned(),
     ///             nodes: vec![QuerySchemaNode::Model {
-    ///                 name: "name".to_string(),
+    ///                 name: "name".to_owned(),
     ///                 nodes: vec![
-    ///                     QuerySchemaNode::Field("first".to_string()),
-    ///                     QuerySchemaNode::Field("last".to_string()),
+    ///                     QuerySchemaNode::Field("first".to_owned()),
+    ///                     QuerySchemaNode::Field("last".to_owned()),
     ///                 ]
     ///             }]
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     )),
     /// );
     /// ```
@@ -354,7 +354,7 @@ impl Schema {
     /// use dragonfly::ast::QuerySchema;
     ///
     /// let schema = QuerySchema {
-    ///     name: "user".to_string(),
+    ///     name: "user".to_owned(),
     ///     nodes: vec![],
     /// };
     ///
@@ -368,8 +368,8 @@ impl Schema {
     /// };
     ///
     /// let schema = QuerySchema {
-    ///     name: "user".to_string(),
-    ///     nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    ///     name: "user".to_owned(),
+    ///     nodes: vec![QuerySchemaNode::Field("name".to_owned())],
     /// };
     ///
     /// assert!(!schema.is_empty());

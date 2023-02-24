@@ -23,12 +23,12 @@ use super::{
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(brace_open("{"), Ok(('{', "".to_string())));
+/// assert_eq!(brace_open("{"), Ok(('{', "".to_owned())));
 ///
 /// assert_eq!(
 ///     brace_open("}"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '{', found '}'".to_string(),
+///         message: "expected character '{', found '}'".to_owned(),
 ///         actual: '}'
 ///     })
 /// );
@@ -57,12 +57,12 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(brace_close("}"), Ok(('}', "".to_string())));
+/// assert_eq!(brace_close("}"), Ok(('}', "".to_owned())));
 ///
 /// assert_eq!(
 ///     brace_close("{"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '}', found '{'".to_string(),
+///         message: "expected character '}', found '{'".to_owned(),
 ///         actual: '{'
 ///     })
 /// );
@@ -91,12 +91,12 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(hyphen("-"), Ok(('-', "".to_string())));
+/// assert_eq!(hyphen("-"), Ok(('-', "".to_owned())));
 ///
 /// assert_eq!(
 ///     hyphen("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '-', found 'a'".to_string(),
+///         message: "expected character '-', found 'a'".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -125,12 +125,12 @@ pub fn hyphen(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(forward_slash("/"), Ok(('/', "".to_string())));
+/// assert_eq!(forward_slash("/"), Ok(('/', "".to_owned())));
 ///
 /// assert_eq!(
 ///     forward_slash("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '/', found 'a'".to_string(),
+///         message: "expected character '/', found 'a'".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -158,12 +158,12 @@ pub fn forward_slash(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(colon(":"), Ok((':', "".to_string())));
+/// assert_eq!(colon(":"), Ok((':', "".to_owned())));
 ///
 /// assert_eq!(
 ///     colon("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character ':', found 'a'".to_string(),
+///         message: "expected character ':', found 'a'".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -192,12 +192,12 @@ pub fn colon(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(paren_open("("), Ok(('(', "".to_string())));
+/// assert_eq!(paren_open("("), Ok(('(', "".to_owned())));
 ///
 /// assert_eq!(
 ///     paren_open(")"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '(', found ')'".to_string(),
+///         message: "expected character '(', found ')'".to_owned(),
 ///         actual: ')'
 ///     })
 /// );
@@ -226,12 +226,12 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(paren_close(")"), Ok((')', "".to_string())));
+/// assert_eq!(paren_close(")"), Ok((')', "".to_owned())));
 ///
 /// assert_eq!(
 ///     paren_close("("),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character ')', found '('".to_string(),
+///         message: "expected character ')', found '('".to_owned(),
 ///         actual: '('
 ///     })
 /// );
@@ -260,12 +260,12 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(dollar("$"), Ok(('$', "".to_string())));
+/// assert_eq!(dollar("$"), Ok(('$', "".to_owned())));
 ///
 /// assert_eq!(
 ///     dollar("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '$', found 'a'".to_string(),
+///         message: "expected character '$', found 'a'".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -294,12 +294,12 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(underscore("_"), Ok(('_', "".to_string())));
+/// assert_eq!(underscore("_"), Ok(('_', "".to_owned())));
 ///
 /// assert_eq!(
 ///     underscore("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '_', found 'a'".to_string(),
+///         message: "expected character '_', found 'a'".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -327,12 +327,12 @@ pub fn underscore(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(comma(","), Ok((',', "".to_string())));
+/// assert_eq!(comma(","), Ok((',', "".to_owned())));
 ///
 /// assert_eq!(
 ///     comma("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character ',', found 'a'".to_string(),
+///         message: "expected character ',', found 'a'".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );

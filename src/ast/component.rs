@@ -41,11 +41,11 @@ impl Component {
     /// }";
     ///
     /// let expected = Component {
-    ///     name: "Foo".to_string(),
-    ///     path: "foo/bar/Foo".to_string(),
+    ///     name: "Foo".to_owned(),
+    ///     path: "foo/bar/Foo".to_owned(),
     /// };
     ///
-    /// assert_eq!(Component::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Component::parse(input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -56,11 +56,11 @@ impl Component {
     /// }";
     ///
     /// let expected = Component {
-    ///     name: "Foo".to_string(),
-    ///     path: "Foo".to_string(),
+    ///     name: "Foo".to_owned(),
+    ///     path: "Foo".to_owned(),
     /// };
     ///
-    /// assert_eq!(Component::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Component::parse(input), Ok((expected, "".to_owned())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "component")?;

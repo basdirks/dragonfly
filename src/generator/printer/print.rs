@@ -38,10 +38,10 @@ pub trait Print {
     /// }
     ///
     /// let foo = Foo::Bar(
-    ///     "Foo".to_string(),
+    ///     "Foo".to_owned(),
     ///     Box::new(Foo::Bar(
-    ///         "Bar".to_string(),
-    ///         Box::new(Foo::Baz("Baz".to_string())),
+    ///         "Bar".to_owned(),
+    ///         Box::new(Foo::Baz("Baz".to_owned())),
     ///     )),
     /// );
     ///

@@ -46,11 +46,11 @@ impl Enum {
     /// }";
     ///
     /// let expected = Enum {
-    ///     name: "Foo".to_string(),
-    ///     variants: vec!["Bar".to_string(), "Baz".to_string()],
+    ///     name: "Foo".to_owned(),
+    ///     variants: vec!["Bar".to_owned(), "Baz".to_owned()],
     /// };
     ///
-    /// assert_eq!(Enum::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Enum::parse(input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -88,8 +88,8 @@ impl Enum {
     /// assert_eq!(
     ///     Enum::parse(input),
     ///     Err(ParseError::CustomError {
-    ///         message: "duplicate enum variant".to_string(),
-    ///         input: "\n}".to_string()
+    ///         message: "duplicate enum variant".to_owned(),
+    ///         input: "\n}".to_owned()
     ///     })
     /// );
     /// ```
@@ -109,7 +109,7 @@ impl Enum {
 
         if variants.len() != variants.iter().collect::<HashSet<_>>().len() {
             return Err(ParseError::CustomError {
-                message: "duplicate enum variant".to_string(),
+                message: "duplicate enum variant".to_owned(),
                 input,
             });
         }

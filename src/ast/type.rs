@@ -52,21 +52,18 @@ impl Scalar {
     ///
     /// assert_eq!(
     ///     Scalar::parse("Boolean"),
-    ///     Ok((Scalar::Boolean, "".to_string()))
+    ///     Ok((Scalar::Boolean, "".to_owned()))
     /// );
     ///
     /// assert_eq!(
     ///     Scalar::parse("DateTime"),
-    ///     Ok((Scalar::DateTime, "".to_string()))
+    ///     Ok((Scalar::DateTime, "".to_owned()))
     /// );
     ///
-    /// assert_eq!(Scalar::parse("Float"), Ok((Scalar::Float, "".to_string())));
-    /// assert_eq!(Scalar::parse("Int"), Ok((Scalar::Int, "".to_string())));
+    /// assert_eq!(Scalar::parse("Float"), Ok((Scalar::Float, "".to_owned())));
+    /// assert_eq!(Scalar::parse("Int"), Ok((Scalar::Int, "".to_owned())));
     ///
-    /// assert_eq!(
-    ///     Scalar::parse("String"),
-    ///     Ok((Scalar::String, "".to_string()))
-    /// );
+    /// assert_eq!(Scalar::parse("String"), Ok((Scalar::String, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -74,7 +71,7 @@ impl Scalar {
     ///
     /// assert_eq!(
     ///     Scalar::parse("Foo"),
-    ///     Ok((Scalar::Reference("Foo".to_string()), "".to_string()))
+    ///     Ok((Scalar::Reference("Foo".to_owned()), "".to_owned()))
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -130,11 +127,31 @@ impl Display for Type {
 }
 
 impl Type {
-    fn parse_one(input: &str) -> ParseResult<Self> {
+    /// Parse a scalar type from the given input.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input to parse.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ParseError` if the input does not start with a valid scalar
+    /// type.
+    pub fn parse_scalar(input: &str) -> ParseResult<Self> {
         map(input, Scalar::parse, Self::Scalar)
     }
 
-    fn parse_array(input: &str) -> ParseResult<Self> {
+    /// Parse an array type from the given input.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input to parse.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ParseError` if the input does not start with a valid array
+    /// type.
+    pub fn parse_array(input: &str) -> ParseResult<Self> {
         let (scalar, input) = between(input, "[", Scalar::parse, "]")?;
 
         Ok((Self::Array(scalar), input))
@@ -163,22 +180,22 @@ impl Type {
     ///
     /// assert_eq!(
     ///     Type::parse("String"),
-    ///     Ok((Type::Scalar(Scalar::String), "".to_string()))
+    ///     Ok((Type::Scalar(Scalar::String), "".to_owned()))
     /// );
     ///
     /// assert_eq!(
     ///     Type::parse("Int"),
-    ///     Ok((Type::Scalar(Scalar::Int), "".to_string()))
+    ///     Ok((Type::Scalar(Scalar::Int), "".to_owned()))
     /// );
     ///
     /// assert_eq!(
     ///     Type::parse("Float"),
-    ///     Ok((Type::Scalar(Scalar::Float), "".to_string()))
+    ///     Ok((Type::Scalar(Scalar::Float), "".to_owned()))
     /// );
     ///
     /// assert_eq!(
     ///     Type::parse("Boolean"),
-    ///     Ok((Type::Scalar(Scalar::Boolean), "".to_string()))
+    ///     Ok((Type::Scalar(Scalar::Boolean), "".to_owned()))
     /// );
     /// ```
     ///
@@ -190,7 +207,7 @@ impl Type {
     ///
     /// assert_eq!(
     ///     Type::parse("[String]"),
-    ///     Ok((Type::Array(Scalar::String), "".to_string())),
+    ///     Ok((Type::Array(Scalar::String), "".to_owned())),
     /// );
     /// ```
     ///
@@ -203,8 +220,8 @@ impl Type {
     /// assert_eq!(
     ///     Type::parse("[Foo]"),
     ///     Ok((
-    ///         Type::Array(Scalar::Reference("Foo".to_string())),
-    ///         "".to_string()
+    ///         Type::Array(Scalar::Reference("Foo".to_owned())),
+    ///         "".to_owned()
     ///     )),
     /// );
     /// ```
@@ -233,7 +250,7 @@ impl Type {
     /// assert!(Type::parse("").is_err());
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
-        choice::<Self>(input, vec![Self::parse_one, Self::parse_array])
+        choice::<Self>(input, vec![Self::parse_scalar, Self::parse_array])
     }
 
     /// Return the scalar type of this type.
@@ -268,7 +285,7 @@ mod tests {
         assert_eq!(Scalar::Float.to_string(), "Float");
         assert_eq!(Scalar::Int.to_string(), "Int");
         assert_eq!(Scalar::String.to_string(), "String");
-        assert_eq!(Scalar::Reference("Foo".to_string()).to_string(), "Foo");
+        assert_eq!(Scalar::Reference("Foo".to_owned()).to_string(), "Foo");
     }
 
     #[test]
@@ -279,7 +296,7 @@ mod tests {
         assert_eq!(Type::Scalar(Scalar::Boolean).to_string(), "Boolean");
 
         assert_eq!(
-            Type::Scalar(Scalar::Reference("Foo".to_string())).to_string(),
+            Type::Scalar(Scalar::Reference("Foo".to_owned())).to_string(),
             "Foo"
         );
 
@@ -289,7 +306,7 @@ mod tests {
         assert_eq!(Type::Array(Scalar::Boolean).to_string(), "[Boolean]");
 
         assert_eq!(
-            Type::Array(Scalar::Reference("Foo".to_string())).to_string(),
+            Type::Array(Scalar::Reference("Foo".to_owned())).to_string(),
             "[Foo]"
         );
     }

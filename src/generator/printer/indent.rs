@@ -1,5 +1,10 @@
+/// Default indentation for Prisma Schema Language.
 const PSL_INDENT: usize = 2;
+
+/// Default indentation for GraphQL.
 const GRAPHQL_INDENT: usize = 2;
+
+/// Default indentation for TypeScript.
 const TYPESCRIPT_INDENT: usize = 4;
 
 /// Return a string of spaces for the given indentation level.

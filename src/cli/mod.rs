@@ -10,11 +10,12 @@ pub mod io;
 pub fn help_check_message() -> String {
     "
 
-Usage: dragonfly check <source-file>
+USAGE:
+    dragonfly check <FILE>
 
 "
     .trim()
-    .to_string()
+    .to_owned()
 }
 
 /// Print help message for the `build` command.
@@ -22,14 +23,15 @@ Usage: dragonfly check <source-file>
 pub fn help_build_message() -> String {
     "
 
-Usage: dragonfly build [flags] <source-file>
+USAGE:
+    dragonfly build [FLAGS] <FILE>
 
-Flags:
-  -o, --output <output-directory>   The output directory. (default: `./out`)
+FLAGS:
+    -o, --output <output-directory>   The output directory. (default: `./out`)
 
 "
     .trim()
-    .to_string()
+    .to_owned()
 }
 
 /// Print help message.
@@ -37,25 +39,26 @@ Flags:
 pub fn help_message() -> String {
     "
 
-Usage: dragonfly [command] [command-args]
+USAGE:
+    dragonfly [COMMAND] [ARGS]
 
-Commands:
-  help                          Print this help message.
-  help <command>                Print help message for a command.
-  version                       Print the version number.
-  check <source-file>           Check a source file for errors.
-  build <flags> <source-file>   Generate code from a source file. (see `help \
+COMMANDS:
+    help                    Print this help message.
+    help <COMMAND>          Print help message for a command.
+    version                 Print the version number.
+    check <FILE>            Check a source file for errors.
+    build [FLAGS] <FILE>    Generate code from a source file. (see `help \
      build`).
 
 "
     .trim()
-    .to_string()
+    .to_owned()
 }
 
 /// Print version number.
 #[must_use]
 pub fn version() -> String {
-    env!("CARGO_PKG_VERSION").to_string()
+    env!("CARGO_PKG_VERSION").to_owned()
 }
 
 /// Parse a `help` command.
@@ -86,9 +89,9 @@ pub fn version() -> String {
 /// };
 ///
 /// assert_eq!(
-///     parse_help(&mut ["check".to_string()].iter()),
+///     parse_help(&mut ["check".to_owned()].iter()),
 ///     Command::HelpCommand {
-///         command: "check".to_string(),
+///         command: "check".to_owned(),
 ///     }
 /// );
 /// ```
@@ -116,7 +119,7 @@ pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
 ///     parse_args,
 /// };
 ///
-/// assert_eq!(parse_args(&["dragonfly".to_string()]), Command::Help);
+/// assert_eq!(parse_args(&["dragonfly".to_owned()]), Command::Help);
 /// ```
 ///
 /// Show help message:
@@ -128,29 +131,29 @@ pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
 /// };
 ///
 /// assert_eq!(
-///     parse_args(&["dragonfly".to_string(), "help".to_string()]),
+///     parse_args(&["dragonfly".to_owned(), "help".to_owned()]),
 ///     Command::Help
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&[
-///         "dragonfly".to_string(),
-///         "help".to_string(),
-///         "check".to_string()
+///         "dragonfly".to_owned(),
+///         "help".to_owned(),
+///         "check".to_owned()
 ///     ]),
 ///     Command::HelpCommand {
-///         command: "check".to_string(),
+///         command: "check".to_owned(),
 ///     }
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&[
-///         "dragonfly".to_string(),
-///         "help".to_string(),
-///         "build".to_string()
+///         "dragonfly".to_owned(),
+///         "help".to_owned(),
+///         "build".to_owned()
 ///     ]),
 ///     Command::HelpCommand {
-///         command: "build".to_string(),
+///         command: "build".to_owned(),
 ///     }
 /// );
 /// ```
@@ -164,7 +167,7 @@ pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
 /// };
 ///
 /// assert_eq!(
-///     parse_args(&["dragonfly".to_string(), "version".to_string()]),
+///     parse_args(&["dragonfly".to_owned(), "version".to_owned()]),
 ///     Command::Version
 /// );
 /// ```
@@ -179,12 +182,12 @@ pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
 ///
 /// assert_eq!(
 ///     parse_args(&[
-///         "dragonfly".to_string(),
-///         "check".to_string(),
-///         "file.dfly".to_string()
+///         "dragonfly".to_owned(),
+///         "check".to_owned(),
+///         "file.dfly".to_owned()
 ///     ]),
 ///     Command::Check {
-///         input: "file.dfly".to_string(),
+///         input: "file.dfly".to_owned(),
 ///     }
 /// );
 /// ```
@@ -199,41 +202,41 @@ pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
 ///
 /// assert_eq!(
 ///     parse_args(&[
-///         "dragonfly".to_string(),
-///         "build".to_string(),
-///         "file.dfly".to_string()
+///         "dragonfly".to_owned(),
+///         "build".to_owned(),
+///         "file.dfly".to_owned()
 ///     ]),
 ///     Command::Build {
-///         input: "file.dfly".to_string(),
+///         input: "file.dfly".to_owned(),
 ///         output: None,
 ///     }
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&[
-///         "dragonfly".to_string(),
-///         "build".to_string(),
-///         "-o".to_string(),
-///         "output".to_string(),
-///         "file.dfly".to_string(),
+///         "dragonfly".to_owned(),
+///         "build".to_owned(),
+///         "-o".to_owned(),
+///         "output".to_owned(),
+///         "file.dfly".to_owned(),
 ///     ]),
 ///     Command::Build {
-///         input: "file.dfly".to_string(),
-///         output: Some("output".to_string()),
+///         input: "file.dfly".to_owned(),
+///         output: Some("output".to_owned()),
 ///     }
 /// );
 ///
 /// assert_eq!(
 ///     parse_args(&[
-///         "dragonfly".to_string(),
-///         "build".to_string(),
-///         "--output".to_string(),
-///         "output".to_string(),
-///         "file.dfly".to_string(),
+///         "dragonfly".to_owned(),
+///         "build".to_owned(),
+///         "--output".to_owned(),
+///         "output".to_owned(),
+///         "file.dfly".to_owned(),
 ///     ]),
 ///     Command::Build {
-///         input: "file.dfly".to_string(),
-///         output: Some("output".to_string()),
+///         input: "file.dfly".to_owned(),
+///         output: Some("output".to_owned()),
 ///     }
 /// );
 /// ```
@@ -248,7 +251,7 @@ pub fn parse_args(args: &[String]) -> Command {
             args.next().map_or_else(
                 || {
                     Command::HelpCommand {
-                        command: "check".to_string(),
+                        command: "check".to_owned(),
                     }
                 },
                 |input| {
@@ -270,20 +273,20 @@ pub fn parse_args(args: &[String]) -> Command {
                         }
                         _ => {
                             Command::HelpCommand {
-                                command: "build".to_string(),
+                                command: "build".to_owned(),
                             }
                         }
                     }
                 }
                 Some(input) => {
                     Command::Build {
-                        input: input.to_string(),
+                        input: input.to_owned(),
                         output: None,
                     }
                 }
                 None => {
                     Command::HelpCommand {
-                        command: "build".to_string(),
+                        command: "build".to_owned(),
                     }
                 }
             }

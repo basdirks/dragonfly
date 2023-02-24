@@ -7,6 +7,7 @@ use {
         indent,
         Print,
     },
+    std::fmt::Write,
 };
 
 /// A fragment spread.
@@ -26,7 +27,7 @@ impl Print for Spread {
         let mut output = format!("{}...{}", indent::graphql(level), self.name);
 
         for directive in &self.directives {
-            output.push_str(&format!(" {directive}"));
+            let _ = write!(output, " {directive}");
         }
 
         output
@@ -56,7 +57,7 @@ impl Print for Inline {
         );
 
         for directive in &self.directives {
-            output.push_str(&format!(" {directive}"));
+            let _ = write!(output, " {directive}");
         }
 
         output.push_str(&Selection::print_multiple(&self.selections, level));
@@ -79,19 +80,19 @@ mod tests {
     #[test]
     fn test_print_spread() {
         let spread = Spread {
-            name: "foo".to_string(),
+            name: "foo".to_owned(),
             directives: vec![],
         };
 
         assert_eq!(spread.print(0), "...foo");
 
         let spread = Spread {
-            name: "daboi".to_string(),
+            name: "daboi".to_owned(),
             directives: vec![Directive {
-                name: "is".to_string(),
+                name: "is".to_owned(),
                 arguments: vec![Argument {
-                    name: "a".to_string(),
-                    value: Value::String("good boy.".to_string()),
+                    name: "a".to_owned(),
+                    value: Value::String("good boy.".to_owned()),
                 }],
             }],
         };
@@ -102,21 +103,21 @@ mod tests {
     #[test]
     fn test_print_inline() {
         let inline = Inline {
-            type_condition: "Foo".to_string(),
+            type_condition: "Foo".to_owned(),
             directives: vec![],
             selections: vec![Selection::Field(Field {
-                name: "bar".to_string(),
+                name: "bar".to_owned(),
                 arguments: vec![],
                 directives: vec![],
                 selections: vec![
                     Selection::Field(Field {
-                        name: "baz".to_string(),
+                        name: "baz".to_owned(),
                         arguments: vec![],
                         directives: vec![],
                         selections: vec![],
                     }),
                     Selection::Field(Field {
-                        name: "bax".to_string(),
+                        name: "bax".to_owned(),
                         arguments: vec![],
                         directives: vec![],
                         selections: vec![],

@@ -34,11 +34,11 @@ impl From<AstType> for Type {
     fn from(ast_type: AstType) -> Self {
         let print_scalar = |scalar| {
             match scalar {
-                AstScalar::Boolean => "Boolean".to_string(),
-                AstScalar::DateTime => "DateTime".to_string(),
-                AstScalar::Float => "Float".to_string(),
-                AstScalar::Int => "Int".to_string(),
-                AstScalar::String => "String".to_string(),
+                AstScalar::Boolean => "Boolean".to_owned(),
+                AstScalar::DateTime => "DateTime".to_owned(),
+                AstScalar::Float => "Float".to_owned(),
+                AstScalar::Int => "Int".to_owned(),
+                AstScalar::String => "String".to_owned(),
                 AstScalar::Reference(name) => name,
             }
         };
@@ -62,75 +62,73 @@ mod tests {
     fn test_from_ast_type() {
         assert_eq!(
             Type::from(AstType::Scalar(AstScalar::Boolean)),
-            Type::NonNull(Box::new(Type::Name("Boolean".to_string())))
+            Type::NonNull(Box::new(Type::Name("Boolean".to_owned())))
         );
 
         assert_eq!(
             Type::from(AstType::Scalar(AstScalar::DateTime)),
-            Type::NonNull(Box::new(Type::Name("DateTime".to_string())))
+            Type::NonNull(Box::new(Type::Name("DateTime".to_owned())))
         );
 
         assert_eq!(
             Type::from(AstType::Scalar(AstScalar::Float)),
-            Type::NonNull(Box::new(Type::Name("Float".to_string())))
+            Type::NonNull(Box::new(Type::Name("Float".to_owned())))
         );
 
         assert_eq!(
             Type::from(AstType::Scalar(AstScalar::Int)),
-            Type::NonNull(Box::new(Type::Name("Int".to_string())))
+            Type::NonNull(Box::new(Type::Name("Int".to_owned())))
         );
 
         assert_eq!(
             Type::from(AstType::Scalar(AstScalar::String)),
-            Type::NonNull(Box::new(Type::Name("String".to_string())))
+            Type::NonNull(Box::new(Type::Name("String".to_owned())))
         );
 
         assert_eq!(
-            Type::from(AstType::Scalar(AstScalar::Reference(
-                "Foo".to_string()
-            ))),
-            Type::NonNull(Box::new(Type::Name("Foo".to_string())))
+            Type::from(AstType::Scalar(AstScalar::Reference("Foo".to_owned()))),
+            Type::NonNull(Box::new(Type::Name("Foo".to_owned())))
         );
 
         assert_eq!(
             Type::from(AstType::Array(AstScalar::Boolean)),
             Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Boolean".to_string()
+                "Boolean".to_owned()
             )))))
         );
 
         assert_eq!(
             Type::from(AstType::Array(AstScalar::DateTime)),
             Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "DateTime".to_string()
+                "DateTime".to_owned()
             )))))
         );
 
         assert_eq!(
             Type::from(AstType::Array(AstScalar::Float)),
             Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Float".to_string()
+                "Float".to_owned()
             )))))
         );
 
         assert_eq!(
             Type::from(AstType::Array(AstScalar::Int)),
             Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Int".to_string()
+                "Int".to_owned()
             )))))
         );
 
         assert_eq!(
             Type::from(AstType::Array(AstScalar::String)),
             Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "String".to_string()
+                "String".to_owned()
             )))))
         );
 
         assert_eq!(
-            Type::from(AstType::Array(AstScalar::Reference("Foo".to_string()))),
+            Type::from(AstType::Array(AstScalar::Reference("Foo".to_owned()))),
             Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Foo".to_string()
+                "Foo".to_owned()
             )))))
         );
     }
@@ -166,7 +164,7 @@ mod tests {
             format!(
                 "{}",
                 Type::from(AstType::Scalar(AstScalar::Reference(
-                    "Foo".to_string()
+                    "Foo".to_owned()
                 )))
             ),
             "Foo!"
@@ -201,7 +199,7 @@ mod tests {
             format!(
                 "{}",
                 Type::from(AstType::Array(AstScalar::Reference(
-                    "Foo".to_string()
+                    "Foo".to_owned()
                 )))
             ),
             "[Foo]!"

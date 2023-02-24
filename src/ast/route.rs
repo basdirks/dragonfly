@@ -47,13 +47,13 @@ impl Route {
     ///
     /// assert_eq!(
     ///     Route::parse_root("root: Foo"),
-    ///     Ok(("Foo".to_string(), "".to_string()))
+    ///     Ok(("Foo".to_owned(), "".to_owned()))
     /// );
     ///
     /// assert_eq!(
     ///     Route::parse_root("root Foo"),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected character ':', found ' '".to_string(),
+    ///         message: "expected character ':', found ' '".to_owned(),
     ///         actual: ' '
     ///     })
     /// );
@@ -61,7 +61,7 @@ impl Route {
     /// assert_eq!(
     ///     Route::parse_root("component: Foo"),
     ///     Err(ParseError::UnmatchedLiteral {
-    ///         expected: "root".to_string()
+    ///         expected: "root".to_owned()
     ///     })
     /// );
     /// ```
@@ -96,13 +96,13 @@ impl Route {
     ///
     /// assert_eq!(
     ///     Route::parse_title("title: Foo"),
-    ///     Ok(("Foo".to_string(), "".to_string()))
+    ///     Ok(("Foo".to_owned(), "".to_owned()))
     /// );
     ///
     /// assert_eq!(
     ///     Route::parse_title("title Foo"),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected character ':', found ' '".to_string(),
+    ///         message: "expected character ':', found ' '".to_owned(),
     ///         actual: ' '
     ///     })
     /// );
@@ -110,7 +110,7 @@ impl Route {
     /// assert_eq!(
     ///     Route::parse_title("name: Foo"),
     ///     Err(ParseError::UnmatchedLiteral {
-    ///         expected: "title".to_string()
+    ///         expected: "title".to_owned()
     ///     })
     /// );
     /// ```
@@ -147,11 +147,11 @@ impl Route {
     ///     Route::parse(input),
     ///     Ok((
     ///         Route {
-    ///             path: "/foo/bar".to_string(),
-    ///             root: "Foo".to_string(),
-    ///             title: "Foobar".to_string(),
+    ///             path: "/foo/bar".to_owned(),
+    ///             root: "Foo".to_owned(),
+    ///             title: "Foobar".to_owned(),
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     ))
     /// );
     /// ```
@@ -220,12 +220,12 @@ impl Route {
     /// use dragonfly::ast::Route;
     ///
     /// let route = Route {
-    ///     path: "/".to_string(),
-    ///     root: "Index".to_string(),
-    ///     title: "Home".to_string(),
+    ///     path: "/".to_owned(),
+    ///     root: "Index".to_owned(),
+    ///     title: "Home".to_owned(),
     /// };
     ///
-    /// let components = vec!["Index".to_string()].into_iter().collect();
+    /// let components = vec!["Index".to_owned()].into_iter().collect();
     ///
     /// assert!(route.check_root(&components).is_ok());
     /// ```
@@ -237,18 +237,18 @@ impl Route {
     /// };
     ///
     /// let route = Route {
-    ///     path: "/".to_string(),
-    ///     root: "Index".to_string(),
-    ///     title: "Home".to_string(),
+    ///     path: "/".to_owned(),
+    ///     root: "Index".to_owned(),
+    ///     title: "Home".to_owned(),
     /// };
     ///
-    /// let components = vec!["Home".to_string()].into_iter().collect();
+    /// let components = vec!["Home".to_owned()].into_iter().collect();
     ///
     /// assert_eq!(
     ///     route.check_root(&components),
     ///     Err(TypeError::UnknownRouteRoot {
-    ///         root: "Index".to_string(),
-    ///         route_name: "/".to_string(),
+    ///         root: "Index".to_owned(),
+    ///         route_name: "/".to_owned(),
     ///     })
     /// );
     /// ```

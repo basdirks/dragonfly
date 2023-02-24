@@ -32,8 +32,8 @@ mod tests {
     fn test_display() {
         assert_eq!(
             Argument {
-                name: "foo".to_string(),
-                value: ConstValue::String("bar".to_string()),
+                name: "foo".to_owned(),
+                value: ConstValue::String("bar".to_owned()),
             }
             .to_string(),
             "foo: \"bar\"",

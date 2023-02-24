@@ -44,12 +44,12 @@ impl Display for FieldType {
 impl From<AstScalar> for FieldType {
     fn from(scalar: AstScalar) -> Self {
         match scalar {
-            AstScalar::Boolean => Self::Name("Boolean".to_string()),
-            AstScalar::DateTime => Self::Name("DateTime".to_string()),
-            AstScalar::Float => Self::Name("Float".to_string()),
-            AstScalar::Int => Self::Name("Int".to_string()),
+            AstScalar::Boolean => Self::Name("Boolean".to_owned()),
+            AstScalar::DateTime => Self::Name("DateTime".to_owned()),
+            AstScalar::Float => Self::Name("Float".to_owned()),
+            AstScalar::Int => Self::Name("Int".to_owned()),
             AstScalar::Reference(name) => Self::Name(name),
-            AstScalar::String => Self::Name("String".to_string()),
+            AstScalar::String => Self::Name("String".to_owned()),
         }
     }
 }
@@ -76,8 +76,8 @@ impl Field {
     #[must_use]
     pub fn id() -> Self {
         Self {
-            name: "id".to_string(),
-            r#type: FieldType::Name("Int".to_string()),
+            name: "id".to_owned(),
+            r#type: FieldType::Name("Int".to_owned()),
             required: true,
             array: false,
             attributes: vec![
@@ -91,8 +91,8 @@ impl Field {
     #[must_use]
     pub fn created_at() -> Self {
         Self {
-            name: "createdAt".to_string(),
-            r#type: FieldType::Name("DateTime".to_string()),
+            name: "createdAt".to_owned(),
+            r#type: FieldType::Name("DateTime".to_owned()),
             required: true,
             array: false,
             attributes: vec![],
@@ -103,8 +103,8 @@ impl Field {
     #[must_use]
     pub fn updated_at() -> Self {
         Self {
-            name: "updatedAt".to_string(),
-            r#type: FieldType::Name("DateTime".to_string()),
+            name: "updatedAt".to_owned(),
+            r#type: FieldType::Name("DateTime".to_owned()),
             required: true,
             array: false,
             attributes: vec![],
@@ -237,14 +237,14 @@ mod tests {
 
     #[test]
     fn test_display_field_type() {
-        assert_eq!(FieldType::Name("Int".to_string()).to_string(), "Int");
+        assert_eq!(FieldType::Name("Int".to_owned()).to_string(), "Int");
 
         assert_eq!(
             FieldType::Function(Function {
-                name: "unique".to_string(),
+                name: "unique".to_owned(),
                 parameters: vec![Value::Array(vec![
-                    Value::String("firstName".to_string()),
-                    Value::String("lastName".to_string()),
+                    Value::String("firstName".to_owned()),
+                    Value::String("lastName".to_owned()),
                 ])],
             })
             .to_string(),
@@ -256,8 +256,8 @@ mod tests {
     fn test_display_field() {
         assert_eq!(
             Field {
-                name: "id".to_string(),
-                r#type: FieldType::Name("Int".to_string()),
+                name: "id".to_owned(),
+                r#type: FieldType::Name("Int".to_owned()),
                 required: true,
                 array: false,
                 attributes: vec![],
@@ -268,15 +268,15 @@ mod tests {
 
         assert_eq!(
             Field {
-                name: "id".to_string(),
-                r#type: FieldType::Name("Int".to_string()),
+                name: "id".to_owned(),
+                r#type: FieldType::Name("Int".to_owned()),
                 required: true,
                 array: false,
                 attributes: vec![attribute::Field {
                     group: None,
-                    name: "default".to_string(),
+                    name: "default".to_owned(),
                     arguments: vec![Argument::Function(Function {
-                        name: "autoincrement".to_string(),
+                        name: "autoincrement".to_owned(),
                         parameters: vec![],
                     })],
                 }],
@@ -289,56 +289,56 @@ mod tests {
     #[test]
     fn test_display_model() {
         let model = Model {
-            name: "User".to_string(),
+            name: "User".to_owned(),
             fields: vec![
                 Field {
-                    name: "id".to_string(),
-                    r#type: FieldType::Name("Int".to_string()),
+                    name: "id".to_owned(),
+                    r#type: FieldType::Name("Int".to_owned()),
                     required: true,
                     array: false,
                     attributes: vec![attribute::Field {
                         group: None,
-                        name: "default".to_string(),
+                        name: "default".to_owned(),
                         arguments: vec![Argument::Function(Function {
-                            name: "autoincrement".to_string(),
+                            name: "autoincrement".to_owned(),
                             parameters: vec![],
                         })],
                     }],
                 },
                 Field {
-                    name: "firstName".to_string(),
-                    r#type: FieldType::Name("String".to_string()),
+                    name: "firstName".to_owned(),
+                    r#type: FieldType::Name("String".to_owned()),
                     required: true,
                     array: false,
                     attributes: vec![],
                 },
                 Field {
-                    name: "lastName".to_string(),
-                    r#type: FieldType::Name("String".to_string()),
+                    name: "lastName".to_owned(),
+                    r#type: FieldType::Name("String".to_owned()),
                     required: true,
                     array: false,
                     attributes: vec![],
                 },
                 Field {
-                    name: "isAdmin".to_string(),
-                    r#type: FieldType::Name("Boolean".to_string()),
+                    name: "isAdmin".to_owned(),
+                    r#type: FieldType::Name("Boolean".to_owned()),
                     required: true,
                     array: false,
                     attributes: vec![attribute::Field {
                         group: None,
-                        name: "default".to_string(),
+                        name: "default".to_owned(),
                         arguments: vec![Argument::Value(Value::String(
-                            "false".to_string(),
+                            "false".to_owned(),
                         ))],
                     }],
                 },
             ],
             attributes: vec![attribute::Block {
                 group: None,
-                name: "unique".to_string(),
+                name: "unique".to_owned(),
                 arguments: vec![Argument::Value(Value::Array(vec![
-                    Value::String("firstName".to_string()),
-                    Value::String("lastName".to_string()),
+                    Value::String("firstName".to_owned()),
+                    Value::String("lastName".to_owned()),
                 ]))],
             }],
         };

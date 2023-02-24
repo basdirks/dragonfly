@@ -140,42 +140,42 @@ mod tests {
     fn test_from_ast_enum() {
         assert_eq!(
             StringEnum::from(AstEnum {
-                name: "CountryName".to_string(),
+                name: "CountryName".to_owned(),
                 variants: vec![
-                    "France".to_string(),
-                    "Germany".to_string(),
-                    "Italy".to_string(),
-                    "Spain".to_string(),
-                    "UnitedKingdom".to_string(),
-                    "UnitedStates".to_string(),
+                    "France".to_owned(),
+                    "Germany".to_owned(),
+                    "Italy".to_owned(),
+                    "Spain".to_owned(),
+                    "UnitedKingdom".to_owned(),
+                    "UnitedStates".to_owned(),
                 ]
             }),
             StringEnum {
-                identifier: "CountryName".to_string(),
+                identifier: "CountryName".to_owned(),
                 variants: vec![
                     Variant {
-                        name: "France".to_string(),
-                        value: "France".to_string()
+                        name: "France".to_owned(),
+                        value: "France".to_owned()
                     },
                     Variant {
-                        name: "Germany".to_string(),
-                        value: "Germany".to_string()
+                        name: "Germany".to_owned(),
+                        value: "Germany".to_owned()
                     },
                     Variant {
-                        name: "Italy".to_string(),
-                        value: "Italy".to_string()
+                        name: "Italy".to_owned(),
+                        value: "Italy".to_owned()
                     },
                     Variant {
-                        name: "Spain".to_string(),
-                        value: "Spain".to_string()
+                        name: "Spain".to_owned(),
+                        value: "Spain".to_owned()
                     },
                     Variant {
-                        name: "UnitedKingdom".to_string(),
-                        value: "UnitedKingdom".to_string()
+                        name: "UnitedKingdom".to_owned(),
+                        value: "UnitedKingdom".to_owned()
                     },
                     Variant {
-                        name: "UnitedStates".to_string(),
-                        value: "UnitedStates".to_string()
+                        name: "UnitedStates".to_owned(),
+                        value: "UnitedStates".to_owned()
                     },
                 ]
             }
@@ -186,31 +186,31 @@ mod tests {
     fn test_print_enum() {
         assert_eq!(
             StringEnum {
-                identifier: "CountryName".to_string(),
+                identifier: "CountryName".to_owned(),
                 variants: vec![
                     Variant {
-                        name: "France".to_string(),
-                        value: "France".to_string()
+                        name: "France".to_owned(),
+                        value: "France".to_owned()
                     },
                     Variant {
-                        name: "Germany".to_string(),
-                        value: "Germany".to_string()
+                        name: "Germany".to_owned(),
+                        value: "Germany".to_owned()
                     },
                     Variant {
-                        name: "Italy".to_string(),
-                        value: "Italy".to_string()
+                        name: "Italy".to_owned(),
+                        value: "Italy".to_owned()
                     },
                     Variant {
-                        name: "Spain".to_string(),
-                        value: "Spain".to_string()
+                        name: "Spain".to_owned(),
+                        value: "Spain".to_owned()
                     },
                     Variant {
-                        name: "UnitedKingdom".to_string(),
-                        value: "UnitedKingdom".to_string()
+                        name: "UnitedKingdom".to_owned(),
+                        value: "UnitedKingdom".to_owned()
                     },
                     Variant {
-                        name: "UnitedStates".to_string(),
-                        value: "UnitedStates".to_string()
+                        name: "UnitedStates".to_owned(),
+                        value: "UnitedStates".to_owned()
                     },
                 ]
             }

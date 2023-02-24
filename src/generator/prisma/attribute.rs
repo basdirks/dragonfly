@@ -108,7 +108,7 @@ impl Field {
     pub fn id() -> Self {
         Self {
             group: None,
-            name: "id".to_string(),
+            name: "id".to_owned(),
             arguments: vec![],
         }
     }
@@ -118,9 +118,9 @@ impl Field {
     pub fn default_auto_increment() -> Self {
         Self {
             group: None,
-            name: "default".to_string(),
+            name: "default".to_owned(),
             arguments: vec![Argument::Function(Function {
-                name: "autoincrement".to_string(),
+                name: "autoincrement".to_owned(),
                 parameters: vec![],
             })],
         }
@@ -135,24 +135,24 @@ mod tests {
     fn test_display_argument() {
         assert_eq!(
             Argument::KeyValuePair(KeyValuePair {
-                key: "foo".to_string(),
-                value: Value::String("bar".to_string()),
+                key: "foo".to_owned(),
+                value: Value::String("bar".to_owned()),
             })
             .to_string(),
             "foo: bar"
         );
 
         assert_eq!(
-            Argument::Value(Value::String("foo".to_string())).to_string(),
+            Argument::Value(Value::String("foo".to_owned())).to_string(),
             "foo"
         );
 
         assert_eq!(
             Argument::Function(Function {
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 parameters: vec![
-                    Value::String("bar".to_string()),
-                    Value::String("baz".to_string()),
+                    Value::String("bar".to_owned()),
+                    Value::String("baz".to_owned()),
                 ],
             })
             .to_string(),
@@ -165,7 +165,7 @@ mod tests {
         assert_eq!(
             Block {
                 group: None,
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 arguments: vec![],
             }
             .to_string(),
@@ -174,8 +174,8 @@ mod tests {
 
         assert_eq!(
             Block {
-                group: Some("bar".to_string()),
-                name: "foo".to_string(),
+                group: Some("bar".to_owned()),
+                name: "foo".to_owned(),
                 arguments: vec![],
             }
             .to_string(),
@@ -185,15 +185,15 @@ mod tests {
         assert_eq!(
             Block {
                 group: None,
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 arguments: vec![
                     Argument::KeyValuePair(KeyValuePair {
-                        key: "foo".to_string(),
-                        value: Value::String("bar".to_string()),
+                        key: "foo".to_owned(),
+                        value: Value::String("bar".to_owned()),
                     }),
-                    Argument::Value(Value::String("baz".to_string())),
+                    Argument::Value(Value::String("baz".to_owned())),
                     Argument::Function(Function {
-                        name: "qux".to_string(),
+                        name: "qux".to_owned(),
                         parameters: vec![],
                     }),
                 ],
@@ -208,7 +208,7 @@ mod tests {
         assert_eq!(
             Field {
                 group: None,
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 arguments: vec![],
             }
             .to_string(),
@@ -217,8 +217,8 @@ mod tests {
 
         assert_eq!(
             Field {
-                group: Some("bar".to_string()),
-                name: "foo".to_string(),
+                group: Some("bar".to_owned()),
+                name: "foo".to_owned(),
                 arguments: vec![],
             }
             .to_string(),
@@ -228,15 +228,15 @@ mod tests {
         assert_eq!(
             Field {
                 group: None,
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 arguments: vec![
                     Argument::KeyValuePair(KeyValuePair {
-                        key: "foo".to_string(),
-                        value: Value::String("bar".to_string()),
+                        key: "foo".to_owned(),
+                        value: Value::String("bar".to_owned()),
                     }),
-                    Argument::Value(Value::String("baz".to_string())),
+                    Argument::Value(Value::String("baz".to_owned())),
                     Argument::Function(Function {
-                        name: "qux".to_string(),
+                        name: "qux".to_owned(),
                         parameters: vec![],
                     }),
                 ],

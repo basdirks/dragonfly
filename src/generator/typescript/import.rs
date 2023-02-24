@@ -85,13 +85,13 @@ mod tests {
     #[test]
     fn display_named_specifier() {
         let specifier = NamedSpecifier::AliasedName {
-            alias: "foo".to_string(),
-            identifier: "bar".to_string(),
+            alias: "foo".to_owned(),
+            identifier: "bar".to_owned(),
         };
 
         assert_eq!(specifier.to_string(), "bar as foo");
 
-        let specifier = NamedSpecifier::Name("foo".to_string());
+        let specifier = NamedSpecifier::Name("foo".to_owned());
 
         assert_eq!(specifier.to_string(), "foo");
     }
@@ -99,13 +99,13 @@ mod tests {
     #[test]
     fn named_import() {
         let import = Import::Named {
-            module: "foo".to_string(),
+            module: "foo".to_owned(),
             specifiers: vec![
                 NamedSpecifier::AliasedName {
-                    alias: "foo".to_string(),
-                    identifier: "bar".to_string(),
+                    alias: "foo".to_owned(),
+                    identifier: "bar".to_owned(),
                 },
-                NamedSpecifier::Name("baz".to_string()),
+                NamedSpecifier::Name("baz".to_owned()),
             ],
         };
 
@@ -118,8 +118,8 @@ mod tests {
     #[test]
     fn star_import() {
         let import = Import::Star {
-            module: "foo".to_string(),
-            alias: "bar".to_string(),
+            module: "foo".to_owned(),
+            alias: "bar".to_owned(),
         };
 
         assert_eq!(import.to_string(), "import * as bar from \"foo\";");
@@ -128,8 +128,8 @@ mod tests {
     #[test]
     fn default_import() {
         let import = Import::Default {
-            module: "foo".to_string(),
-            alias: "bar".to_string(),
+            module: "foo".to_owned(),
+            alias: "bar".to_owned(),
         };
 
         assert_eq!(import.to_string(), "import bar from \"foo\";");

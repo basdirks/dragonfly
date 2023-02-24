@@ -65,11 +65,11 @@ mod tests {
     #[test]
     fn test_display() {
         let enum_ = Enum {
-            name: "Color".to_string(),
+            name: "Color".to_owned(),
             enumerators: vec![
-                "Red".to_string(),
-                "Green".to_string(),
-                "Blue".to_string(),
+                "Red".to_owned(),
+                "Green".to_owned(),
+                "Blue".to_owned(),
             ],
         };
 

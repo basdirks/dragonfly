@@ -60,27 +60,27 @@ impl Model {
     /// }";
     ///
     /// let expected = Model {
-    ///     name: "Foo".to_string(),
+    ///     name: "Foo".to_owned(),
     ///     fields: vec![
     ///         (
-    ///             "bar".to_string(),
+    ///             "bar".to_owned(),
     ///             Field {
-    ///                 name: "bar".to_string(),
+    ///                 name: "bar".to_owned(),
     ///                 r#type: Type::Scalar(Scalar::String),
     ///             },
     ///         ),
     ///         (
-    ///             "baz".to_string(),
+    ///             "baz".to_owned(),
     ///             Field {
-    ///                 name: "baz".to_string(),
+    ///                 name: "baz".to_owned(),
     ///                 r#type: Type::Scalar(Scalar::Int),
     ///             },
     ///         ),
     ///         (
-    ///             "qux".to_string(),
+    ///             "qux".to_owned(),
     ///             Field {
-    ///                 name: "qux".to_string(),
-    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_string())),
+    ///                 name: "qux".to_owned(),
+    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
     ///             },
     ///         ),
     ///     ]
@@ -88,7 +88,7 @@ impl Model {
     ///     .collect(),
     /// };
     ///
-    /// assert_eq!(Model::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Model::parse(input), Ok((expected, "".to_owned())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "model")?;
@@ -107,8 +107,8 @@ impl Model {
 
             if fields.insert(field.name.clone(), field).is_some() {
                 return Err(ParseError::CustomError {
-                    message: "duplicate model field".to_string(),
-                    input: input.to_string(),
+                    message: "duplicate model field".to_owned(),
+                    input: input.clone(),
                 });
             }
 
@@ -150,27 +150,27 @@ impl Model {
     /// };
     ///
     /// let model = Model {
-    ///     name: "Foo".to_string(),
+    ///     name: "Foo".to_owned(),
     ///     fields: vec![
     ///         (
-    ///             "bar".to_string(),
+    ///             "bar".to_owned(),
     ///             Field {
-    ///                 name: "bar".to_string(),
+    ///                 name: "bar".to_owned(),
     ///                 r#type: Type::Scalar(Scalar::String),
     ///             },
     ///         ),
     ///         (
-    ///             "baz".to_string(),
+    ///             "baz".to_owned(),
     ///             Field {
-    ///                 name: "baz".to_string(),
+    ///                 name: "baz".to_owned(),
     ///                 r#type: Type::Scalar(Scalar::Int),
     ///             },
     ///         ),
     ///         (
-    ///             "qux".to_string(),
+    ///             "qux".to_owned(),
     ///             Field {
-    ///                 name: "qux".to_string(),
-    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_string())),
+    ///                 name: "qux".to_owned(),
+    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
     ///             },
     ///         ),
     ///     ]
@@ -180,7 +180,7 @@ impl Model {
     ///
     /// assert!(model
     ///     .check_field_types(
-    ///         &["Foo".to_string(), "Bar".to_string()]
+    ///         &["Foo".to_owned(), "Bar".to_owned()]
     ///             .iter()
     ///             .cloned()
     ///             .collect(),
@@ -190,14 +190,14 @@ impl Model {
     ///
     /// assert_eq!(
     ///     model.check_field_types(
-    ///         &["Foo".to_string()].iter().cloned().collect(),
+    ///         &["Foo".to_owned()].iter().cloned().collect(),
     ///         &HashSet::new()
     ///     ),
     ///     Err(TypeError::UnknownModelFieldType {
-    ///         model_name: "Foo".to_string(),
+    ///         model_name: "Foo".to_owned(),
     ///         field: Field {
-    ///             name: "qux".to_string(),
-    ///             r#type: Type::Array(Scalar::Reference("Bar".to_string())),
+    ///             name: "qux".to_owned(),
+    ///             r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
     ///         },
     ///     })
     /// );

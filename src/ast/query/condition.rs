@@ -55,7 +55,7 @@ impl Operator {
     ///
     /// assert_eq!(
     ///     QueryOperator::parse("contains: $foo"),
-    ///     Ok((QueryOperator::Contains, ": $foo".to_string()))
+    ///     Ok((QueryOperator::Contains, ": $foo".to_owned()))
     /// );
     /// ```
     ///
@@ -64,7 +64,7 @@ impl Operator {
     ///
     /// assert_eq!(
     ///     QueryOperator::parse("equals: $bar"),
-    ///     Ok((QueryOperator::Equals, ": $bar".to_string()))
+    ///     Ok((QueryOperator::Equals, ": $bar".to_owned()))
     /// );
     /// ```
     ///
@@ -118,8 +118,8 @@ impl FieldPath {
     ///
     /// let mut path = FieldPath::new(&["foo", "bar"]);
     ///
-    /// assert_eq!(path.pop_front(), Some("foo".to_string()));
-    /// assert_eq!(path.pop_front(), Some("bar".to_string()));
+    /// assert_eq!(path.pop_front(), Some("foo".to_owned()));
+    /// assert_eq!(path.pop_front(), Some("bar".to_owned()));
     /// assert_eq!(path.pop_front(), None);
     /// ```
     pub fn pop_front(&mut self) -> Option<String> {
@@ -135,8 +135,8 @@ impl FieldPath {
     ///
     /// let mut path = FieldPath::new(&["foo", "bar"]);
     ///
-    /// assert_eq!(path.pop_back(), Some("bar".to_string()));
-    /// assert_eq!(path.pop_back(), Some("foo".to_string()));
+    /// assert_eq!(path.pop_back(), Some("bar".to_owned()));
+    /// assert_eq!(path.pop_back(), Some("foo".to_owned()));
     /// assert_eq!(path.pop_back(), None);
     /// ```
     pub fn pop_back(&mut self) -> Option<String> {
@@ -237,7 +237,7 @@ mod tests {
             Condition {
                 field_path: FieldPath::new(&["foo", "bar"]),
                 operator: Operator::Contains,
-                argument: "baz".to_string(),
+                argument: "baz".to_owned(),
             }
             .to_string(),
             "foo { bar } contains $baz"
@@ -247,7 +247,7 @@ mod tests {
             Condition {
                 field_path: FieldPath::new(&["foo", "bar", "baz",]),
                 operator: Operator::Equals,
-                argument: "baz".to_string(),
+                argument: "baz".to_owned(),
             }
             .to_string(),
             "foo { bar { baz } } equals $baz"

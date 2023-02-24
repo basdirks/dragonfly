@@ -215,7 +215,7 @@ impl From<AstScalarType> for Type {
             // This should be fine in combination with https://date-fns.org/.
             AstScalarType::DateTime => {
                 Self::TypeReference {
-                    identifier: "Date".to_string(),
+                    identifier: "Date".to_owned(),
                     type_references: vec![],
                 }
             }
@@ -256,9 +256,9 @@ mod tests {
     fn test_display_array() {
         assert_eq!(
             Type::Array(Box::new(Type::TypeReference {
-                identifier: "Partial".to_string(),
+                identifier: "Partial".to_owned(),
                 type_references: vec![Type::TypeReference {
-                    identifier: "Image".to_string(),
+                    identifier: "Image".to_owned(),
                     type_references: vec![],
                 }]
             }))
@@ -283,19 +283,19 @@ mod tests {
             Type::Function {
                 arguments: vec![
                     FunctionArgument {
-                        name: "name".to_string(),
+                        name: "name".to_owned(),
                         r#type: Type::TypeReference {
-                            identifier: "Partial".to_string(),
+                            identifier: "Partial".to_owned(),
                             type_references: vec![Type::TypeReference {
-                                identifier: "Image".to_string(),
+                                identifier: "Image".to_owned(),
                                 type_references: vec![],
                             }]
                         }
                     },
                     FunctionArgument {
-                        name: "countryName".to_string(),
+                        name: "countryName".to_owned(),
                         r#type: Type::TypeReference {
-                            identifier: "CountryName".to_string(),
+                            identifier: "CountryName".to_owned(),
                             type_references: vec![],
                         }
                     }
@@ -303,7 +303,7 @@ mod tests {
                 .into_iter()
                 .collect(),
                 return_type: Box::new(Type::TypeReference {
-                    identifier: "String".to_string(),
+                    identifier: "String".to_owned(),
                     type_references: vec![]
                 }),
             }
@@ -332,7 +332,7 @@ mod tests {
     #[test]
     fn test_display_literal() {
         assert_eq!(
-            Type::Literal(Literal::BigInt("1".to_string())).to_string(),
+            Type::Literal(Literal::BigInt("1".to_owned())).to_string(),
             "1n"
         );
 
@@ -340,17 +340,17 @@ mod tests {
         assert_eq!(Type::Literal(Literal::Boolean(false)).to_string(), "false");
 
         assert_eq!(
-            Type::Literal(Literal::Number("1.0".to_string())).to_string(),
+            Type::Literal(Literal::Number("1.0".to_owned())).to_string(),
             "1.0"
         );
 
         assert_eq!(
-            Type::Literal(Literal::Number("1.5".to_string())).to_string(),
+            Type::Literal(Literal::Number("1.5".to_owned())).to_string(),
             "1.5"
         );
 
         assert_eq!(
-            Type::Literal(Literal::String("hello".to_string())).to_string(),
+            Type::Literal(Literal::String("hello".to_owned())).to_string(),
             "\"hello\""
         );
     }
@@ -360,16 +360,16 @@ mod tests {
         assert_eq!(
             Type::Intersection(vec![
                 Type::TypeReference {
-                    identifier: "Partial".to_string(),
+                    identifier: "Partial".to_owned(),
                     type_references: vec![Type::TypeReference {
-                        identifier: "T".to_string(),
+                        identifier: "T".to_owned(),
                         type_references: vec![],
                     }]
                 },
                 Type::TypeReference {
-                    identifier: "Partial".to_string(),
+                    identifier: "Partial".to_owned(),
                     type_references: vec![Type::TypeReference {
-                        identifier: "U".to_string(),
+                        identifier: "U".to_owned(),
                         type_references: vec![],
                     }]
                 },
@@ -405,18 +405,18 @@ mod tests {
             Type::ObjectLiteral(
                 vec![
                     ObjectLiteralProperty {
-                        name: "country".to_string(),
+                        name: "country".to_owned(),
                         r#type: Type::ObjectLiteral(
                             vec![
                                 ObjectLiteralProperty {
-                                    name: "name".to_string(),
+                                    name: "name".to_owned(),
                                     r#type: Type::TypeReference {
-                                        identifier: "CountryName".to_string(),
+                                        identifier: "CountryName".to_owned(),
                                         type_references: vec![],
                                     }
                                 },
                                 ObjectLiteralProperty {
-                                    name: "languages".to_string(),
+                                    name: "languages".to_owned(),
                                     r#type: Type::Array(Box::new(
                                         Type::Keyword(Keyword::String)
                                     ))
@@ -427,9 +427,9 @@ mod tests {
                         )
                     },
                     ObjectLiteralProperty {
-                        name: "tags".to_string(),
+                        name: "tags".to_owned(),
                         r#type: Type::Array(Box::new(Type::TypeReference {
-                            identifier: "Tag".to_string(),
+                            identifier: "Tag".to_owned(),
                             type_references: vec![],
                         }))
                     }
@@ -458,7 +458,7 @@ mod tests {
         assert_eq!(
             Type::Tuple(vec![
                 Type::TypeReference {
-                    identifier: "CountryName".to_string(),
+                    identifier: "CountryName".to_owned(),
                     type_references: vec![],
                 },
                 Type::Keyword(Keyword::String),
@@ -476,9 +476,9 @@ mod tests {
     fn test_display_type_reference() {
         assert_eq!(
             Type::TypeReference {
-                identifier: "Partial".to_string(),
+                identifier: "Partial".to_owned(),
                 type_references: vec![Type::TypeReference {
-                    identifier: "Image".to_string(),
+                    identifier: "Image".to_owned(),
                     type_references: vec![],
                 }]
             }
@@ -497,7 +497,7 @@ mod tests {
         assert_eq!(
             Type::Union(vec![
                 Type::TypeReference {
-                    identifier: "CountryName".to_string(),
+                    identifier: "CountryName".to_owned(),
                     type_references: vec![],
                 },
                 Type::Keyword(Keyword::String),
@@ -519,7 +519,7 @@ mod tests {
     #[test]
     fn test_display_literal_bigint() {
         assert_eq!(
-            Type::Literal(Literal::BigInt("1".to_string())).to_string(),
+            Type::Literal(Literal::BigInt("1".to_owned())).to_string(),
             "1n"
         );
     }
@@ -533,12 +533,12 @@ mod tests {
     #[test]
     fn test_display_literal_number() {
         assert_eq!(
-            Type::Literal(Literal::Number("1.0".to_string())).to_string(),
+            Type::Literal(Literal::Number("1.0".to_owned())).to_string(),
             "1.0"
         );
 
         assert_eq!(
-            Type::Literal(Literal::Number("1.1".to_string())).to_string(),
+            Type::Literal(Literal::Number("1.1".to_owned())).to_string(),
             "1.1"
         );
     }
@@ -546,7 +546,7 @@ mod tests {
     #[test]
     fn test_display_literal_string() {
         assert_eq!(
-            Type::Literal(Literal::String("foo".to_string())).to_string(),
+            Type::Literal(Literal::String("foo".to_owned())).to_string(),
             "\"foo\""
         );
     }
@@ -569,7 +569,7 @@ mod tests {
         assert_eq!(
             Type::from(AstScalarType::DateTime),
             Type::TypeReference {
-                identifier: "Date".to_string(),
+                identifier: "Date".to_owned(),
                 type_references: vec![]
             }
         );
@@ -602,9 +602,9 @@ mod tests {
     #[test]
     fn test_from_ast_scalar_identifier() {
         assert_eq!(
-            Type::from(AstScalarType::Reference("Image".to_string())),
+            Type::from(AstScalarType::Reference("Image".to_owned())),
             Type::TypeReference {
-                identifier: "Image".to_string(),
+                identifier: "Image".to_owned(),
                 type_references: vec![]
             }
         );

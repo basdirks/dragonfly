@@ -43,11 +43,11 @@ impl Field {
     /// let input = "bar: String";
     ///
     /// let expected = Field {
-    ///     name: "bar".to_string(),
+    ///     name: "bar".to_owned(),
     ///     r#type: Type::Scalar(Scalar::String),
     /// };
     ///
-    /// assert_eq!(Field::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Field::parse(input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -88,7 +88,7 @@ impl Field {
     /// assert_eq!(
     ///     Field::parse(input),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected character ':', found '='".to_string(),
+    ///         message: "expected character ':', found '='".to_owned(),
     ///         actual: '=',
     ///     })
     /// );

@@ -42,7 +42,7 @@ mod tests {
     fn test_display() {
         assert_eq!(
             Directive {
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 arguments: vec![],
             }
             .to_string(),
@@ -51,15 +51,15 @@ mod tests {
 
         assert_eq!(
             Directive {
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 arguments: vec![
                     ConstArgument {
-                        name: "bar".to_string(),
-                        value: ConstValue::String("baz".to_string()),
+                        name: "bar".to_owned(),
+                        value: ConstValue::String("baz".to_owned()),
                     },
                     ConstArgument {
-                        name: "qux".to_string(),
-                        value: ConstValue::String("quux".to_string()),
+                        name: "qux".to_owned(),
+                        value: ConstValue::String("quux".to_owned()),
                     },
                 ],
             }

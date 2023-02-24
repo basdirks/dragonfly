@@ -78,8 +78,8 @@ mod tests {
     fn test_display_custom_error() {
         assert_eq!(
             ParseError::CustomError {
-                message: "foo".to_string(),
-                input: "bar".to_string(),
+                message: "foo".to_owned(),
+                input: "bar".to_owned(),
             }
             .to_string(),
             "foo: bar"
@@ -99,7 +99,7 @@ mod tests {
         assert_eq!(
             ParseError::UnexpectedChar {
                 actual: 'a',
-                message: "foo".to_string(),
+                message: "foo".to_owned(),
             }
             .to_string(),
             "Unexpected character 'a': foo"
@@ -112,8 +112,8 @@ mod tests {
             ParseError::UnmatchedChoice {
                 errors: vec![
                     ParseError::CustomError {
-                        message: "foo".to_string(),
-                        input: "bar".to_string(),
+                        message: "foo".to_owned(),
+                        input: "bar".to_owned(),
                     },
                     ParseError::UnexpectedEof,
                 ],
@@ -134,7 +134,7 @@ Unmatched choice:
     fn test_display_unmatched_literal_error() {
         assert_eq!(
             ParseError::UnmatchedLiteral {
-                expected: "foo".to_string(),
+                expected: "foo".to_owned(),
             }
             .to_string(),
             "Unmatched literal: foo"

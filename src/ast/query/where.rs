@@ -71,22 +71,22 @@ impl Where {
     ///         QueryCondition {
     ///             field_path: FieldPath::new(&["foo"]),
     ///             operator: QueryOperator::Contains,
-    ///             argument: "foo".to_string(),
+    ///             argument: "foo".to_owned(),
     ///         },
     ///         QueryCondition {
     ///             field_path: FieldPath::new(&["foo", "bar",]),
     ///             operator: QueryOperator::Equals,
-    ///             argument: "bar".to_string(),
+    ///             argument: "bar".to_owned(),
     ///         },
     ///         QueryCondition {
     ///             field_path: FieldPath::new(&["foo", "baz",]),
     ///             operator: QueryOperator::Contains,
-    ///             argument: "baz".to_string(),
+    ///             argument: "baz".to_owned(),
     ///         },
     ///         QueryCondition {
     ///             field_path: FieldPath::new(&["foo", "qux",]),
     ///             operator: QueryOperator::Contains,
-    ///             argument: "qux".to_string(),
+    ///             argument: "qux".to_owned(),
     ///         }
     ///     ]
     /// );
@@ -105,13 +105,13 @@ impl Where {
     /// assert_eq!(
     ///     QueryWhere::parse_conditions(input),
     ///     Err(ParseError::CustomError {
-    ///         message: "a condition must refer to a field".to_string(),
-    ///         input: "contains: $foo".to_string(),
+    ///         message: "a condition must refer to a field".to_owned(),
+    ///         input: "contains: $foo".to_owned(),
     ///     })
     /// );
     /// ```
     pub fn parse_conditions(input: &str) -> ParseResult<Vec<Condition>> {
-        let mut input = input.to_string();
+        let mut input = input.to_owned();
         let mut field_path = FieldPath::new(&[]);
         let mut conditions: Vec<Condition> = vec![];
 
@@ -150,9 +150,8 @@ impl Where {
             {
                 if field_path.is_empty() {
                     return Err(ParseError::CustomError {
-                        message: "a condition must refer to a field"
-                            .to_string(),
-                        input: input.to_string(),
+                        message: "a condition must refer to a field".to_owned(),
+                        input: input.clone(),
                     });
                 }
 
@@ -221,14 +220,14 @@ impl Where {
     ///     QueryWhere::parse(input),
     ///     Ok((
     ///         QueryWhere {
-    ///             name: "foo".to_string(),
+    ///             name: "foo".to_owned(),
     ///             conditions: vec![QueryCondition {
     ///                 field_path: FieldPath::new(&["bar"]),
     ///                 operator: QueryOperator::Contains,
-    ///                 argument: "foo".to_string(),
+    ///                 argument: "foo".to_owned(),
     ///             }]
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     ))
     /// );
     /// ```
@@ -256,21 +255,21 @@ impl Where {
     ///     QueryWhere::parse(input),
     ///     Ok((
     ///         QueryWhere {
-    ///             name: "image".to_string(),
+    ///             name: "image".to_owned(),
     ///             conditions: vec![
     ///                 QueryCondition {
     ///                     field_path: FieldPath::new(&["title"]),
     ///                     operator: QueryOperator::Equals,
-    ///                     argument: "title".to_string(),
+    ///                     argument: "title".to_owned(),
     ///                 },
     ///                 QueryCondition {
     ///                     field_path: FieldPath::new(&["title", "tags",]),
     ///                     operator: QueryOperator::Contains,
-    ///                     argument: "tag".to_string(),
+    ///                     argument: "tag".to_owned(),
     ///                 }
     ///             ]
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     ))
     /// );
     /// ```
@@ -292,7 +291,7 @@ impl Where {
                 _ => {
                     Err(ParseError::CustomError {
                         message: format!("expected closing brace for {name}."),
-                        input: input.to_string(),
+                        input: input.to_owned(),
                     })
                 }
             }

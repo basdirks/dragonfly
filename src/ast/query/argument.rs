@@ -60,10 +60,10 @@ impl Argument {
     ///     QueryArgument::parse("$name: String"),
     ///     Ok((
     ///         QueryArgument {
-    ///             name: "name".to_string(),
+    ///             name: "name".to_owned(),
     ///             r#type: Type::Scalar(Scalar::String),
     ///         },
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     ))
     /// );
     /// ```
@@ -90,14 +90,14 @@ mod tests {
     #[test]
     fn test_display() {
         let argument = Argument {
-            name: "name".to_string(),
+            name: "name".to_owned(),
             r#type: Type::Scalar(Scalar::String),
         };
 
         assert_eq!(argument.to_string(), "$name: String");
 
         let argument = Argument {
-            name: "name".to_string(),
+            name: "name".to_owned(),
             r#type: Type::Array(Scalar::String),
         };
 

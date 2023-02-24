@@ -160,26 +160,26 @@ mod tests {
 
     #[test]
     fn test_display_value_enum() {
-        assert_eq!(Value::Enum("Foo.BAR".to_string()).to_string(), "Foo.BAR");
+        assert_eq!(Value::Enum("Foo.BAR".to_owned()).to_string(), "Foo.BAR");
     }
 
     #[test]
     fn test_display_value_float() {
-        assert_eq!(Value::Float("1.0".to_string()).to_string(), "1.0");
+        assert_eq!(Value::Float("1.0".to_owned()).to_string(), "1.0");
     }
 
     #[test]
     fn test_display_value_int() {
-        assert_eq!(Value::Int("1".to_string()).to_string(), "1");
+        assert_eq!(Value::Int("1".to_owned()).to_string(), "1");
     }
 
     #[test]
     fn test_display_value_list() {
         assert_eq!(
             Value::List(vec![
-                Value::Int("1".to_string()),
-                Value::Int("2".to_string()),
-                Value::Int("3".to_string()),
+                Value::Int("1".to_owned()),
+                Value::Int("2".to_owned()),
+                Value::Int("3".to_owned()),
             ])
             .to_string(),
             "[1, 2, 3]"
@@ -196,16 +196,16 @@ mod tests {
         assert_eq!(
             Value::Object(vec![
                 ObjectField {
-                    name: "foo".to_string(),
-                    value: Value::Int("1".to_string()),
+                    name: "foo".to_owned(),
+                    value: Value::Int("1".to_owned()),
                 },
                 ObjectField {
-                    name: "bar".to_string(),
-                    value: Value::Int("2".to_string()),
+                    name: "bar".to_owned(),
+                    value: Value::Int("2".to_owned()),
                 },
                 ObjectField {
-                    name: "baz".to_string(),
-                    value: Value::Int("3".to_string()),
+                    name: "baz".to_owned(),
+                    value: Value::Int("3".to_owned()),
                 },
             ])
             .to_string(),
@@ -215,12 +215,12 @@ mod tests {
 
     #[test]
     fn test_display_value_string() {
-        assert_eq!(Value::String("foo".to_string()).to_string(), "\"foo\"");
+        assert_eq!(Value::String("foo".to_owned()).to_string(), "\"foo\"");
     }
 
     #[test]
     fn test_display_value_variable() {
-        assert_eq!(Value::Variable("foo".to_string()).to_string(), "$foo");
+        assert_eq!(Value::Variable("foo".to_owned()).to_string(), "$foo");
     }
 
     #[test]
@@ -231,26 +231,26 @@ mod tests {
 
     #[test]
     fn test_display_const_enum() {
-        assert_eq!(Const::Enum("Foo.BAR".to_string()).to_string(), "Foo.BAR");
+        assert_eq!(Const::Enum("Foo.BAR".to_owned()).to_string(), "Foo.BAR");
     }
 
     #[test]
     fn test_display_const_float() {
-        assert_eq!(Const::Float("1.0".to_string()).to_string(), "1.0");
+        assert_eq!(Const::Float("1.0".to_owned()).to_string(), "1.0");
     }
 
     #[test]
     fn test_display_const_int() {
-        assert_eq!(Const::Int("1".to_string()).to_string(), "1");
+        assert_eq!(Const::Int("1".to_owned()).to_string(), "1");
     }
 
     #[test]
     fn test_display_const_list() {
         assert_eq!(
             Const::List(vec![
-                Const::Int("1".to_string()),
-                Const::Int("2".to_string()),
-                Const::Int("3".to_string()),
+                Const::Int("1".to_owned()),
+                Const::Int("2".to_owned()),
+                Const::Int("3".to_owned()),
             ])
             .to_string(),
             "[1, 2, 3]"
@@ -267,16 +267,16 @@ mod tests {
         assert_eq!(
             Const::Object(vec![
                 ConstObjectField {
-                    name: "foo".to_string(),
-                    value: Const::Int("1".to_string()),
+                    name: "foo".to_owned(),
+                    value: Const::Int("1".to_owned()),
                 },
                 ConstObjectField {
-                    name: "bar".to_string(),
-                    value: Const::Int("2".to_string()),
+                    name: "bar".to_owned(),
+                    value: Const::Int("2".to_owned()),
                 },
                 ConstObjectField {
-                    name: "baz".to_string(),
-                    value: Const::Int("3".to_string()),
+                    name: "baz".to_owned(),
+                    value: Const::Int("3".to_owned()),
                 },
             ])
             .to_string(),
@@ -286,6 +286,6 @@ mod tests {
 
     #[test]
     fn test_display_const_string() {
-        assert_eq!(Const::String("foo".to_string()).to_string(), "\"foo\"");
+        assert_eq!(Const::String("foo".to_owned()).to_string(), "\"foo\"");
     }
 }

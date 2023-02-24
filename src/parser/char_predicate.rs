@@ -32,7 +32,7 @@ use super::{
 ///         |c| c.is_ascii_lowercase(),
 ///         "character is not lowercase"
 ///     ),
-///     Ok(('a', "".to_string())),
+///     Ok(('a', "".to_owned())),
 /// );
 ///
 /// assert_eq!(
@@ -43,7 +43,7 @@ use super::{
 ///     ),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'A',
-///         message: "character is not lowercase".to_string(),
+///         message: "character is not lowercase".to_owned(),
 ///     }),
 /// );
 ///
@@ -64,7 +64,7 @@ pub fn char_if(
 
         return Err(ParseError::UnexpectedChar {
             actual: char,
-            message: description.to_string(),
+            message: description.to_owned(),
         });
     }
 
@@ -100,7 +100,7 @@ pub fn char_if(
 ///         |c| c.is_ascii_alphabetic(),
 ///         "character is not alphabetic"
 ///     ),
-///     Ok(("abc".to_string(), "".to_string())),
+///     Ok(("abc".to_owned(), "".to_owned())),
 /// );
 ///
 /// assert_eq!(
@@ -111,7 +111,7 @@ pub fn char_if(
 ///     ),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
-///         message: "character is not alphabetic".to_string(),
+///         message: "character is not alphabetic".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -157,7 +157,7 @@ pub fn chars_if(
 ///     alphabetic("1"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
-///         message: "character is not alphabetic".to_string(),
+///         message: "character is not alphabetic".to_owned(),
 ///     })
 /// );
 /// ```
@@ -189,13 +189,13 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(alphabetics("abc"), Ok(("abc".to_string(), "".to_string())));
+/// assert_eq!(alphabetics("abc"), Ok(("abc".to_owned(), "".to_owned())));
 ///
 /// assert_eq!(
 ///     alphabetics("123"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
-///         message: "character is not alphabetic".to_string(),
+///         message: "character is not alphabetic".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -227,16 +227,13 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(
-///     alphanumerics("1a3"),
-///     Ok(("1a3".to_string(), "".to_string()))
-/// );
+/// assert_eq!(alphanumerics("1a3"), Ok(("1a3".to_owned(), "".to_owned())));
 ///
 /// assert_eq!(
 ///     alphanumerics("_bc"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '_',
-///         message: "character is not alphanumeric".to_string(),
+///         message: "character is not alphanumeric".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -276,7 +273,7 @@ pub fn alphanumerics(input: &str) -> ParseResult<String> {
 ///     alphanumeric(" "),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: ' ',
-///         message: "character is not alphanumeric".to_string(),
+///         message: "character is not alphanumeric".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -314,7 +311,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///     digit("a"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
-///         message: "character is not a decimal digit".to_string(),
+///         message: "character is not a decimal digit".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -352,7 +349,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///     lowercase("A"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'A',
-///         message: "character is not lowercase".to_string(),
+///         message: "character is not lowercase".to_owned(),
 ///     })
 /// );
 /// ```
@@ -390,7 +387,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///     uppercase("a"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
-///         message: "character is not uppercase".to_string(),
+///         message: "character is not uppercase".to_owned(),
 ///     })
 /// );
 /// ```
@@ -431,7 +428,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///     space("a"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
-///         message: "character is not whitespace".to_string(),
+///         message: "character is not whitespace".to_owned(),
 ///     })
 /// );
 /// ```
@@ -463,9 +460,9 @@ pub fn space(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     spaces(" \t\r\n"),
-///     Ok((vec![' ', '\t', '\r', '\n'], "".to_string()))
+///     Ok((vec![' ', '\t', '\r', '\n'], "".to_owned()))
 /// );
-/// assert_eq!(spaces("abc"), Ok((vec![], "abc".to_string())));
+/// assert_eq!(spaces("abc"), Ok((vec![], "abc".to_owned())));
 /// ```
 pub fn spaces(input: &str) -> ParseResult<Vec<char>> {
     many(input, space)

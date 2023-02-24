@@ -77,12 +77,12 @@ impl ReturnType {
     ///
     /// assert_eq!(
     ///     QueryReturnType::parse("Foo"),
-    ///     Ok((QueryReturnType::Model("Foo".to_string()), "".to_string()))
+    ///     Ok((QueryReturnType::Model("Foo".to_owned()), "".to_owned()))
     /// );
     ///
     /// assert_eq!(
     ///     QueryReturnType::parse("[Foo]"),
-    ///     Ok((QueryReturnType::Array("Foo".to_string()), "".to_string()))
+    ///     Ok((QueryReturnType::Array("Foo".to_owned()), "".to_owned()))
     /// );
     ///
     /// assert!(QueryReturnType::parse("{Foo}").is_err());
@@ -100,7 +100,7 @@ impl ReturnType {
             }
             _ => {
                 Err(ParseError::CustomError {
-                    message: "expected return type".to_string(),
+                    message: "expected return type".to_owned(),
                     input,
                 })
             }
@@ -114,8 +114,8 @@ impl ReturnType {
     /// ```rust
     /// use dragonfly::ast::QueryReturnType;
     ///
-    /// assert_eq!(QueryReturnType::Model("Foo".to_string()).model(), "Foo");
-    /// assert_eq!(QueryReturnType::Array("Foo".to_string()).model(), "Foo");
+    /// assert_eq!(QueryReturnType::Model("Foo".to_owned()).model(), "Foo");
+    /// assert_eq!(QueryReturnType::Array("Foo".to_owned()).model(), "Foo");
     /// ```
     #[must_use]
     pub fn model(&self) -> &str {
@@ -167,10 +167,10 @@ impl Query {
     ///     Query::parse_arguments("($id: UUID)"),
     ///     Ok((
     ///         vec![QueryArgument {
-    ///             name: "id".to_string(),
-    ///             r#type: Type::Scalar(Scalar::Reference("UUID".to_string()))
+    ///             name: "id".to_owned(),
+    ///             r#type: Type::Scalar(Scalar::Reference("UUID".to_owned()))
     ///         }],
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     ))
     /// );
     /// ```
@@ -188,15 +188,15 @@ impl Query {
     ///     Ok((
     ///         vec![
     ///             QueryArgument {
-    ///                 name: "id".to_string(),
-    ///                 r#type: Type::Scalar(Scalar::Reference("UUID".to_string()))
+    ///                 name: "id".to_owned(),
+    ///                 r#type: Type::Scalar(Scalar::Reference("UUID".to_owned()))
     ///             },
     ///             QueryArgument {
-    ///                 name: "name".to_string(),
+    ///                 name: "name".to_owned(),
     ///                 r#type: Type::Array(Scalar::String)
     ///             }
     ///         ],
-    ///         "".to_string()
+    ///         "".to_owned()
     ///     ))
     /// );
     /// ```
@@ -218,7 +218,7 @@ impl Query {
             return Ok((arguments, input));
         }
 
-        Ok((vec![], input.to_string()))
+        Ok((vec![], input.to_owned()))
     }
 
     /// Parse a reference from the given input.
@@ -239,7 +239,7 @@ impl Query {
     ///
     /// assert_eq!(
     ///     Query::parse_reference("$name"),
-    ///     Ok(("name".to_string(), "".to_string()))
+    ///     Ok(("name".to_owned(), "".to_owned()))
     /// );
     /// ```
     ///
@@ -283,17 +283,17 @@ impl Query {
     /// }";
     ///
     /// let expected = Query {
-    ///     name: "images".to_string(),
+    ///     name: "images".to_owned(),
     ///     arguments: vec![],
     ///     schema: QuerySchema {
-    ///         name: "image".to_string(),
-    ///         nodes: vec![QuerySchemaNode::Field("title".to_string())],
+    ///         name: "image".to_owned(),
+    ///         nodes: vec![QuerySchemaNode::Field("title".to_owned())],
     ///     },
-    ///     r#type: QueryReturnType::Array("Image".to_string()),
+    ///     r#type: QueryReturnType::Array("Image".to_owned()),
     ///     r#where: None,
     /// };
     ///
-    /// assert_eq!(Query::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Query::parse(input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -328,40 +328,40 @@ impl Query {
     /// }";
     ///
     /// let expected = Query {
-    ///     name: "images".to_string(),
+    ///     name: "images".to_owned(),
     ///     arguments: vec![
     ///         QueryArgument {
-    ///             name: "tag".to_string(),
+    ///             name: "tag".to_owned(),
     ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///         QueryArgument {
-    ///             name: "title".to_string(),
+    ///             name: "title".to_owned(),
     ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///     ],
     ///     schema: QuerySchema {
-    ///         name: "image".to_string(),
-    ///         nodes: vec![QuerySchemaNode::Field("title".to_string())],
+    ///         name: "image".to_owned(),
+    ///         nodes: vec![QuerySchemaNode::Field("title".to_owned())],
     ///     },
-    ///     r#type: QueryReturnType::Array("Image".to_string()),
+    ///     r#type: QueryReturnType::Array("Image".to_owned()),
     ///     r#where: Some(QueryWhere {
-    ///         name: "image".to_string(),
+    ///         name: "image".to_owned(),
     ///         conditions: vec![
     ///             QueryCondition {
     ///                 field_path: FieldPath::new(&["title"]),
     ///                 operator: QueryOperator::Equals,
-    ///                 argument: "title".to_string(),
+    ///                 argument: "title".to_owned(),
     ///             },
     ///             QueryCondition {
     ///                 field_path: FieldPath::new(&["title", "tags"]),
     ///                 operator: QueryOperator::Contains,
-    ///                 argument: "tag".to_string(),
+    ///                 argument: "tag".to_owned(),
     ///             },
     ///         ],
     ///     }),
     /// };
     ///
-    /// assert_eq!(Query::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Query::parse(input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -396,30 +396,30 @@ impl Query {
     /// }";
     ///
     /// let expected = Query {
-    ///     name: "imagesByCountryName".to_string(),
+    ///     name: "imagesByCountryName".to_owned(),
     ///     arguments: vec![QueryArgument {
-    ///         name: "name".to_string(),
-    ///         r#type: Type::Scalar(Scalar::Reference("CountryName".to_string())),
+    ///         name: "name".to_owned(),
+    ///         r#type: Type::Scalar(Scalar::Reference("CountryName".to_owned())),
     ///     }],
     ///     schema: QuerySchema {
-    ///         name: "image".to_string(),
+    ///         name: "image".to_owned(),
     ///         nodes: vec![
-    ///             QuerySchemaNode::Field("title".to_string()),
-    ///             QuerySchemaNode::Field("category".to_string()),
+    ///             QuerySchemaNode::Field("title".to_owned()),
+    ///             QuerySchemaNode::Field("category".to_owned()),
     ///         ],
     ///     },
-    ///     r#type: QueryReturnType::Array("Image".to_string()),
+    ///     r#type: QueryReturnType::Array("Image".to_owned()),
     ///     r#where: Some(QueryWhere {
-    ///         name: "image".to_string(),
+    ///         name: "image".to_owned(),
     ///         conditions: vec![QueryCondition {
     ///             field_path: FieldPath::new(&["country", "name"]),
     ///             operator: QueryOperator::Equals,
-    ///             argument: "name".to_string(),
+    ///             argument: "name".to_owned(),
     ///         }],
     ///     }),
     /// };
     ///
-    /// assert_eq!(Query::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Query::parse(input), Ok((expected, "".to_owned())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "query")?;
@@ -502,9 +502,9 @@ impl Query {
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_root_nodes(),
     ///     Err(TypeError::IncompatibleQueryRootNodes {
-    ///         query_name: "images".to_string(),
-    ///         schema_root: "image".to_string(),
-    ///         where_root: "images".to_string(),
+    ///         query_name: "images".to_owned(),
+    ///         schema_root: "image".to_owned(),
+    ///         where_root: "images".to_owned(),
     ///     })
     /// );
     /// ```
@@ -616,11 +616,11 @@ impl Query {
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_unused_arguments(),
     ///     Err(TypeError::UnusedQueryArgument {
-    ///         query_name: "images".to_string(),
+    ///         query_name: "images".to_owned(),
     ///         argument: QueryArgument {
-    ///             name: "name".to_string(),
+    ///             name: "name".to_owned(),
     ///             r#type: Type::Scalar(Scalar::Reference(
-    ///                 "CountryName".to_string()
+    ///                 "CountryName".to_owned()
     ///             )),
     ///         },
     ///     }),
@@ -654,9 +654,9 @@ impl Query {
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_unused_arguments(),
     ///     Err(TypeError::UnusedQueryArgument {
-    ///         query_name: "images".to_string(),
+    ///         query_name: "images".to_owned(),
     ///         argument: QueryArgument {
-    ///             name: "tag".to_string(),
+    ///             name: "tag".to_owned(),
     ///             r#type: Type::Scalar(Scalar::String),
     ///         },
     ///     }),
@@ -672,7 +672,7 @@ impl Query {
                 let used_arguments = r#where
                     .conditions
                     .iter()
-                    .map(|condition| condition.argument.to_string())
+                    .map(|condition| condition.argument.clone())
                     .collect::<HashSet<_>>();
 
                 for argument in &self.arguments {
@@ -687,7 +687,10 @@ impl Query {
             None => {
                 return Err(TypeError::UnusedQueryArgument {
                     query_name: self.name.clone(),
-                    argument: self.arguments.first().unwrap().clone(),
+                    argument: self.arguments.first().map_or_else(
+                        || unreachable!(),
+                        std::clone::Clone::clone,
+                    ),
                 });
             }
         }
@@ -756,11 +759,11 @@ impl Query {
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_condition_references(),
     ///     Err(TypeError::UnknownQueryConditionReference {
-    ///         query_name: "images".to_string(),
+    ///         query_name: "images".to_owned(),
     ///         condition: QueryCondition {
     ///             field_path: FieldPath::new(&["country", "name",]),
     ///             operator: QueryOperator::Equals,
-    ///             argument: "tag".to_string(),
+    ///             argument: "tag".to_owned(),
     ///         }
     ///     }),
     /// );
@@ -813,7 +816,7 @@ impl Query {
     /// }";
     ///
     /// let query = Query::parse(input).unwrap().0;
-    /// let enum_names = vec!["CountryName".to_string()].into_iter().collect();
+    /// let enum_names = vec!["CountryName".to_owned()].into_iter().collect();
     ///
     /// assert!(query.check_argument_types(&enum_names).is_ok());
     /// ```
@@ -853,16 +856,16 @@ impl Query {
     /// }";
     ///
     /// let query = Query::parse(input).unwrap().0;
-    /// let enum_names = vec!["ContinentName".to_string()].into_iter().collect();
+    /// let enum_names = vec!["ContinentName".to_owned()].into_iter().collect();
     ///
     /// assert_eq!(
     ///     query.check_argument_types(&enum_names),
     ///     Err(TypeError::InvalidQueryArgumentType {
-    ///         query_name: "images".to_string(),
+    ///         query_name: "images".to_owned(),
     ///         argument: QueryArgument {
-    ///             name: "name".to_string(),
+    ///             name: "name".to_owned(),
     ///             r#type: Type::Scalar(Scalar::Reference(
-    ///                 "CountryName".to_string()
+    ///                 "CountryName".to_owned()
     ///             )),
     ///         },
     ///     }),
@@ -913,7 +916,7 @@ impl Query {
     /// }";
     ///
     /// let query = Query::parse(input).unwrap().0;
-    /// let models = vec!["Image".to_string()].into_iter().collect();
+    /// let models = vec!["Image".to_owned()].into_iter().collect();
     ///
     /// assert!(query.check_return_type(&models).is_ok());
     /// ```
@@ -940,8 +943,8 @@ impl Query {
     /// assert_eq!(
     ///     query.check_return_type(&HashSet::new()),
     ///     Err(TypeError::UnknownQueryReturnType {
-    ///         query_name: "images".to_string(),
-    ///         model_name: "Image".to_string(),
+    ///         query_name: "images".to_owned(),
+    ///         model_name: "Image".to_owned(),
     ///     })
     /// );
     /// ```
@@ -954,7 +957,7 @@ impl Query {
         if !model_names.contains(model_name) {
             return Err(TypeError::UnknownQueryReturnType {
                 query_name: self.name.clone(),
-                model_name: model_name.to_string(),
+                model_name: model_name.to_owned(),
             });
         }
 

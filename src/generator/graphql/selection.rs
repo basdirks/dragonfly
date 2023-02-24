@@ -46,28 +46,28 @@ impl Selection {
     ///
     /// let selections = vec![
     ///     Selection::Field(Field {
-    ///         name: "images".to_string(),
+    ///         name: "images".to_owned(),
     ///         arguments: vec![Argument {
-    ///             name: "after".to_string(),
-    ///             value: Value::Variable("endCursor".to_string()),
+    ///             name: "after".to_owned(),
+    ///             value: Value::Variable("endCursor".to_owned()),
     ///         }],
     ///         directives: vec![],
     ///         selections: vec![Selection::Field(Field {
-    ///             name: "id".to_string(),
+    ///             name: "id".to_owned(),
     ///             arguments: vec![],
     ///             directives: vec![],
     ///             selections: vec![],
     ///         })],
     ///     }),
     ///     Selection::FragmentSpread(FragmentSpread {
-    ///         name: "foo".to_string(),
+    ///         name: "foo".to_owned(),
     ///         directives: vec![],
     ///     }),
     ///     Selection::InlineFragment(InlineFragment {
-    ///         type_condition: "Image".to_string(),
+    ///         type_condition: "Image".to_owned(),
     ///         directives: vec![],
     ///         selections: vec![Selection::Field(Field {
-    ///             name: "id".to_string(),
+    ///             name: "id".to_owned(),
     ///             arguments: vec![],
     ///             directives: vec![],
     ///             selections: vec![],
@@ -134,10 +134,10 @@ mod tests {
     #[test]
     fn test_print_selection() {
         let field = Selection::Field(Field {
-            name: "images".to_string(),
+            name: "images".to_owned(),
             arguments: vec![Argument {
-                name: "after".to_string(),
-                value: Value::Variable("endCursor".to_string()),
+                name: "after".to_owned(),
+                value: Value::Variable("endCursor".to_owned()),
             }],
             directives: vec![],
             selections: vec![],
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn test_print_fragment_spread() {
         let spread = FragmentSpread {
-            name: "name".to_string(),
+            name: "name".to_owned(),
             directives: vec![],
         };
 
@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn test_print_inline_fragment() {
         let inline = InlineFragment {
-            type_condition: "Type".to_string(),
+            type_condition: "Type".to_owned(),
             directives: vec![],
             selections: vec![],
         };

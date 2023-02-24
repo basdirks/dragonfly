@@ -308,7 +308,7 @@ mod tests {
     #[test]
     fn test_display_provider() {
         assert_eq!(
-            Provider::File("path/to/file".to_string()).to_string(),
+            Provider::File("path/to/file".to_owned()).to_string(),
             "\"path/to/file\""
         );
 
@@ -446,7 +446,7 @@ mod tests {
     fn test_display_generator() {
         assert_eq!(
             Generator {
-                name: "client".to_string(),
+                name: "client".to_owned(),
                 provider: Provider::PrismaClientJs,
                 output: None,
                 binary_targets: vec![],
@@ -462,9 +462,9 @@ generator client {
 
         assert_eq!(
             Generator {
-                name: "client".to_string(),
+                name: "client".to_owned(),
                 provider: Provider::PrismaClientJs,
-                output: Some("path/to/client".to_string()),
+                output: Some("path/to/client".to_owned()),
                 binary_targets: vec![
                     BinaryTarget::AlpineOpenSsl3_0,
                     BinaryTarget::Arm64OpenSsl3_0,

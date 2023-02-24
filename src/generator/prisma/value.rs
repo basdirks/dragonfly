@@ -81,8 +81,8 @@ mod tests {
     fn test_display_array() {
         assert_eq!(
             Value::Array(vec![
-                Value::String("foo".to_string()),
-                Value::String("bar".to_string()),
+                Value::String("foo".to_owned()),
+                Value::String("bar".to_owned()),
             ])
             .to_string(),
             "[foo, bar]"
@@ -98,7 +98,7 @@ mod tests {
     fn test_display_function() {
         assert_eq!(
             Value::Function(Function {
-                name: "foo".to_string(),
+                name: "foo".to_owned(),
                 parameters: vec![],
             })
             .to_string(),
@@ -108,13 +108,13 @@ mod tests {
 
     #[test]
     fn test_display_number() {
-        assert_eq!(Value::Number("1".to_string()).to_string(), "1");
+        assert_eq!(Value::Number("1".to_owned()).to_string(), "1");
     }
 
     #[test]
     fn test_display_relation_array() {
         assert_eq!(
-            Value::RelationArray(vec!["foo".to_string(), "bar".to_string()])
+            Value::RelationArray(vec!["foo".to_owned(), "bar".to_owned()])
                 .to_string(),
             "[foo, bar]"
         );
@@ -122,15 +122,15 @@ mod tests {
 
     #[test]
     fn test_display_string() {
-        assert_eq!(Value::String("foo".to_string()).to_string(), "foo");
+        assert_eq!(Value::String("foo".to_owned()).to_string(), "foo");
     }
 
     #[test]
     fn test_display_key_value_pair() {
         assert_eq!(
             KeyValuePair {
-                key: "foo".to_string(),
-                value: Value::String("bar".to_string()),
+                key: "foo".to_owned(),
+                value: Value::String("bar".to_owned()),
             }
             .to_string(),
             "foo: bar"

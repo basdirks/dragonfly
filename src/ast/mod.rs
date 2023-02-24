@@ -95,11 +95,11 @@ impl Declaration {
     /// }";
     ///
     /// let expected = Declaration::Component(Component {
-    ///     name: "Foo".to_string(),
-    ///     path: "Foo".to_string(),
+    ///     name: "Foo".to_owned(),
+    ///     path: "Foo".to_owned(),
     /// });
     ///
-    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -114,11 +114,11 @@ impl Declaration {
     /// }";
     ///
     /// let expected = Declaration::Enum(Enum {
-    ///     name: "Foo".to_string(),
-    ///     variants: vec!["Bar".to_string(), "Baz".to_string()],
+    ///     name: "Foo".to_owned(),
+    ///     variants: vec!["Bar".to_owned(), "Baz".to_owned()],
     /// });
     ///
-    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// ```rust
@@ -138,20 +138,20 @@ impl Declaration {
     /// }";
     ///
     /// let expected = Declaration::Model(Model {
-    ///     name: "Foo".to_string(),
+    ///     name: "Foo".to_owned(),
     ///     fields: vec![
     ///         (
-    ///             "foo".to_string(),
+    ///             "foo".to_owned(),
     ///             Field {
-    ///                 name: "foo".to_string(),
+    ///                 name: "foo".to_owned(),
     ///                 r#type: Type::Scalar(Scalar::String),
     ///             },
     ///         ),
     ///         (
-    ///             "bar".to_string(),
+    ///             "bar".to_owned(),
     ///             Field {
-    ///                 name: "bar".to_string(),
-    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_string())),
+    ///                 name: "bar".to_owned(),
+    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
     ///             },
     ///         ),
     ///     ]
@@ -159,7 +159,7 @@ impl Declaration {
     ///     .collect(),
     /// });
     ///
-    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_string())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_owned())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice(
@@ -313,58 +313,58 @@ impl Ast {
     /// let mut expected = Ast::new();
     ///
     /// expected.routes.insert(
-    ///     "/".to_string(),
+    ///     "/".to_owned(),
     ///     Route {
-    ///         path: "/".to_string(),
-    ///         root: "Home".to_string(),
-    ///         title: "Home".to_string(),
+    ///         path: "/".to_owned(),
+    ///         root: "Home".to_owned(),
+    ///         title: "Home".to_owned(),
     ///     },
     /// );
     ///
     /// expected.components.insert(
-    ///     "Home".to_string(),
+    ///     "Home".to_owned(),
     ///     Component {
-    ///         name: "Home".to_string(),
-    ///         path: "Home".to_string(),
+    ///         name: "Home".to_owned(),
+    ///         path: "Home".to_owned(),
     ///     },
     /// );
     ///
     /// expected.models.insert(
-    ///     "Image".to_string(),
+    ///     "Image".to_owned(),
     ///     Model {
-    ///         name: "Image".to_string(),
+    ///         name: "Image".to_owned(),
     ///         fields: vec![
     ///             (
-    ///                 "id".to_string(),
+    ///                 "id".to_owned(),
     ///                 Field {
-    ///                     name: "id".to_string(),
+    ///                     name: "id".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "ID".to_string(),
+    ///                         "ID".to_owned(),
     ///                     )),
     ///                 },
     ///             ),
     ///             (
-    ///                 "title".to_string(),
+    ///                 "title".to_owned(),
     ///                 Field {
-    ///                     name: "title".to_string(),
+    ///                     name: "title".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::String),
     ///                 },
     ///             ),
     ///             (
-    ///                 "country".to_string(),
+    ///                 "country".to_owned(),
     ///                 Field {
-    ///                     name: "country".to_string(),
+    ///                     name: "country".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "Country".to_string(),
+    ///                         "Country".to_owned(),
     ///                     )),
     ///                 },
     ///             ),
     ///             (
-    ///                 "category".to_string(),
+    ///                 "category".to_owned(),
     ///                 Field {
-    ///                     name: "category".to_string(),
+    ///                     name: "category".to_owned(),
     ///                     r#type: Type::Array(Scalar::Reference(
-    ///                         "Category".to_string(),
+    ///                         "Category".to_owned(),
     ///                     )),
     ///                 },
     ///             ),
@@ -375,48 +375,48 @@ impl Ast {
     /// );
     ///
     /// expected.models.insert(
-    ///     "Country".to_string(),
+    ///     "Country".to_owned(),
     ///     Model {
-    ///         name: "Country".to_string(),
+    ///         name: "Country".to_owned(),
     ///         fields: vec![
     ///             (
-    ///                 "id".to_string(),
+    ///                 "id".to_owned(),
     ///                 Field {
-    ///                     name: "id".to_string(),
+    ///                     name: "id".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "ID".to_string(),
+    ///                         "ID".to_owned(),
     ///                     )),
     ///                 },
     ///             ),
     ///             (
-    ///                 "domain".to_string(),
+    ///                 "domain".to_owned(),
     ///                 Field {
-    ///                     name: "domain".to_string(),
+    ///                     name: "domain".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::String),
     ///                 },
     ///             ),
     ///             (
-    ///                 "drivingSide".to_string(),
+    ///                 "drivingSide".to_owned(),
     ///                 Field {
-    ///                     name: "drivingSide".to_string(),
+    ///                     name: "drivingSide".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "DrivingSide".to_string(),
+    ///                         "DrivingSide".to_owned(),
     ///                     )),
     ///                 },
     ///             ),
     ///             (
-    ///                 "flag".to_string(),
+    ///                 "flag".to_owned(),
     ///                 Field {
-    ///                     name: "flag".to_string(),
+    ///                     name: "flag".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::String),
     ///                 },
     ///             ),
     ///             (
-    ///                 "name".to_string(),
+    ///                 "name".to_owned(),
     ///                 Field {
-    ///                     name: "name".to_string(),
+    ///                     name: "name".to_owned(),
     ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "CountryName".to_string(),
+    ///                         "CountryName".to_owned(),
     ///                     )),
     ///                 },
     ///             ),
@@ -427,57 +427,57 @@ impl Ast {
     /// );
     ///
     /// expected.enums.insert(
-    ///     "DrivingSide".to_string(),
+    ///     "DrivingSide".to_owned(),
     ///     Enum {
-    ///         name: "DrivingSide".to_string(),
-    ///         variants: vec!["Left".to_string(), "Right".to_string()],
+    ///         name: "DrivingSide".to_owned(),
+    ///         variants: vec!["Left".to_owned(), "Right".to_owned()],
     ///     },
     /// );
     ///
     /// expected.enums.insert(
-    ///     "CountryName".to_string(),
+    ///     "CountryName".to_owned(),
     ///     Enum {
-    ///         name: "CountryName".to_string(),
+    ///         name: "CountryName".to_owned(),
     ///         variants: vec![
-    ///             "Albania".to_string(),
-    ///             "Andorra".to_string(),
-    ///             "Austria".to_string(),
-    ///             "Yemen".to_string(),
-    ///             "Zambia".to_string(),
-    ///             "Zimbabwe".to_string(),
+    ///             "Albania".to_owned(),
+    ///             "Andorra".to_owned(),
+    ///             "Austria".to_owned(),
+    ///             "Yemen".to_owned(),
+    ///             "Zambia".to_owned(),
+    ///             "Zimbabwe".to_owned(),
     ///         ],
     ///     },
     /// );
     ///
     /// expected.enums.insert(
-    ///     "Category".to_string(),
+    ///     "Category".to_owned(),
     ///     Enum {
-    ///         name: "Category".to_string(),
+    ///         name: "Category".to_owned(),
     ///         variants: vec![
-    ///             "Architecture".to_string(),
-    ///             "Bollard".to_string(),
-    ///             "Chevron".to_string(),
-    ///             "TrafficLight".to_string(),
-    ///             "TrafficSign".to_string(),
-    ///             "UtilityPole".to_string(),
+    ///             "Architecture".to_owned(),
+    ///             "Bollard".to_owned(),
+    ///             "Chevron".to_owned(),
+    ///             "TrafficLight".to_owned(),
+    ///             "TrafficSign".to_owned(),
+    ///             "UtilityPole".to_owned(),
     ///         ],
     ///     },
     /// );
     ///
     /// expected.queries.insert(
-    ///     "images".to_string(),
+    ///     "images".to_owned(),
     ///     Query {
-    ///         name: "images".to_string(),
-    ///         r#type: QueryReturnType::Array("Image".to_string()),
+    ///         name: "images".to_owned(),
+    ///         r#type: QueryReturnType::Array("Image".to_owned()),
     ///         schema: QuerySchema {
-    ///             name: "image".to_string(),
+    ///             name: "image".to_owned(),
     ///             nodes: vec![
-    ///                 QuerySchemaNode::Field("title".to_string()),
+    ///                 QuerySchemaNode::Field("title".to_owned()),
     ///                 QuerySchemaNode::Model {
-    ///                     name: "country".to_string(),
-    ///                     nodes: vec![QuerySchemaNode::Field("name".to_string())],
+    ///                     name: "country".to_owned(),
+    ///                     nodes: vec![QuerySchemaNode::Field("name".to_owned())],
     ///                 },
-    ///                 QuerySchemaNode::Field("category".to_string()),
+    ///                 QuerySchemaNode::Field("category".to_owned()),
     ///             ],
     ///         },
     ///         r#where: None,
@@ -486,35 +486,35 @@ impl Ast {
     /// );
     ///
     /// expected.queries.insert(
-    ///     "imagesByCountryName".to_string(),
+    ///     "imagesByCountryName".to_owned(),
     ///     Query {
-    ///         name: "imagesByCountryName".to_string(),
-    ///         r#type: QueryReturnType::Array("Image".to_string()),
+    ///         name: "imagesByCountryName".to_owned(),
+    ///         r#type: QueryReturnType::Array("Image".to_owned()),
     ///         schema: QuerySchema {
-    ///             name: "image".to_string(),
+    ///             name: "image".to_owned(),
     ///             nodes: vec![
-    ///                 QuerySchemaNode::Field("title".to_string()),
-    ///                 QuerySchemaNode::Field("category".to_string()),
+    ///                 QuerySchemaNode::Field("title".to_owned()),
+    ///                 QuerySchemaNode::Field("category".to_owned()),
     ///             ],
     ///         },
     ///         r#where: Some(QueryWhere {
-    ///             name: "image".to_string(),
+    ///             name: "image".to_owned(),
     ///             conditions: vec![QueryCondition {
     ///                 field_path: FieldPath::new(&["country", "name"]),
     ///                 operator: QueryOperator::Equals,
-    ///                 argument: "name".to_string(),
+    ///                 argument: "name".to_owned(),
     ///             }],
     ///         }),
     ///         arguments: vec![QueryArgument {
-    ///             name: "name".to_string(),
+    ///             name: "name".to_owned(),
     ///             r#type: Type::Scalar(Scalar::Reference(
-    ///                 "CountryName".to_string(),
+    ///                 "CountryName".to_owned(),
     ///             )),
     ///         }],
     ///     },
     /// );
     ///
-    /// assert_eq!(Ast::parse(&input), Ok((expected, "".to_string())));
+    /// assert_eq!(Ast::parse(&input), Ok((expected, "".to_owned())));
     /// ```
     ///
     /// Component names must be unique:
@@ -541,13 +541,13 @@ impl Ast {
     /// assert_eq!(
     ///     Ast::parse(&input),
     ///     Err(ParseError::CustomError {
-    ///         message: "Component Home already defined".to_string(),
-    ///         input: "component Home {\n  path: Index\n}".to_string(),
+    ///         message: "Component Home already defined".to_owned(),
+    ///         input: "component Home {\n  path: Index\n}".to_owned(),
     ///     })
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
-        let mut input = input.to_string();
+        let mut input = input.to_owned();
         let mut ast = Self::new();
 
         while !input.is_empty() {
@@ -620,7 +620,7 @@ impl Ast {
             } else {
                 return Err(ParseError::CustomError {
                     message: "expected a component, model, query, enum or page"
-                        .to_string(),
+                        .to_owned(),
                     input,
                 });
             }
@@ -969,7 +969,7 @@ impl Ast {
     ///         "User",
     ///         &mut FieldPath::new(&["friends", "country"])
     ///     ),
-    ///     Ok(Type::Scalar(Scalar::Reference("Country".to_string()))),
+    ///     Ok(Type::Scalar(Scalar::Reference("Country".to_owned()))),
     /// );
     /// ```
     pub fn resolve_path(
@@ -1005,8 +1005,8 @@ impl Ast {
 
         Err(TypeError::UnresolvedPath {
             path: path.clone(),
-            query_name: query_name.to_string(),
-            model_name: model_name.to_string(),
+            query_name: query_name.to_owned(),
+            model_name: model_name.to_owned(),
         })
     }
 }
