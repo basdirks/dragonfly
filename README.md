@@ -10,7 +10,7 @@ See also:
 - [AST](src/ast/README.md)
 - [Generators](src/generator/README.md)
 
-Rust nightly (1.69.0 or higher) is required.
+![CLI](https://user-images.githubusercontent.com/578048/221036308-091fd3c5-684b-4445-bce2-81f8da1d5b6a.png)
 
 # Roadmap
 
