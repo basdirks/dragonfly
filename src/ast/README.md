@@ -9,15 +9,11 @@ An application consists of:
 - routes: tying components to endpoints,
 - components: the user interface.
 
-Unimplemented:
-
-- mutations,
-- authentication and authorization,
-- scheduled tasks.
-
 ## Models
 
 A model describes entities in an application by giving names to groups of fields. A field has a name and a type. A type can be an array or a scalar type.
+
+![Types](https://user-images.githubusercontent.com/578048/221204820-72a139b4-3005-43a5-8be6-0a281f9f8b96.png)
 
 ### Types
 
