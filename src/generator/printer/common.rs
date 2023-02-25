@@ -11,9 +11,8 @@ use std::fmt::Display;
 /// ```rust
 /// use dragonfly::generator::printer::comma_separated;
 ///
-/// let items = vec!["foo", "bar", "baz"];
-///
-/// assert_eq!(comma_separated(&items), "foo, bar, baz");
+/// assert_eq!(comma_separated(&["foo"]), "foo");
+/// assert_eq!(comma_separated(&["foo", "bar", "baz"]), "foo, bar, baz");
 /// ```
 pub fn comma_separated<T: Display>(items: &[T]) -> String {
     items

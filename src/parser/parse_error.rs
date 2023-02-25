@@ -4,11 +4,9 @@ use std::fmt::Display;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ParseError {
     /// A custom error.
-    CustomError {
+    Custom {
         /// A description of the error.
         message: String,
-        /// The input that remains after the error.
-        input: String,
     },
     /// Unexpected end of file.
     UnexpectedEof,
@@ -39,8 +37,8 @@ impl Display for ParseError {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         match self {
-            Self::CustomError { message, input } => {
-                write!(f, "{message}: {input}")
+            Self::Custom { message } => {
+                write!(f, "{message}")
             }
             Self::UnexpectedEof => write!(f, "Unexpected end of file"),
             Self::UnexpectedChar { actual, message } => {
@@ -77,12 +75,11 @@ mod tests {
     #[test]
     fn test_display_custom_error() {
         assert_eq!(
-            ParseError::CustomError {
+            ParseError::Custom {
                 message: "foo".to_owned(),
-                input: "bar".to_owned(),
             }
             .to_string(),
-            "foo: bar"
+            "foo"
         );
     }
 
@@ -111,9 +108,8 @@ mod tests {
         assert_eq!(
             ParseError::UnmatchedChoice {
                 errors: vec![
-                    ParseError::CustomError {
+                    ParseError::Custom {
                         message: "foo".to_owned(),
-                        input: "bar".to_owned(),
                     },
                     ParseError::UnexpectedEof,
                 ],
@@ -122,7 +118,7 @@ mod tests {
             "
             
 Unmatched choice:
-1. foo: bar
+1. foo
 2. Unexpected end of file
 
 "

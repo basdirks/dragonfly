@@ -104,11 +104,23 @@ mod tests {
     fn test_print_inline() {
         let inline = Inline {
             type_condition: "Foo".to_owned(),
-            directives: vec![],
+            directives: vec![Directive {
+                name: "bar".to_owned(),
+                arguments: vec![Argument {
+                    name: "baz".to_owned(),
+                    value: Value::String("bax".to_owned()),
+                }],
+            }],
             selections: vec![Selection::Field(Field {
                 name: "bar".to_owned(),
                 arguments: vec![],
-                directives: vec![],
+                directives: vec![Directive {
+                    name: "foo".to_owned(),
+                    arguments: vec![Argument {
+                        name: "bar".to_owned(),
+                        value: Value::String("baz".to_owned()),
+                    }],
+                }],
                 selections: vec![
                     Selection::Field(Field {
                         name: "baz".to_owned(),
@@ -128,8 +140,8 @@ mod tests {
 
         assert_eq!(
             inline.print(1),
-            "  ... on Foo {
-    bar {
+            "  ... on Foo @bar(baz: \"bax\") {
+    bar @foo(bar: \"baz\") {
       baz
       bax
     }

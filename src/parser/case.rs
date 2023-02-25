@@ -48,19 +48,22 @@ use super::{
 ///     capitalized("foo"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'f',
-///         message: "expected capitalized identifier to start with uppercase \
-///                   character"
+///         message: "Expected capitalized identifier to start with uppercase \
+///                   character, found 'f'."
 ///             .to_string(),
 ///     })
 /// );
 /// ```
 pub fn capitalized(input: &str) -> ParseResult<String> {
     let (head, input) = uppercase(input).map_err(|_| {
+        let actual = input.chars().next().map_or('\0', |c| c);
+
         ParseError::UnexpectedChar {
-            actual: input.chars().next().map_or('\0', |c| c),
-            message: "expected capitalized identifier to start with uppercase \
-                      character"
-                .to_owned(),
+            actual,
+            message: format!(
+                "Expected capitalized identifier to start with uppercase \
+                 character, found '{actual}'."
+            ),
         }
     })?;
 
@@ -98,8 +101,8 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///     pascal("foobar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'f',
-///         message: "expected segment of PascalCase identifier to start with \
-///                   uppercase character"
+///         message: "Expected segment of PascalCase identifier to start with \
+///                   uppercase character, found 'f'."
 ///             .to_string(),
 ///     })
 /// );
@@ -108,8 +111,8 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///     pascal("foo_bar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'f',
-///         message: "expected segment of PascalCase identifier to start with \
-///                   uppercase character"
+///         message: "Expected segment of PascalCase identifier to start with \
+///                   uppercase character, found 'f'."
 ///             .to_string(),
 ///     })
 /// );
@@ -118,11 +121,13 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///     pascal("foo-bar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'f',
-///         message: "expected segment of PascalCase identifier to start with \
-///                   uppercase character"
+///         message: "Expected segment of PascalCase identifier to start with \
+///                   uppercase character, found 'f'."
 ///             .to_string(),
 ///     })
 /// );
+///
+/// assert_eq!(pascal(""), Err(ParseError::UnexpectedEof));
 /// ```
 pub fn pascal(input: &str) -> ParseResult<String> {
     many1(input, capitalized)
@@ -130,12 +135,19 @@ pub fn pascal(input: &str) -> ParseResult<String> {
         .map_err(|e| {
             match e {
                 ParseError::UnexpectedChar { .. } => {
-                    ParseError::UnexpectedChar {
-                        actual: input.chars().next().map_or('\0', |c| c),
-                        message: "expected segment of PascalCase identifier \
-                                  to start with uppercase character"
-                            .to_owned(),
-                    }
+                    input.chars().next().map_or(
+                        ParseError::UnexpectedEof,
+                        |actual| {
+                            ParseError::UnexpectedChar {
+                                actual,
+                                message: format!(
+                                    "Expected segment of PascalCase \
+                                     identifier to start with uppercase \
+                                     character, found '{actual}'."
+                                ),
+                            }
+                        },
+                    )
                 }
                 _ => e,
             }
@@ -176,7 +188,8 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 /// assert_eq!(
 ///     kebab_case("foo_bar"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "unexpected character at end of kebab-case identifier"
+///         message: "Unexpected character at end of kebab-case identifier, \
+///                   found '_'."
 ///             .to_string(),
 ///         actual: '_',
 ///     })
@@ -186,7 +199,8 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///     kebab_case("foo-Bar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '-',
-///         message: "unexpected character at end of kebab-case identifier"
+///         message: "Unexpected character at end of kebab-case identifier, \
+///                   found '-'."
 ///             .to_string(),
 ///     })
 /// );
@@ -195,7 +209,8 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///     kebab_case("fooBar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'B',
-///         message: "unexpected character at end of kebab-case identifier"
+///         message: "Unexpected character at end of kebab-case identifier, \
+///                   found 'B'."
 ///             .to_string(),
 ///     })
 /// );
@@ -204,8 +219,8 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///     kebab_case("Foo"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'F',
-///         message: "expected kebab-case identifier to start with a \
-///                   lowercase character"
+///         message: "Expected kebab-case identifier to start with a \
+///                   lowercase character, found 'F'."
 ///             .to_string(),
 ///     })
 /// );
@@ -214,21 +229,30 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///     kebab_case("foo--"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '-',
-///         message: "unexpected character at end of kebab-case identifier"
+///         message: "Unexpected character at end of kebab-case identifier, \
+///                   found '-'."
 ///             .to_string(),
 ///     })
 /// );
+///
+/// assert_eq!(kebab_case(""), Err(ParseError::UnexpectedEof));
 /// ```
 pub fn kebab(input: &str) -> ParseResult<String> {
     let (head, input) = many1(input, lowercase).map_err(|e| {
         match e {
             ParseError::UnexpectedChar { .. } => {
-                ParseError::UnexpectedChar {
-                    actual: input.chars().next().map_or('\0', |c| c),
-                    message: "expected kebab-case identifier to start with a \
-                              lowercase character"
-                        .to_owned(),
-                }
+                input.chars().next().map_or(
+                    ParseError::UnexpectedEof,
+                    |actual| {
+                        ParseError::UnexpectedChar {
+                            actual,
+                            message: format!(
+                                "Expected kebab-case identifier to start with \
+                                 a lowercase character, found '{actual}'."
+                            ),
+                        }
+                    },
+                )
             }
             _ => e,
         }
@@ -240,12 +264,19 @@ pub fn kebab(input: &str) -> ParseResult<String> {
         let (segment, input) = many1(&input, lowercase).map_err(|e| {
             match e {
                 ParseError::UnexpectedChar { .. } => {
-                    ParseError::UnexpectedChar {
-                        actual: input.chars().next().map_or('\0', |c| c),
-                        message: "expected kebab-case identifier segment to \
-                                  start with lowercase character"
-                            .to_owned(),
-                    }
+                    input.chars().next().map_or(
+                        ParseError::UnexpectedEof,
+                        |actual| {
+                            ParseError::UnexpectedChar {
+                                actual,
+                                message: format!(
+                                    "Expected kebab-case identifier segment \
+                                     to start with lowercase character, found \
+                                     '{actual}'."
+                                ),
+                            }
+                        },
+                    )
                 }
                 _ => e,
             }
@@ -255,11 +286,18 @@ pub fn kebab(input: &str) -> ParseResult<String> {
     })?;
 
     if choice(&input, vec![hyphen, uppercase, digit, underscore]).is_ok() {
-        return Err(ParseError::UnexpectedChar {
-            actual: input.chars().next().map_or('\0', |c| c),
-            message: "unexpected character at end of kebab-case identifier"
-                .to_owned(),
-        });
+        return Err(input.chars().next().map_or(
+            ParseError::UnexpectedEof,
+            |actual| {
+                ParseError::UnexpectedChar {
+                    actual,
+                    message: format!(
+                        "Unexpected character at end of kebab-case \
+                         identifier, found '{actual}'."
+                    ),
+                }
+            },
+        ));
     }
 
     Ok((
@@ -302,23 +340,31 @@ pub fn kebab(input: &str) -> ParseResult<String> {
 /// assert_eq!(
 ///     camel_case("FooBar"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected camelCase identifier to start with lowercase \
-///                   character"
+///         message: "Expected camelCase identifier to start with lowercase \
+///                   character, found 'F'."
 ///             .to_string(),
 ///         actual: 'F',
 ///     })
 /// );
+///
+/// assert_eq!(camel_case(""), Err(ParseError::UnexpectedEof));
 /// ```
 pub fn camel(input: &str) -> ParseResult<String> {
     let (head, input) = many1(input, lowercase).map_err(|e| {
         match e {
             ParseError::UnexpectedChar { .. } => {
-                ParseError::UnexpectedChar {
-                    message: "expected camelCase identifier to start with \
-                              lowercase character"
-                        .to_owned(),
-                    actual: input.chars().next().map_or('\0', |c| c),
-                }
+                input.chars().next().map_or(
+                    ParseError::UnexpectedEof,
+                    |actual| {
+                        ParseError::UnexpectedChar {
+                            actual,
+                            message: format!(
+                                "Expected camelCase identifier to start with \
+                                 lowercase character, found '{actual}'."
+                            ),
+                        }
+                    },
+                )
             }
             _ => e,
         }

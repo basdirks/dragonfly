@@ -53,7 +53,7 @@ impl Route {
     /// assert_eq!(
     ///     Route::parse_root("root Foo"),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected character ':', found ' '".to_owned(),
+    ///         message: "Expected character ':', found ' '.".to_owned(),
     ///         actual: ' '
     ///     })
     /// );
@@ -102,7 +102,7 @@ impl Route {
     /// assert_eq!(
     ///     Route::parse_title("title Foo"),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected character ':', found ' '".to_owned(),
+    ///         message: "Expected character ':', found ' '.".to_owned(),
     ///         actual: ' '
     ///     })
     /// );
@@ -180,7 +180,7 @@ impl Route {
         let (path, input) = chars_if(
             &input,
             |c| c.is_ascii_alphanumeric() || c == '/',
-            "should be alphanumeric or '/'",
+            "Should be alphanumeric or '/'.",
         )?;
 
         let (_, input) = spaces(&input)?;

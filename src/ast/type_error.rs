@@ -262,7 +262,10 @@ impl Display for TypeError {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use {
+        super::*,
+        crate::ast::Scalar,
+    };
 
     #[test]
     fn test_display_empty_schema_error() {
@@ -432,6 +435,22 @@ mod tests {
             .to_string(),
             "Query `bar` contains a condition that refers to an undefined \
              field. The path is `foo { bar { baz } }`. The model is `foo`."
+        );
+    }
+
+    #[test]
+    fn test_display_unused_query_argument_error() {
+        assert_eq!(
+            TypeError::UnusedQueryArgument {
+                argument: QueryArgument {
+                    name: "foo".to_owned(),
+                    r#type: Type::Scalar(Scalar::String),
+                },
+                query_name: "bar".to_owned(),
+            }
+            .to_string(),
+            "Query `bar` contains an argument that is not used. The argument \
+             is `$foo: String`."
         );
     }
 }

@@ -396,4 +396,36 @@ interface Image {
 }"
         );
     }
+
+    #[test]
+    fn test_interface_from_model() {
+        let input = "
+
+model Image {
+  tags: [Tag]
+  title: String
+  country: Country
+}
+
+"
+        .trim();
+
+        let (model, _) = Model::parse(input).unwrap();
+        let interface = Interface::from(model);
+        let code = interface.print(0);
+
+        assert_eq!(
+            code,
+            "
+
+interface Image {
+    country: Country;
+    tags: Array<Tag>;
+    title: string;
+}
+
+"
+            .trim()
+        );
+    }
 }

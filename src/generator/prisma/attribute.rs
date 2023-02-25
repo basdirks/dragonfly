@@ -104,6 +104,14 @@ impl Display for Field {
 
 impl Field {
     /// Standard `@id` attribute.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::attribute::Field;
+    ///
+    /// assert_eq!(Field::id().to_string(), "@id",);
+    /// ```
     #[must_use]
     pub fn id() -> Self {
         Self {
@@ -114,6 +122,17 @@ impl Field {
     }
 
     /// Standard `@default(autoincrement())` attribute.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::attribute::Field;
+    ///
+    /// assert_eq!(
+    ///     Field::default_auto_increment().to_string(),
+    ///     "@default(autoincrement())"
+    /// );
+    /// ```
     #[must_use]
     pub fn default_auto_increment() -> Self {
         Self {

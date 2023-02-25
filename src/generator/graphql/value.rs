@@ -288,4 +288,16 @@ mod tests {
     fn test_display_const_string() {
         assert_eq!(Const::String("foo".to_owned()).to_string(), "\"foo\"");
     }
+
+    #[test]
+    fn test_display_argument() {
+        assert_eq!(
+            Argument {
+                name: "foo".to_owned(),
+                value: Const::Int("1".to_owned()),
+            }
+            .to_string(),
+            "foo: 1"
+        );
+    }
 }

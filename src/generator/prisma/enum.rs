@@ -75,24 +75,32 @@ mod tests {
 
         assert_eq!(
             enum_.to_string(),
-            "\
+            "
+
 enum Color {
   Red
   Green
   Blue
-}"
+}
+
+"
+            .trim()
         );
     }
 
     #[test]
     fn test_from() {
         let (ast_enum, _) = AstEnum::parse(
-            "\
+            "
+
 enum Color {
     Red
     Green
     Blue
-}",
+}
+
+"
+            .trim(),
         )
         .unwrap();
 
@@ -100,12 +108,75 @@ enum Color {
 
         assert_eq!(
             r#enum.to_string(),
-            "\
+            "
+
 enum Color {
   Red
   Green
   Blue
-}"
+}
+
+"
+            .trim()
+        );
+    }
+
+    #[test]
+    fn test_print_enum() {
+        let enum_ = Enum {
+            name: "Color".to_owned(),
+            enumerators: vec![
+                "Red".to_owned(),
+                "Green".to_owned(),
+                "Blue".to_owned(),
+            ],
+        };
+
+        assert_eq!(
+            enum_.print(0),
+            "
+
+enum Color {
+  Red
+  Green
+  Blue
+}
+
+"
+            .trim()
+        );
+    }
+
+    #[test]
+    fn test_enum_from_ast_enum() {
+        let (ast_enum, _) = AstEnum::parse(
+            "
+
+enum Color {
+  Red
+  Green
+  Blue
+}
+
+"
+            .trim(),
+        )
+        .unwrap();
+
+        let r#enum = Enum::from(ast_enum);
+
+        assert_eq!(
+            r#enum.to_string(),
+            "
+
+enum Color {
+  Red
+  Green
+  Blue
+}
+
+"
+            .trim()
         );
     }
 }

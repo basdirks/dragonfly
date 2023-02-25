@@ -108,8 +108,8 @@ impl Node {
     /// assert_eq!(
     ///     QuerySchemaNode::parse_field("Foo { bar }"),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected camelCase identifier to start with lowercase \
-    ///                   character"
+    ///         message: "Expected camelCase identifier to start with lowercase \
+    ///                   character, found 'F'."
     ///             .to_string(),
     ///         actual: 'F',
     ///     }),

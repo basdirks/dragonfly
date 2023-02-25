@@ -30,7 +30,7 @@ use super::{
 ///     char_if(
 ///         "a",
 ///         |c| c.is_ascii_lowercase(),
-///         "character is not lowercase"
+///         "Expected lowercase character."
 ///     ),
 ///     Ok(('a', "".to_owned())),
 /// );
@@ -39,16 +39,20 @@ use super::{
 ///     char_if(
 ///         "A",
 ///         |c| c.is_ascii_lowercase(),
-///         "character is not lowercase"
+///         "Expected lowercase character."
 ///     ),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'A',
-///         message: "character is not lowercase".to_owned(),
+///         message: "Expected lowercase character.".to_owned(),
 ///     }),
 /// );
 ///
 /// assert_eq!(
-///     char_if("", |c| c.is_ascii_lowercase(), "character is not lowercase"),
+///     char_if(
+///         "",
+///         |c| c.is_ascii_lowercase(),
+///         "Expected lowercase character."
+///     ),
 ///     Err(ParseError::UnexpectedEof),
 /// );
 /// ```
@@ -98,7 +102,7 @@ pub fn char_if(
 ///     chars_if(
 ///         "abc",
 ///         |c| c.is_ascii_alphabetic(),
-///         "character is not alphabetic"
+///         "Expected alphabetic character."
 ///     ),
 ///     Ok(("abc".to_owned(), "".to_owned())),
 /// );
@@ -107,11 +111,11 @@ pub fn char_if(
 ///     chars_if(
 ///         "123",
 ///         |c| c.is_ascii_alphabetic(),
-///         "character is not alphabetic"
+///         "Expected alphabetic character."
 ///     ),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
-///         message: "character is not alphabetic".to_owned(),
+///         message: "Expected alphabetic character.".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -157,7 +161,7 @@ pub fn chars_if(
 ///     alphabetic("1"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
-///         message: "character is not alphabetic".to_owned(),
+///         message: "Expected alphabetic character.".to_owned(),
 ///     })
 /// );
 /// ```
@@ -165,7 +169,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_alphabetic(),
-        "character is not alphabetic",
+        "Expected alphabetic character.",
     )
 }
 
@@ -195,7 +199,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///     alphabetics("123"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '1',
-///         message: "character is not alphabetic".to_owned(),
+///         message: "Expected alphabetic character.".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -203,7 +207,7 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
     chars_if(
         input,
         |char| char.is_ascii_alphabetic(),
-        "character is not alphabetic",
+        "Expected alphabetic character.",
     )
 }
 
@@ -233,7 +237,7 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///     alphanumerics("_bc"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: '_',
-///         message: "character is not alphanumeric".to_owned(),
+///         message: "Expected alphanumeric character.".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -241,7 +245,7 @@ pub fn alphanumerics(input: &str) -> ParseResult<String> {
     chars_if(
         input,
         |char| char.is_ascii_alphanumeric(),
-        "character is not alphanumeric",
+        "Expected alphanumeric character.",
     )
 }
 
@@ -273,7 +277,7 @@ pub fn alphanumerics(input: &str) -> ParseResult<String> {
 ///     alphanumeric(" "),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: ' ',
-///         message: "character is not alphanumeric".to_owned(),
+///         message: "Expected alphanumeric character.".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -281,7 +285,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_alphanumeric(),
-        "character is not alphanumeric",
+        "Expected alphanumeric character.",
     )
 }
 
@@ -311,7 +315,7 @@ pub fn alphanumeric(input: &str) -> ParseResult<char> {
 ///     digit("a"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
-///         message: "character is not a decimal digit".to_owned(),
+///         message: "Expected decimal digit.".to_owned(),
 ///     }),
 /// );
 /// ```
@@ -319,7 +323,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_digit(),
-        "character is not a decimal digit",
+        "Expected decimal digit.",
     )
 }
 
@@ -349,7 +353,7 @@ pub fn digit(input: &str) -> ParseResult<char> {
 ///     lowercase("A"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'A',
-///         message: "character is not lowercase".to_owned(),
+///         message: "Expected lowercase character.".to_owned(),
 ///     })
 /// );
 /// ```
@@ -357,7 +361,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_lowercase(),
-        "character is not lowercase",
+        "Expected lowercase character.",
     )
 }
 
@@ -387,7 +391,7 @@ pub fn lowercase(input: &str) -> ParseResult<char> {
 ///     uppercase("a"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
-///         message: "character is not uppercase".to_owned(),
+///         message: "Expected uppercase character.".to_owned(),
 ///     })
 /// );
 /// ```
@@ -395,7 +399,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_uppercase(),
-        "character is not uppercase",
+        "Expected uppercase character.",
     )
 }
 
@@ -428,7 +432,7 @@ pub fn uppercase(input: &str) -> ParseResult<char> {
 ///     space("a"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'a',
-///         message: "character is not whitespace".to_owned(),
+///         message: "Expected whitespace character.".to_owned(),
 ///     })
 /// );
 /// ```
@@ -436,7 +440,7 @@ pub fn space(input: &str) -> ParseResult<char> {
     char_if(
         input,
         |char| char.is_ascii_whitespace(),
-        "character is not whitespace",
+        "Expected whitespace character.",
     )
 }
 

@@ -540,9 +540,190 @@ impl Ast {
     ///
     /// assert_eq!(
     ///     Ast::parse(&input),
-    ///     Err(ParseError::CustomError {
-    ///         message: "Component Home already defined".to_owned(),
-    ///         input: "component Home {\n  path: Index\n}".to_owned(),
+    ///     Err(ParseError::Custom {
+    ///         message: "Component `Home` already defined.".to_owned(),
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// Model names must be unique:
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::Ast,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// model Image {
+    ///   title: String
+    ///   country: Country
+    ///   category: Category
+    /// }
+    ///
+    /// model Image {
+    ///   file: String
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Model `Image` already defined.".to_owned(),
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// Component names must be unique:
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::Ast,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// component Home {
+    ///   path: Home
+    /// }
+    ///
+    /// component Home {
+    ///   path: Index
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Component `Home` already defined.".to_owned(),
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// Enum names must be unique:
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::Ast,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// enum Category {
+    ///   Architecture
+    ///   Bollard
+    ///   Chevron
+    /// }
+    ///
+    /// enum Category {
+    ///   TrafficLight
+    ///   TrafficSign
+    ///   UtilityPole
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Enum `Category` already defined.".to_owned(),
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// Query names must be unique:
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::Ast,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// query images: [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }
+    ///
+    /// query images: [Image] {
+    ///   image {
+    ///     category
+    ///   }
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Query `images` already defined.".to_owned(),
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// Route paths must be unique:
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::Ast,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// route / {
+    ///   root: Home
+    ///   title: Home
+    /// }
+    ///
+    /// route / {
+    ///   root: Index
+    ///   title: Index
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Route with path `/` already defined.".to_owned(),
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::Ast,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// asset catalogue {
+    ///   path: /catalogue.pdf
+    ///   type: pdf
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Expected a component, model, query, enum or page."
+    ///             .to_owned(),
     ///     })
     /// );
     /// ```
@@ -557,9 +738,8 @@ impl Ast {
                 let name = declaration.name.clone();
 
                 if ast.components.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::CustomError {
-                        message: format!("Component {name} already defined"),
-                        input,
+                    return Err(ParseError::Custom {
+                        message: format!("Component `{name}` already defined."),
                     });
                 }
 
@@ -570,9 +750,8 @@ impl Ast {
                 let name = declaration.name.clone();
 
                 if ast.models.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::CustomError {
-                        message: format!("Model {name} already defined"),
-                        input,
+                    return Err(ParseError::Custom {
+                        message: format!("Model `{name}` already defined."),
                     });
                 }
 
@@ -583,9 +762,8 @@ impl Ast {
                 let name = declaration.name.clone();
 
                 if ast.queries.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::CustomError {
-                        message: format!("Query {name} already defined"),
-                        input,
+                    return Err(ParseError::Custom {
+                        message: format!("Query `{name}` already defined."),
                     });
                 }
 
@@ -595,9 +773,8 @@ impl Ast {
                 let name = declaration.name.clone();
 
                 if ast.enums.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::CustomError {
-                        message: format!("Enum {name} already defined"),
-                        input,
+                    return Err(ParseError::Custom {
+                        message: format!("Enum `{name}` already defined."),
                     });
                 }
 
@@ -608,20 +785,19 @@ impl Ast {
                 let path = declaration.path.clone();
 
                 if ast.routes.insert(path.clone(), declaration).is_some() {
-                    return Err(ParseError::CustomError {
+                    return Err(ParseError::Custom {
                         message: format!(
-                            "Route with path {path} already defined"
+                            "Route with path `{path}` already defined."
                         ),
-                        input,
                     });
                 }
 
                 input = new_input;
             } else {
-                return Err(ParseError::CustomError {
-                    message: "expected a component, model, query, enum or page"
+                return Err(ParseError::Custom {
+                    message: "Expected a component, model, query, enum or \
+                              page."
                         .to_owned(),
-                    input,
                 });
             }
 
@@ -653,9 +829,82 @@ impl Ast {
     ///   query is not a reference to a known model.
     /// * Returns `TypeError::UnknownRouteRoot` if the root of any route is not
     ///   a reference to a known component.
-    /// * Returns `TypeError::InvalidModelFieldType` if the type of any model
+    /// * Returns `TypeError::UnknownModelFieldType` if the type of any model
     ///   field is not a primitive, a reference to a known enum or model, or an
     ///   array of any such a type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Ast,
+    ///     Field,
+    ///     Scalar,
+    ///     Type,
+    ///     TypeError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// model Post {
+    ///   title: String
+    ///   tags: [Tag]
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// let ast = Ast::parse(&input).unwrap().0;
+    ///
+    /// assert_eq!(
+    ///     ast.check(),
+    ///     Err(TypeError::UnknownModelFieldType {
+    ///         model_name: "Post".to_owned(),
+    ///         field: Field {
+    ///             name: "tags".to_owned(),
+    ///             r#type: Type::Array(Scalar::Reference("Tag".to_owned()))
+    ///         },
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Ast,
+    ///     TypeError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// model Post {
+    ///   title: String
+    /// }
+    ///
+    /// query posts($title: String): [Post] {
+    ///   post {
+    ///     title
+    ///   }
+    ///   where {
+    ///     posts {
+    ///       title {
+    ///         equals: $title
+    ///       }
+    ///     }
+    ///   }
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     Ast::parse(&input).unwrap().0.check(),
+    ///     Err(TypeError::IncompatibleQueryRootNodes {
+    ///         query_name: "posts".to_owned(),
+    ///         where_root: "posts".to_owned(),
+    ///         schema_root: "post".to_owned(),
+    ///     })
+    /// );
+    /// ```
     pub fn check(&self) -> Result<(), TypeError> {
         self.check_entities()?;
         self.check_types()?;

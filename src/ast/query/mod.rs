@@ -99,9 +99,8 @@ impl ReturnType {
                 Ok((Self::Array(name), input))
             }
             _ => {
-                Err(ParseError::CustomError {
-                    message: "expected return type".to_owned(),
-                    input,
+                Err(ParseError::Custom {
+                    message: "Expected return type.".to_owned(),
                 })
             }
         }

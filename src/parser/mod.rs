@@ -162,7 +162,7 @@ pub fn between<T>(
 /// assert_eq!(
 ///     char("a", 'b'),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character 'b', found 'a'".to_owned(),
+///         message: "Expected character 'b', found 'a'.".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -182,7 +182,7 @@ pub fn char(
             } else {
                 Err(ParseError::UnexpectedChar {
                     message: format!(
-                        "expected character '{expected}', found '{actual}'"
+                        "Expected character '{expected}', found '{actual}'."
                     ),
                     actual,
                 })
@@ -343,7 +343,7 @@ pub fn many<T>(
 /// assert_eq!(
 ///     many1("123", alphabetic),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "character is not alphabetic".to_owned(),
+///         message: "Expected alphabetic character.".to_owned(),
 ///         actual: '1',
 ///     })
 /// );
@@ -533,7 +533,7 @@ pub fn count<T>(
 /// assert_eq!(
 ///     many_once("abc", &[char!('a'), char!('b'), char!('d')]),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character 'd', found 'c'".to_owned(),
+///         message: "Expected character 'd', found 'c'.".to_owned(),
 ///         actual: 'c',
 ///     })
 /// );
@@ -556,7 +556,7 @@ pub fn count<T>(
 /// assert_eq!(
 ///     many_once("abc", &[char!('a'), char!('a')]),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character 'a', found 'b'".to_owned(),
+///         message: "Expected character 'a', found 'b'.".to_owned(),
 ///         actual: 'b',
 ///     })
 /// );

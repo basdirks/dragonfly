@@ -90,6 +90,30 @@ impl Model {
     ///
     /// assert_eq!(Model::parse(input), Ok((expected, "".to_owned())));
     /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::{
+    ///         Field,
+    ///         Model,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "model Foo {
+    ///   bar: String
+    ///   bar: Int
+    /// }";
+    ///
+    /// assert_eq!(
+    ///     Model::parse(input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Duplicate model field with name `bar`.".to_owned()
+    ///     }),
+    /// );
+    /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "model")?;
         let (_, input) = spaces(&input)?;
@@ -104,11 +128,13 @@ impl Model {
 
         while let Ok((field, new_input)) = Field::parse(&input) {
             let (_, new_input) = spaces(&new_input)?;
+            let name = field.name.clone();
 
-            if fields.insert(field.name.clone(), field).is_some() {
-                return Err(ParseError::CustomError {
-                    message: "duplicate model field".to_owned(),
-                    input: input.clone(),
+            if fields.insert(name.clone(), field.clone()).is_some() {
+                return Err(ParseError::Custom {
+                    message: format!(
+                        "Duplicate model field with name `{name}`.",
+                    ),
                 });
             }
 

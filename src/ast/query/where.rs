@@ -104,9 +104,8 @@ impl Where {
     ///
     /// assert_eq!(
     ///     QueryWhere::parse_conditions(input),
-    ///     Err(ParseError::CustomError {
-    ///         message: "a condition must refer to a field".to_owned(),
-    ///         input: "contains: $foo".to_owned(),
+    ///     Err(ParseError::Custom {
+    ///         message: "A condition must refer to a field.".to_owned(),
     ///     })
     /// );
     /// ```
@@ -149,9 +148,9 @@ impl Where {
             })(&input)
             {
                 if field_path.is_empty() {
-                    return Err(ParseError::CustomError {
-                        message: "a condition must refer to a field".to_owned(),
-                        input: input.clone(),
+                    return Err(ParseError::Custom {
+                        message: "A condition must refer to a field."
+                            .to_owned(),
                     });
                 }
 
@@ -289,9 +288,8 @@ impl Where {
             match brace_close(input) {
                 Ok((_, input)) => Ok(((), input)),
                 _ => {
-                    Err(ParseError::CustomError {
-                        message: format!("expected closing brace for {name}."),
-                        input: input.to_owned(),
+                    Err(ParseError::Custom {
+                        message: format!("Expected closing brace for {name}."),
                     })
                 }
             }

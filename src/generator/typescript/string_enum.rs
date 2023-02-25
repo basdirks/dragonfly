@@ -225,4 +225,62 @@ mod tests {
     }"
         );
     }
+
+    #[test]
+    fn test_display_variant() {
+        assert_eq!(
+            Variant {
+                name: "France".to_owned(),
+                value: "France".to_owned()
+            }
+            .to_string(),
+            "France = \"France\""
+        );
+    }
+
+    #[test]
+    fn test_enum_from_ast_enum() {
+        assert_eq!(
+            StringEnum::from(AstEnum {
+                name: "CountryName".to_owned(),
+                variants: vec![
+                    "France".to_owned(),
+                    "Germany".to_owned(),
+                    "Italy".to_owned(),
+                    "Spain".to_owned(),
+                    "UnitedKingdom".to_owned(),
+                    "UnitedStates".to_owned(),
+                ]
+            }),
+            StringEnum {
+                identifier: "CountryName".to_owned(),
+                variants: vec![
+                    Variant {
+                        name: "France".to_owned(),
+                        value: "France".to_owned()
+                    },
+                    Variant {
+                        name: "Germany".to_owned(),
+                        value: "Germany".to_owned()
+                    },
+                    Variant {
+                        name: "Italy".to_owned(),
+                        value: "Italy".to_owned()
+                    },
+                    Variant {
+                        name: "Spain".to_owned(),
+                        value: "Spain".to_owned()
+                    },
+                    Variant {
+                        name: "UnitedKingdom".to_owned(),
+                        value: "UnitedKingdom".to_owned()
+                    },
+                    Variant {
+                        name: "UnitedStates".to_owned(),
+                        value: "UnitedStates".to_owned()
+                    },
+                ]
+            }
+        );
+    }
 }

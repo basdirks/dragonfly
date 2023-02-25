@@ -65,8 +65,8 @@ impl Field {
     /// assert_eq!(
     ///     Field::parse(input),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected camelCase identifier to start with lowercase \
-    ///                   character"
+    ///         message: "Expected camelCase identifier to start with lowercase \
+    ///                   character, found 'B'."
     ///             .to_string(),
     ///         actual: 'B'
     ///     })
@@ -88,7 +88,7 @@ impl Field {
     /// assert_eq!(
     ///     Field::parse(input),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected character ':', found '='".to_owned(),
+    ///         message: "Expected character ':', found '='.".to_owned(),
     ///         actual: '=',
     ///     })
     /// );
@@ -111,5 +111,23 @@ impl Display for Field {
         let Self { name, r#type } = self;
 
         write!(f, "{name}: {type}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        super::*,
+        crate::ast::Scalar,
+    };
+
+    #[test]
+    fn test_display() {
+        let field = Field {
+            name: "foo".to_owned(),
+            r#type: Type::Scalar(Scalar::String),
+        };
+
+        assert_eq!(field.to_string(), "foo: String");
     }
 }

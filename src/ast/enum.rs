@@ -66,8 +66,8 @@ impl Enum {
     /// assert_eq!(
     ///     Enum::parse(input),
     ///     Err(ParseError::UnexpectedChar {
-    ///         message: "expected segment of PascalCase identifier to start with \
-    ///                   uppercase character"
+    ///         message: "Expected segment of PascalCase identifier to start with \
+    ///                   uppercase character, found 'b'."
     ///             .to_string(),
     ///         actual: 'b'
     ///     })
@@ -87,9 +87,8 @@ impl Enum {
     ///
     /// assert_eq!(
     ///     Enum::parse(input),
-    ///     Err(ParseError::CustomError {
-    ///         message: "duplicate enum variant".to_owned(),
-    ///         input: "\n}".to_owned()
+    ///     Err(ParseError::Custom {
+    ///         message: "Duplicate enum variant with name `Bar`.".to_owned(),
     ///     })
     /// );
     /// ```
@@ -107,11 +106,16 @@ impl Enum {
             Ok((variant, input))
         })?;
 
-        if variants.len() != variants.iter().collect::<HashSet<_>>().len() {
-            return Err(ParseError::CustomError {
-                message: "duplicate enum variant".to_owned(),
-                input,
-            });
+        let mut unique = HashSet::new();
+
+        for variant in &variants {
+            if !unique.insert(variant) {
+                return Err(ParseError::Custom {
+                    message: format!(
+                        "Duplicate enum variant with name `{variant}`."
+                    ),
+                });
+            }
         }
 
         let (_, input) = spaces(&input)?;

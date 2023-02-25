@@ -356,4 +356,52 @@ model User {
 }"
         );
     }
+
+    #[test]
+    fn test_field_type_from_string() {
+        assert_eq!(
+            FieldType::from(AstScalar::String),
+            FieldType::Name("String".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_field_type_from_int() {
+        assert_eq!(
+            FieldType::from(AstScalar::Int),
+            FieldType::Name("Int".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_field_type_from_float() {
+        assert_eq!(
+            FieldType::from(AstScalar::Float),
+            FieldType::Name("Float".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_field_type_from_boolean() {
+        assert_eq!(
+            FieldType::from(AstScalar::Boolean),
+            FieldType::Name("Boolean".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_field_type_from_datetime() {
+        assert_eq!(
+            FieldType::from(AstScalar::DateTime),
+            FieldType::Name("DateTime".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_field_type_from_reference() {
+        assert_eq!(
+            FieldType::from(AstScalar::Reference("User".to_owned())),
+            FieldType::Name("User".to_owned())
+        );
+    }
 }

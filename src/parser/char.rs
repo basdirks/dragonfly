@@ -28,7 +28,7 @@ use super::{
 /// assert_eq!(
 ///     brace_open("}"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '{', found '}'".to_owned(),
+///         message: "Expected character '{', found '}'.".to_owned(),
 ///         actual: '}'
 ///     })
 /// );
@@ -62,7 +62,7 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     brace_close("{"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '}', found '{'".to_owned(),
+///         message: "Expected character '}', found '{'.".to_owned(),
 ///         actual: '{'
 ///     })
 /// );
@@ -96,7 +96,7 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     hyphen("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '-', found 'a'".to_owned(),
+///         message: "Expected character '-', found 'a'.".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -130,7 +130,7 @@ pub fn hyphen(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     forward_slash("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '/', found 'a'".to_owned(),
+///         message: "Expected character '/', found 'a'.".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -163,7 +163,7 @@ pub fn forward_slash(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     colon("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character ':', found 'a'".to_owned(),
+///         message: "Expected character ':', found 'a'.".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -197,7 +197,7 @@ pub fn colon(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     paren_open(")"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '(', found ')'".to_owned(),
+///         message: "Expected character '(', found ')'.".to_owned(),
 ///         actual: ')'
 ///     })
 /// );
@@ -231,7 +231,7 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     paren_close("("),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character ')', found '('".to_owned(),
+///         message: "Expected character ')', found '('.".to_owned(),
 ///         actual: '('
 ///     })
 /// );
@@ -265,7 +265,7 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     dollar("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '$', found 'a'".to_owned(),
+///         message: "Expected character '$', found 'a'.".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -299,7 +299,7 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     underscore("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character '_', found 'a'".to_owned(),
+///         message: "Expected character '_', found 'a'.".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
@@ -332,7 +332,7 @@ pub fn underscore(input: &str) -> ParseResult<char> {
 /// assert_eq!(
 ///     comma("a"),
 ///     Err(ParseError::UnexpectedChar {
-///         message: "expected character ',', found 'a'".to_owned(),
+///         message: "Expected character ',', found 'a'.".to_owned(),
 ///         actual: 'a'
 ///     })
 /// );
