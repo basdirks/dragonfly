@@ -14,17 +14,11 @@ See also:
 
 # Roadmap
 
-- [ ] Align columns in PSL output.
 - [ ] Generate foreign keys in PSL.
-- [ ] CLI: generate GQL.
-- [ ] Support additional useful types:
-  - [ ] `Email`
-  - [ ] `URL`
-  - [ ] `Currency`
 - [ ] Generate full GraphQL queries.
+  - [ ] CLI: generate GQL.
 - [ ] Support aggregate queries :)
 - [ ] Create `Path` values as soon as possible.
-- [ ] Wrap `ParseError` in `SyntaxError`.
 
 # Example application
 

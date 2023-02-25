@@ -995,7 +995,69 @@ impl Ast {
     /// Returns `TypeError::IncompatibleQueryOperator` if the types of the
     /// condition operands are not compatible with one another or with the type
     /// of condition.
-    #[allow(clippy::too_many_lines)]
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::{
+    ///     Ast,
+    ///     FieldPath,
+    ///     Query,
+    ///     QueryCondition,
+    ///     QueryOperator,
+    ///     Scalar,
+    ///     Type,
+    ///     TypeError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// model Post {
+    ///   title: String
+    ///   tags: [Tag]
+    /// }
+    ///
+    /// enum Tag {
+    ///   A
+    ///   B
+    /// }
+    ///
+    /// query posts($title: String): [Post] {
+    ///   post {
+    ///     title
+    ///     tags
+    ///   }
+    ///   where {
+    ///     post {
+    ///       title {
+    ///         equals: $title
+    ///       }
+    ///       tags {
+    ///         contains: $title
+    ///       }
+    ///     }
+    ///   }
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// let ast = Ast::parse(&input).unwrap().0;
+    ///
+    /// assert_eq!(
+    ///     ast.check_query_condition_types(&ast.queries["posts"]),
+    ///     Err(TypeError::IncompatibleQueryOperator {
+    ///         query_name: "posts".to_owned(),
+    ///         condition: QueryCondition {
+    ///             field_path: FieldPath::new(&["tags"]),
+    ///             operator: QueryOperator::Contains,
+    ///             argument: "title".to_owned(),
+    ///         },
+    ///         field_type: Type::Array(Scalar::Reference("Tag".to_owned())),
+    ///         argument_type: Type::Scalar(Scalar::String),
+    ///     })
+    /// );
+    /// ```
     pub fn check_query_condition_types(
         &self,
         query: &Query,
@@ -1017,95 +1079,16 @@ impl Ast {
                 if let Some(argument) = argument_map.get(&condition.argument) {
                     let argument_type = argument.r#type.clone();
 
-                    // TODO: move to separate function
-                    match (
-                        (argument_type.clone(), field_type.clone()),
-                        condition.operator
-                    ) {
-                        // Values of the same primitive type can be compared for
-                        // equality.
-                        (
-                            (
-                                Type::Scalar(Scalar::Boolean),
-                                Type::Scalar(Scalar::Boolean),
-                            )
-                            | (
-                                Type::Scalar(Scalar::DateTime),
-                                Type::Scalar(Scalar::DateTime),
-                            )
-                            | (
-                                Type::Scalar(Scalar::Float),
-                                Type::Scalar(Scalar::Float),
-                            )
-                            | (
-                                Type::Scalar(Scalar::Int),
-                                Type::Scalar(Scalar::Int),
-                            )
-                            | (
-                                Type::Scalar(Scalar::String),
-                                Type::Scalar(Scalar::String),
-                            ),
-                            QueryOperator::Equals { .. },
-                        ) |
-                        // A primitive value can be contained in an array of
-                        // the same type.
-                        (
-                            (
-                                Type::Scalar(Scalar::Boolean),
-                                Type::Array(Scalar::Boolean),
-                            )
-                            | (
-                                Type::Scalar(Scalar::DateTime),
-                                Type::Array(Scalar::DateTime),
-                            )
-                            | (
-                                Type::Scalar(Scalar::Float),
-                                Type::Array(Scalar::Float),
-                            )
-                            | (
-                                Type::Scalar(Scalar::Int),
-                                Type::Array(Scalar::Int),
-                            )
-                            | (
-                                Type::Scalar(Scalar::String),
-                                Type::Array(Scalar::String),
-                            ),
-                            QueryOperator::Contains { .. },
-                        ) => {
-                            continue;
-                        }
-                        // An enum variant can be contained in an array of the
-                        // same enum.
-                        (
-                            (
-                                Type::Scalar(Scalar::Reference(lhs)),
-                                Type::Array(Scalar::Reference(rhs)),
-                            ),
-                            QueryOperator::Contains { .. },
-                        ) |
-                        // Enum variants can be compared for equality if they
-                        // are from the same, existing enum.
-                        (
-                            (
-                                Type::Scalar(Scalar::Reference(lhs)),
-                                Type::Scalar(Scalar::Reference(rhs)),
-                            ),
-                            QueryOperator::Equals { .. },
-                        ) => {
-                            if lhs == rhs && self.enums.contains_key(&lhs) {
-                                continue;
-                            }
-                        }
-                        _ => {
-                            return Err(
-                                TypeError::IncompatibleQueryOperator {
-                                    query_name: query.name.clone(),
-                                    condition: condition.clone(),
-                                    argument_type,
-                                    field_type,
-                                },
-                            )
-                        }
+                    if !condition
+                        .operator
+                        .check_operands(&field_type, &argument_type)
+                    {
+                        return Err(TypeError::IncompatibleQueryOperator {
+                            condition: condition.clone(),
+                            query_name: query.name.clone(),
+                            field_type,
+                            argument_type,
+                        });
                     }
                 }
             }
@@ -1295,8 +1278,8 @@ impl Ast {
     /// model Country {
     ///   id        Int       @id @default(autoincrement())
     ///   createdAt DateTime  @default(now())
-    ///   name      String
     ///   continent Continent
+    ///   name      String
     /// }
     ///
     /// enum Continent {
