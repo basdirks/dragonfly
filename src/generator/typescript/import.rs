@@ -4,7 +4,7 @@ use {
 };
 
 /// A named import specifier.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum NamedSpecifier {
     /// An import of a named export with an alias.
     AliasedName {
@@ -32,7 +32,7 @@ impl Display for NamedSpecifier {
 }
 
 /// An import declaration.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Import {
     /// A named import.
     Named {

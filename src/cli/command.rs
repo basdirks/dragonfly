@@ -1,5 +1,5 @@
 /// A command.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Command {
     /// Show the general help message.
     Help,

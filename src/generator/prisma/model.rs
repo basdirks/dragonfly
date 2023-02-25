@@ -24,7 +24,7 @@ use {
 };
 
 /// A field type.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum FieldType {
     /// A name.
     Name(String),
@@ -58,7 +58,7 @@ impl From<AstScalar> for FieldType {
 }
 
 /// A field.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Field {
     /// The name of the field. Must adhere to the following regular expression:
     /// [A-Za-z][A-Za-z0-9_]*. Must start with an alphabetic character. Usually
@@ -153,7 +153,7 @@ impl Field {
 }
 
 /// A Prisma model.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Model {
     /// The name of the model. Must adhere to `[A-Za-z][A-Za-z0-9_]*`. Usually
     /// pascal case. May not be a reserved Prisma keyword or a JavaScript

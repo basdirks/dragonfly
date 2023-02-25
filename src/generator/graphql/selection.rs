@@ -11,7 +11,7 @@ use {
 };
 
 /// A selection node.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Selection {
     /// A field.
     Field(Field),

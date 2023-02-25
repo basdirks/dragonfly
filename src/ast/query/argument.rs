@@ -15,7 +15,7 @@ use {
 };
 
 /// A query argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Argument {
     /// The name of the argument. Used inside the conditions of
     /// the where clause.

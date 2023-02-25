@@ -20,7 +20,7 @@ use {
 };
 
 /// The conditions that queried data must meet.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Where {
     /// The name of the root node.
     pub name: String,

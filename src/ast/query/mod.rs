@@ -47,7 +47,7 @@ pub mod r#where;
 /// The return type of a query.
 ///
 /// Must be a model or an array of such a type.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum ReturnType {
     /// The name of a model.
     Model(String),
@@ -125,7 +125,7 @@ impl ReturnType {
 }
 
 /// A query.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Query {
     /// The name of the query. Used as the name of the generated function.
     pub name: String,

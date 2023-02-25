@@ -16,7 +16,7 @@ use {
 };
 
 /// A route describes access to a component.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Route {
     /// The path of the route.
     pub path: String,

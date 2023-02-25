@@ -13,7 +13,7 @@ use {
 };
 
 /// A JavaScript literal.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Literal {
     /// A BigInt literal: a number followed by `n`.
     BigInt(String),
@@ -40,7 +40,7 @@ impl Display for Literal {
 }
 
 /// A TypeScript type keyword.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Keyword {
     /// The `any` type.
     Any,
@@ -94,7 +94,7 @@ impl Display for Keyword {
 }
 
 /// A function argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct FunctionArgument {
     /// The name of the argument.
     pub name: String,
@@ -112,7 +112,7 @@ impl Display for FunctionArgument {
 }
 
 /// An object literal property.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct ObjectLiteralProperty {
     /// The name of the property.
     pub name: String,
@@ -130,7 +130,7 @@ impl Display for ObjectLiteralProperty {
 }
 
 /// A TypeScript type.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Type {
     /// An array type.
     Array(Box<Type>),

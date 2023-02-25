@@ -4,7 +4,7 @@ use {
 };
 
 /// A function.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Function {
     /// The name of the function.
     pub name: String,
@@ -22,7 +22,7 @@ impl Display for Function {
 }
 
 /// A value.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Value {
     /// An array of values.
     Array(Vec<Value>),
@@ -56,7 +56,7 @@ impl Display for Value {
 }
 
 /// A key value pair.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct KeyValuePair {
     /// The key.
     pub key: String,

@@ -7,7 +7,7 @@ use {
 };
 
 /// GraphQL types.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Type {
     /// A list type.
     List(Box<Type>),

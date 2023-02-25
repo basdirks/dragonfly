@@ -12,7 +12,7 @@ use crate::parser::{
 };
 
 /// A JSX component.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Component {
     /// The name of the component.
     pub name: String,

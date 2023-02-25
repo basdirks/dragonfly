@@ -21,7 +21,7 @@ use {
 };
 
 /// A variable definition.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Variable {
     /// The name of the variable.
     pub name: String,
@@ -64,7 +64,7 @@ impl Display for Variable {
 }
 
 /// A GraphQL query.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Query {
     /// The directives of the query.
     pub directives: Vec<Directive>,

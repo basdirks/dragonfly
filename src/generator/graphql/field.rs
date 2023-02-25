@@ -13,7 +13,7 @@ use {
 };
 
 /// A selection field.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Field {
     /// The name of the field.
     pub name: String,

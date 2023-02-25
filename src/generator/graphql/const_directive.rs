@@ -5,7 +5,7 @@ use {
 };
 
 /// A constant directive.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Directive {
     /// The name of the directive.
     pub name: String,

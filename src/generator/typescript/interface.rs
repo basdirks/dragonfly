@@ -15,7 +15,7 @@ use {
 };
 
 /// An interface property.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Property {
     /// The name of the property. Usually camel case.
     pub identifier: String,
@@ -44,7 +44,7 @@ impl Print for Property {
 }
 
 /// An expression with type arguments.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct ExpressionWithTypeArguments {
     /// The name of the expression. Usually pascal case.
     pub identifier: String,
@@ -71,7 +71,7 @@ impl Display for ExpressionWithTypeArguments {
 }
 
 /// A type parameter.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct TypeParameter {
     /// The name of the type parameter.
     pub identifier: String,
@@ -102,7 +102,7 @@ impl Display for TypeParameter {
 }
 
 /// An interface declaration.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Interface {
     /// The types that the interface extends.
     ///

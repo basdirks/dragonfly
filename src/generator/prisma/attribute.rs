@@ -9,7 +9,7 @@ use {
 };
 
 /// A model attribute argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Argument {
     /// A key value pair.
     KeyValuePair(KeyValuePair),
@@ -35,7 +35,7 @@ impl Display for Argument {
 }
 
 /// A model attribute.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Block {
     /// The name of the group to which the attribute belongs.
     pub group: Option<String>,
@@ -67,7 +67,7 @@ impl Display for Block {
 }
 
 /// A field attribute.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Field {
     /// The name of the group to which the attribute belongs.
     pub group: Option<String>,

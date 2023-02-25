@@ -385,7 +385,6 @@ pub fn many1<T>(
 ///     tag,
 /// };
 ///
-/// #[derive(Debug, Eq, PartialEq)]
 /// enum Choice {
 ///     A,
 ///     B,

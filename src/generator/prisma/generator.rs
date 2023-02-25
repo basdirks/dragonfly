@@ -7,7 +7,7 @@ use {
 };
 
 /// A generator provider.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub enum Provider {
     /// A file path.
     File(String),
@@ -33,7 +33,7 @@ impl Display for Provider {
 }
 
 /// A binary target.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub enum BinaryTarget {
     /// `linux-musl`
     ///
@@ -157,7 +157,7 @@ impl Display for BinaryTarget {
 }
 
 /// An engine type.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub enum EngineType {
     /// A library.
     #[default]
@@ -183,7 +183,7 @@ impl Display for EngineType {
 }
 
 /// Preview features (updated 4.10.0).
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PreviewFeature {
     /// `clientExtensions`, since 3.6.0.
     ClientExtensions,
@@ -241,7 +241,7 @@ impl Display for PreviewFeature {
 }
 
 /// A generator.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Generator {
     /// The name of the generator.
     pub name: String,

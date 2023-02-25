@@ -7,7 +7,7 @@ use {
 };
 
 /// How referential integrity is enforced.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
 pub enum RelationMode {
     /// Foreign keys are enforced by the database.
     ForeignKeys,
@@ -32,7 +32,7 @@ impl Display for RelationMode {
 }
 
 /// A data source provider.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub enum Provider {
     /// A PostgreSQL database.
     PostgreSql {
@@ -313,7 +313,7 @@ impl Provider {
 }
 
 /// A Prisma data source.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct DataSource {
     /// The name of the data source.
     pub name: String,

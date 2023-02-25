@@ -23,7 +23,7 @@ use {
 ///     Germany = "Germany",
 /// }
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Variant {
     /// The name of the variant. Must be unique within the enum. Usually
     /// pascal case.
@@ -54,7 +54,7 @@ impl Display for Variant {
 }
 
 /// A TypeScript enum declaration.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct StringEnum {
     /// The name of the enum.
     ///

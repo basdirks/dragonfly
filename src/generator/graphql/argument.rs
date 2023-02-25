@@ -4,7 +4,7 @@ use {
 };
 
 /// A field argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Argument {
     /// The name of the argument.
     pub name: String,

@@ -4,7 +4,7 @@ use {
 };
 
 /// A constant object field.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct ConstObjectField {
     /// The name of the field.
     pub name: String,
@@ -22,7 +22,7 @@ impl Display for ConstObjectField {
 }
 
 /// A constant directive argument.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Argument {
     /// The name of the argument.
     pub name: String,
@@ -40,7 +40,7 @@ impl Display for Argument {
 }
 
 /// A constant value.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Const {
     /// A boolean constant.
     Boolean(bool),
@@ -83,7 +83,7 @@ impl Display for Const {
 }
 
 /// An object field.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct ObjectField {
     /// The name of the field.
     pub name: String,
@@ -101,7 +101,7 @@ impl Display for ObjectField {
 }
 
 /// A value.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Value {
     /// A boolean value.
     Boolean(bool),

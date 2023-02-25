@@ -10,7 +10,7 @@ use {
 };
 
 /// Type checking errors.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum TypeError {
     /// A query schema should contain at least one field, but the schema of
     /// this query is empty. An empty schema is not allowed because it would

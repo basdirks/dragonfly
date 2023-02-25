@@ -7,7 +7,7 @@ use {
 };
 
 /// An enumerated type.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Enum {
     /// The name of the enum.
     pub name: String,

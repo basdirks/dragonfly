@@ -11,7 +11,7 @@ use crate::parser::{
 };
 
 /// A schema node.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Node {
     /// A leaf node: a field.
     Field(String),
@@ -245,7 +245,7 @@ impl Node {
 }
 
 /// The structure of the data that the query should return.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Schema {
     /// The name of the root node.
     pub name: String,

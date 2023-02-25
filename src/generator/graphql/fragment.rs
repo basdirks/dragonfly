@@ -11,7 +11,7 @@ use {
 };
 
 /// A fragment spread.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Spread {
     /// The name of the fragment.
     pub name: String,
@@ -35,7 +35,7 @@ impl Print for Spread {
 }
 
 /// An inline fragment.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Inline {
     /// The type condition of the fragment.
     pub type_condition: String,

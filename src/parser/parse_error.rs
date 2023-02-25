@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 /// Low-level parsing errors.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum ParseError {
     /// A custom error.
     Custom {
