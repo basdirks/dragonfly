@@ -77,31 +77,6 @@ pub struct Field {
     pub arguments: Vec<Argument>,
 }
 
-impl Display for Field {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        let Self {
-            group,
-            name,
-            arguments,
-        } = self;
-
-        let group = group
-            .as_ref()
-            .map_or_else(String::new, |group| format!("{group}."));
-
-        let arguments = if arguments.is_empty() {
-            String::new()
-        } else {
-            format!("({})", comma_separated(arguments))
-        };
-
-        write!(f, "@{group}{name}{arguments}")
-    }
-}
-
 impl Field {
     /// Standard `@id` attribute.
     ///
@@ -143,6 +118,52 @@ impl Field {
                 parameters: vec![],
             })],
         }
+    }
+
+    /// Standard `@default(now)` attribute.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::attribute::Field;
+    ///
+    /// assert_eq!(Field::default_now().to_string(), "@default(now())");
+    /// ```
+    #[must_use]
+    pub fn default_now() -> Self {
+        Self {
+            group: None,
+            name: "default".to_owned(),
+            arguments: vec![Argument::Function(Function {
+                name: "now".to_owned(),
+                parameters: vec![],
+            })],
+        }
+    }
+}
+
+impl Display for Field {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        let Self {
+            group,
+            name,
+            arguments,
+        } = self;
+
+        let group = group
+            .as_ref()
+            .map_or_else(String::new, |group| format!("{group}."));
+
+        let arguments = if arguments.is_empty() {
+            String::new()
+        } else {
+            format!("({})", comma_separated(arguments))
+        };
+
+        write!(f, "@{group}{name}{arguments}")
     }
 }
 

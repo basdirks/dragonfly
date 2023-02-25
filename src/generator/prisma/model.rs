@@ -98,7 +98,7 @@ impl Field {
             r#type: FieldType::Name("DateTime".to_owned()),
             required: true,
             array: false,
-            attributes: vec![],
+            attributes: vec![attribute::Field::default_now()],
         }
     }
 
@@ -245,8 +245,7 @@ impl From<AstModel> for Model {
             fields: ast_fields,
         }: AstModel
     ) -> Self {
-        let mut fields =
-            vec![Field::id(), Field::created_at(), Field::updated_at()];
+        let mut fields = vec![Field::id(), Field::created_at()];
 
         for AstField { r#type, name } in ast_fields.values() {
             let (array, scalar) = match r#type.clone() {

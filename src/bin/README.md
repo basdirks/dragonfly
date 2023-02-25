@@ -130,7 +130,6 @@ $ cat out/prisma/application.prisma
 model Country {
   id Int @id @default(autoincrement())
   createdAt DateTime
-  updatedAt DateTime
   flag String
   domain String
   drivingSide DrivingSide
@@ -140,7 +139,6 @@ model Country {
 model Image {
   id Int @id @default(autoincrement())
   createdAt DateTime
-  updatedAt DateTime
   title String
   country Country
   category Category[]

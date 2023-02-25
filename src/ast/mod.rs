@@ -25,6 +25,10 @@ pub use self::{
 };
 use {
     crate::{
+        generator::prisma::{
+            Enum as PrismaEnum,
+            Model as PrismaModel,
+        },
         map,
         parser::{
             choice,
@@ -1257,5 +1261,73 @@ impl Ast {
             query_name: query_name.to_owned(),
             model_name: model_name.to_owned(),
         })
+    }
+
+    /// Print AST as a Prisma schema.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Ast;
+    ///
+    /// let input = "
+    ///
+    /// model Country {
+    ///    name: String
+    ///    continent: Continent
+    /// }
+    ///
+    /// enum Continent {
+    ///   Africa
+    ///   Antarctica
+    ///   Asia
+    ///   Australia
+    ///   Europe
+    ///   NorthAmerica
+    ///   SouthAmerica
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// let expected = "
+    ///
+    /// model Country {
+    ///   id        Int       @id @default(autoincrement())
+    ///   createdAt DateTime  @default(now())
+    ///   name      String
+    ///   continent Continent
+    /// }
+    ///
+    /// enum Continent {
+    ///   Africa
+    ///   Antarctica
+    ///   Asia
+    ///   Australia
+    ///   Europe
+    ///   NorthAmerica
+    ///   SouthAmerica
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// let ast = Ast::parse(input).unwrap().0;
+    ///
+    /// assert_eq!(ast.to_prisma_schema(), expected);
+    /// ```
+    #[must_use]
+    pub fn to_prisma_schema(&self) -> String {
+        let mut schema = Vec::new();
+
+        for model in self.models.values() {
+            schema.push(PrismaModel::from(model.clone()).to_string());
+        }
+
+        for r#enum in self.enums.values() {
+            schema.push(PrismaEnum::from(r#enum.clone()).to_string());
+        }
+
+        schema.join("\n\n")
     }
 }

@@ -3,10 +3,6 @@ use {
         ast::Ast,
         generator::{
             printer::Print,
-            prisma::{
-                Enum as PrismaEnum,
-                Model as PrismaModel,
-            },
             typescript::{
                 Enum as TypescriptEnum,
                 Interface as TypescriptInterface,
@@ -134,19 +130,8 @@ pub fn generate_prisma(
         })?;
     }
 
-    let mut source = String::new();
-
-    for model in ast.models.values() {
-        source.push_str(&PrismaModel::from(model).print(0));
-        source.push_str("\n\n");
-    }
-
-    for r#enum in ast.enums.values() {
-        source.push_str(&PrismaEnum::from(r#enum).print(0));
-        source.push_str("\n\n");
-    }
-
     let file = path.join(format!("application.{PRISMA_FILE_EXTENSION}"));
+    let source = ast.to_prisma_schema();
 
     write_to_file(&file, source)
 }
