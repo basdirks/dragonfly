@@ -1,40 +1,14 @@
 use {
     super::{
+        argument::Argument,
         Function,
-        KeyValuePair,
         Value,
     },
     crate::generator::printer::comma_separated,
     std::fmt::Display,
 };
 
-/// A model attribute argument.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Argument {
-    /// A key value pair.
-    KeyValuePair(KeyValuePair),
-    /// A value.
-    Value(Value),
-    /// A function.
-    Function(Function),
-}
-
-impl Display for Argument {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        match self {
-            Self::KeyValuePair(key_value_pair) => {
-                write!(f, "{key_value_pair}")
-            }
-            Self::Value(value) => write!(f, "{value}"),
-            Self::Function(function) => write!(f, "{function}"),
-        }
-    }
-}
-
-/// A model attribute.
+/// A block attribute.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Block {
     /// The name of the group to which the attribute belongs.
@@ -113,10 +87,13 @@ impl Field {
         Self {
             group: None,
             name: "default".to_owned(),
-            arguments: vec![Argument::Function(Function {
-                name: "autoincrement".to_owned(),
-                parameters: vec![],
-            })],
+            arguments: vec![Argument {
+                name: None,
+                value: Value::Function(Function {
+                    name: "autoincrement".to_owned(),
+                    parameters: vec![],
+                }),
+            }],
         }
     }
 
@@ -134,10 +111,13 @@ impl Field {
         Self {
             group: None,
             name: "default".to_owned(),
-            arguments: vec![Argument::Function(Function {
-                name: "now".to_owned(),
-                parameters: vec![],
-            })],
+            arguments: vec![Argument {
+                name: None,
+                value: Value::Function(Function {
+                    name: "now".to_owned(),
+                    parameters: vec![],
+                }),
+            }],
         }
     }
 }
@@ -172,35 +152,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_display_argument() {
-        assert_eq!(
-            Argument::KeyValuePair(KeyValuePair {
-                key: "foo".to_owned(),
-                value: Value::String("bar".to_owned()),
-            })
-            .to_string(),
-            "foo: bar"
-        );
-
-        assert_eq!(
-            Argument::Value(Value::String("foo".to_owned())).to_string(),
-            "foo"
-        );
-
-        assert_eq!(
-            Argument::Function(Function {
-                name: "foo".to_owned(),
-                parameters: vec![
-                    Value::String("bar".to_owned()),
-                    Value::String("baz".to_owned()),
-                ],
-            })
-            .to_string(),
-            "foo(bar, baz)"
-        );
-    }
-
-    #[test]
     fn test_display_block() {
         assert_eq!(
             Block {
@@ -227,15 +178,21 @@ mod tests {
                 group: None,
                 name: "foo".to_owned(),
                 arguments: vec![
-                    Argument::KeyValuePair(KeyValuePair {
-                        key: "foo".to_owned(),
-                        value: Value::String("bar".to_owned()),
-                    }),
-                    Argument::Value(Value::String("baz".to_owned())),
-                    Argument::Function(Function {
-                        name: "qux".to_owned(),
-                        parameters: vec![],
-                    }),
+                    Argument {
+                        name: Some("foo".to_owned()),
+                        value: Value::Keyword("bar".to_owned()),
+                    },
+                    Argument {
+                        name: None,
+                        value: Value::Keyword("baz".to_owned()),
+                    },
+                    Argument {
+                        name: None,
+                        value: Value::Function(Function {
+                            name: "qux".to_owned(),
+                            parameters: vec![],
+                        }),
+                    },
                 ],
             }
             .to_string(),
@@ -270,15 +227,21 @@ mod tests {
                 group: None,
                 name: "foo".to_owned(),
                 arguments: vec![
-                    Argument::KeyValuePair(KeyValuePair {
-                        key: "foo".to_owned(),
-                        value: Value::String("bar".to_owned()),
-                    }),
-                    Argument::Value(Value::String("baz".to_owned())),
-                    Argument::Function(Function {
-                        name: "qux".to_owned(),
-                        parameters: vec![],
-                    }),
+                    Argument {
+                        name: Some("foo".to_owned()),
+                        value: Value::Keyword("bar".to_owned()),
+                    },
+                    Argument {
+                        name: None,
+                        value: Value::Keyword("baz".to_owned()),
+                    },
+                    Argument {
+                        name: None,
+                        value: Value::Function(Function {
+                            name: "qux".to_owned(),
+                            parameters: vec![],
+                        }),
+                    },
                 ],
             }
             .to_string(),

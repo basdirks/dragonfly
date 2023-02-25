@@ -283,8 +283,8 @@ mod tests {
     use {
         super::*,
         crate::generator::prisma::{
-            attribute::Argument,
-            value::Value,
+            Argument,
+            Value,
         },
     };
 
@@ -296,8 +296,8 @@ mod tests {
             FieldType::Function(Function {
                 name: "unique".to_owned(),
                 parameters: vec![Value::Array(vec![
-                    Value::String("firstName".to_owned()),
-                    Value::String("lastName".to_owned()),
+                    Value::Keyword("firstName".to_owned()),
+                    Value::Keyword("lastName".to_owned()),
                 ])],
             })
             .to_string(),
@@ -318,10 +318,13 @@ mod tests {
                     attributes: vec![attribute::Field {
                         group: None,
                         name: "default".to_owned(),
-                        arguments: vec![Argument::Function(Function {
-                            name: "autoincrement".to_owned(),
-                            parameters: vec![],
-                        })],
+                        arguments: vec![Argument {
+                            name: None,
+                            value: Value::Function(Function {
+                                name: "autoincrement".to_owned(),
+                                parameters: vec![],
+                            }),
+                        }],
                     }],
                 },
                 Field {
@@ -346,19 +349,23 @@ mod tests {
                     attributes: vec![attribute::Field {
                         group: None,
                         name: "default".to_owned(),
-                        arguments: vec![Argument::Value(Value::String(
-                            "false".to_owned(),
-                        ))],
+                        arguments: vec![Argument {
+                            name: None,
+                            value: Value::Boolean(false),
+                        }],
                     }],
                 },
             ],
             attributes: vec![attribute::Block {
                 group: None,
                 name: "unique".to_owned(),
-                arguments: vec![Argument::Value(Value::Array(vec![
-                    Value::String("firstName".to_owned()),
-                    Value::String("lastName".to_owned()),
-                ]))],
+                arguments: vec![Argument {
+                    name: None,
+                    value: Value::Array(vec![
+                        Value::Keyword("firstName".to_owned()),
+                        Value::Keyword("lastName".to_owned()),
+                    ]),
+                }],
             }],
         };
 

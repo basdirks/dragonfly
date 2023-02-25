@@ -28,12 +28,12 @@ pub enum Value {
     Array(Vec<Value>),
     /// A boolean value.
     Boolean(bool),
+    /// A keyword.
+    Keyword(String),
     /// A function.
     Function(Function),
     /// A number.
     Number(String),
-    /// An array of relations.
-    RelationArray(Vec<String>),
     /// A string.
     String(String),
 }
@@ -47,29 +47,9 @@ impl Display for Value {
             Self::Array(values) => write!(f, "[{}]", comma_separated(values)),
             Self::Boolean(value) => write!(f, "{value}"),
             Self::Function(function) => write!(f, "{function}"),
-            Self::Number(value) | Self::String(value) => write!(f, "{value}"),
-            Self::RelationArray(values) => {
-                write!(f, "[{}]", comma_separated(values))
-            }
+            Self::Number(value) | Self::Keyword(value) => write!(f, "{value}"),
+            Self::String(value) => write!(f, "\"{value}\""),
         }
-    }
-}
-
-/// A key value pair.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct KeyValuePair {
-    /// The key.
-    pub key: String,
-    /// The value.
-    pub value: Value,
-}
-
-impl Display for KeyValuePair {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(f, "{}: {}", self.key, self.value)
     }
 }
 
@@ -85,7 +65,7 @@ mod tests {
                 Value::String("bar".to_owned()),
             ])
             .to_string(),
-            "[foo, bar]"
+            "[\"foo\", \"bar\"]"
         );
     }
 
@@ -112,28 +92,12 @@ mod tests {
     }
 
     #[test]
-    fn test_display_relation_array() {
-        assert_eq!(
-            Value::RelationArray(vec!["foo".to_owned(), "bar".to_owned()])
-                .to_string(),
-            "[foo, bar]"
-        );
-    }
-
-    #[test]
     fn test_display_string() {
-        assert_eq!(Value::String("foo".to_owned()).to_string(), "foo");
+        assert_eq!(Value::String("foo".to_owned()).to_string(), "\"foo\"");
     }
 
     #[test]
-    fn test_display_key_value_pair() {
-        assert_eq!(
-            KeyValuePair {
-                key: "foo".to_owned(),
-                value: Value::String("bar".to_owned()),
-            }
-            .to_string(),
-            "foo: bar"
-        );
+    fn test_display_keyword() {
+        assert_eq!(Value::Keyword("foo".to_owned()).to_string(), "foo");
     }
 }

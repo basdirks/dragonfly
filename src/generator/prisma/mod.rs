@@ -1,3 +1,5 @@
+/// Arguments.
+pub mod argument;
 /// Attributes.
 pub mod attribute;
 /// Data source definitions.
@@ -12,6 +14,7 @@ pub mod model;
 pub mod value;
 
 pub use {
+    argument::Argument,
     data_source::{
         DataSource,
         Provider as DataSourceProvider,
@@ -32,7 +35,6 @@ pub use {
     r#enum::Enum,
     value::{
         Function,
-        KeyValuePair,
         Value,
     },
 };

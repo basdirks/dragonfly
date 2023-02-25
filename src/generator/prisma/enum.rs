@@ -1,4 +1,5 @@
 use {
+    super::attribute::Block,
     crate::{
         ast::Enum as AstEnum,
         generator::printer::Print,
@@ -12,7 +13,9 @@ pub struct Enum {
     /// The name of the enum.
     pub name: String,
     /// The values of the enum.
-    pub enumerators: Vec<String>,
+    pub values: Vec<String>,
+    /// The attributes of the enum.
+    pub attributes: Vec<Block>,
 }
 
 impl Display for Enum {
@@ -20,15 +23,32 @@ impl Display for Enum {
         &self,
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
-        let Self { name, enumerators } = self;
+        let Self {
+            attributes,
+            name,
+            values,
+        } = self;
 
-        let enumerators = enumerators
+        let values = values
             .iter()
-            .map(|enumerator| format!("  {enumerator}"))
+            .map(|value| format!("  {value}"))
             .collect::<Vec<_>>()
             .join("\n");
 
-        write!(f, "enum {name} {{\n{enumerators}\n}}")
+        let attributes = if attributes.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "\n\n{}",
+                attributes
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            )
+        };
+
+        write!(f, "enum {name} {{\n{values}{attributes}\n}}")
     }
 }
 
@@ -45,10 +65,14 @@ impl From<AstEnum> for Enum {
     fn from(
         AstEnum {
             name,
-            variants: enumerators,
+            variants: values,
         }: AstEnum
     ) -> Self {
-        Self { name, enumerators }
+        Self {
+            name,
+            values,
+            attributes: vec![],
+        }
     }
 }
 
@@ -60,13 +84,27 @@ impl From<&AstEnum> for Enum {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use {
+        super::*,
+        crate::generator::prisma::{
+            Argument,
+            Value,
+        },
+    };
 
     #[test]
     fn test_display() {
-        let enum_ = Enum {
+        let r#enum = Enum {
+            attributes: vec![Block {
+                arguments: vec![Argument {
+                    name: None,
+                    value: Value::String("colors".to_owned()),
+                }],
+                group: None,
+                name: "map".to_owned(),
+            }],
             name: "Color".to_owned(),
-            enumerators: vec![
+            values: vec![
                 "Red".to_owned(),
                 "Green".to_owned(),
                 "Blue".to_owned(),
@@ -74,13 +112,15 @@ mod tests {
         };
 
         assert_eq!(
-            enum_.to_string(),
+            r#enum.to_string(),
             "
 
 enum Color {
   Red
   Green
   Blue
+
+  @@map(\"colors\")
 }
 
 "
@@ -124,8 +164,16 @@ enum Color {
     #[test]
     fn test_print_enum() {
         let enum_ = Enum {
+            attributes: vec![Block {
+                arguments: vec![Argument {
+                    name: None,
+                    value: Value::String("colors".to_owned()),
+                }],
+                group: None,
+                name: "map".to_owned(),
+            }],
             name: "Color".to_owned(),
-            enumerators: vec![
+            values: vec![
                 "Red".to_owned(),
                 "Green".to_owned(),
                 "Blue".to_owned(),
@@ -140,6 +188,8 @@ enum Color {
   Red
   Green
   Blue
+
+  @@map(\"colors\")
 }
 
 "
