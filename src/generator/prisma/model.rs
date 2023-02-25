@@ -17,7 +17,10 @@ use {
             Print,
         },
     },
-    std::fmt::Display,
+    std::fmt::{
+        Display,
+        Write,
+    },
 };
 
 /// A field type.
@@ -110,32 +113,42 @@ impl Field {
             attributes: vec![],
         }
     }
-}
 
-impl Display for Field {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    /// Print the type of the field.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     Field,
+    ///     FieldType,
+    /// };
+    ///
+    /// assert_eq!(
+    ///     Field {
+    ///         name: "id".to_owned(),
+    ///         r#type: FieldType::Name("Int".to_owned()),
+    ///         required: true,
+    ///         array: false,
+    ///         attributes: vec![],
+    ///     }
+    ///     .print_type(),
+    ///     "Int"
+    /// );
+    /// ```
+    #[must_use]
+    pub fn print_type(&self) -> String {
         let Self {
-            name,
             r#type,
             required,
             array,
-            attributes,
+            ..
         } = self;
 
-        let indent = indent::psl(1);
         let array = if *array { "[]" } else { "" };
         let optional = if *required { "" } else { "?" };
 
-        let attributes = if attributes.is_empty() {
-            String::new()
-        } else {
-            format!(" {}", space_separated(&self.attributes))
-        };
-
-        write!(f, "{indent}{name} {type}{array}{optional}{attributes}")
+        format!("{type}{array}{optional}")
     }
 }
 
@@ -163,7 +176,48 @@ impl Display for Model {
             attributes,
         } = self;
 
-        let fields = newline_separated(fields);
+        let longest_field_name = fields
+            .iter()
+            .map(|field| field.name.len())
+            .max()
+            .unwrap_or(0)
+            + 1;
+
+        let longest_field_type = fields
+            .iter()
+            .map(|field| field.print_type().len())
+            .max()
+            .unwrap_or(0)
+            + 1;
+
+        let indent = indent::psl(1);
+
+        let fields = fields
+            .iter()
+            .map(|field| {
+                let Field {
+                    name, attributes, ..
+                } = field;
+
+                let mut string = format!("{indent}{name:<longest_field_name$}");
+                let r#type = field.print_type();
+
+                if attributes.is_empty() {
+                    let _ = write!(string, "{type}");
+                } else {
+                    let attributes = space_separated(attributes);
+
+                    let _ = write!(
+                        string,
+                        "{type:<longest_field_type$}{attributes}"
+                    );
+                }
+
+                string
+            })
+            .collect::<Vec<_>>();
+
+        let fields = newline_separated(&fields);
 
         let attributes = if attributes.is_empty() {
             String::new()
@@ -253,40 +307,6 @@ mod tests {
     }
 
     #[test]
-    fn test_display_field() {
-        assert_eq!(
-            Field {
-                name: "id".to_owned(),
-                r#type: FieldType::Name("Int".to_owned()),
-                required: true,
-                array: false,
-                attributes: vec![],
-            }
-            .to_string(),
-            "  id Int"
-        );
-
-        assert_eq!(
-            Field {
-                name: "id".to_owned(),
-                r#type: FieldType::Name("Int".to_owned()),
-                required: true,
-                array: false,
-                attributes: vec![attribute::Field {
-                    group: None,
-                    name: "default".to_owned(),
-                    arguments: vec![Argument::Function(Function {
-                        name: "autoincrement".to_owned(),
-                        parameters: vec![],
-                    })],
-                }],
-            }
-            .to_string(),
-            "  id Int @default(autoincrement())"
-        );
-    }
-
-    #[test]
     fn test_display_model() {
         let model = Model {
             name: "User".to_owned(),
@@ -347,10 +367,10 @@ mod tests {
             model.to_string(),
             "\
 model User {
-  id Int @default(autoincrement())
+  id        Int     @default(autoincrement())
   firstName String
-  lastName String
-  isAdmin Boolean @default(false)
+  lastName  String
+  isAdmin   Boolean @default(false)
 
   @@unique([firstName, lastName])
 }"
