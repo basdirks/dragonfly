@@ -108,8 +108,8 @@ impl Print for StringEnum {
 }
 
 impl From<AstEnum> for StringEnum {
-    fn from(value: AstEnum) -> Self {
-        let AstEnum { name, variants } = value;
+    fn from(ast_enum: AstEnum) -> Self {
+        let AstEnum { name, variants } = ast_enum;
 
         Self {
             identifier: name,
@@ -127,8 +127,8 @@ impl From<AstEnum> for StringEnum {
 }
 
 impl From<&AstEnum> for StringEnum {
-    fn from(value: &AstEnum) -> Self {
-        Self::from(value.clone())
+    fn from(ast_enum: &AstEnum) -> Self {
+        Self::from(ast_enum.clone())
     }
 }
 

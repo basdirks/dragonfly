@@ -70,6 +70,24 @@ impl Field {
         }
     }
 
+    /// Standard `@unique` attribute.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::attribute::Field;
+    ///
+    /// assert_eq!(Field::unique().to_string(), "@unique");
+    /// ```
+    #[must_use]
+    pub fn unique() -> Self {
+        Self {
+            group: None,
+            name: "unique".to_owned(),
+            arguments: vec![],
+        }
+    }
+
     /// Standard `@default(autoincrement())` attribute.
     ///
     /// # Examples

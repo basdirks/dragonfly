@@ -192,8 +192,8 @@ impl Print for Interface {
 }
 
 impl From<Model> for Interface {
-    fn from(value: Model) -> Self {
-        let Model { name, fields, .. } = value;
+    fn from(model: Model) -> Self {
+        let Model { name, fields, .. } = model;
 
         let fields = fields
             .into_iter()
@@ -216,8 +216,8 @@ impl From<Model> for Interface {
 }
 
 impl From<&Model> for Interface {
-    fn from(value: &Model) -> Self {
-        Self::from(value.clone())
+    fn from(model: &Model) -> Self {
+        Self::from(model.clone())
     }
 }
 
