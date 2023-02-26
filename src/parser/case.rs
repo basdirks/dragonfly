@@ -27,7 +27,7 @@ use super::{
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     case::capitalized,
+///     capitalized,
 ///     ParseError,
 /// };
 ///
@@ -91,14 +91,17 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     case::pascal,
+///     pascal_case,
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(pascal("FooBar"), Ok(("FooBar".to_owned(), "".to_owned())));
+/// assert_eq!(
+///     pascal_case("FooBar"),
+///     Ok(("FooBar".to_owned(), "".to_owned()))
+/// );
 ///
 /// assert_eq!(
-///     pascal("foobar"),
+///     pascal_case("foobar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'f',
 ///         message: "Expected segment of PascalCase identifier to start with \
@@ -108,7 +111,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 /// );
 ///
 /// assert_eq!(
-///     pascal("foo_bar"),
+///     pascal_case("foo_bar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'f',
 ///         message: "Expected segment of PascalCase identifier to start with \
@@ -118,7 +121,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 /// );
 ///
 /// assert_eq!(
-///     pascal("foo-bar"),
+///     pascal_case("foo-bar"),
 ///     Err(ParseError::UnexpectedChar {
 ///         actual: 'f',
 ///         message: "Expected segment of PascalCase identifier to start with \
@@ -127,7 +130,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///     })
 /// );
 ///
-/// assert_eq!(pascal(""), Err(ParseError::UnexpectedEof));
+/// assert_eq!(pascal_case(""), Err(ParseError::UnexpectedEof));
 /// ```
 pub fn pascal(input: &str) -> ParseResult<String> {
     many1(input, capitalized)
@@ -149,7 +152,7 @@ pub fn pascal(input: &str) -> ParseResult<String> {
                         },
                     )
                 }
-                _ => e,
+                _ => unreachable!(),
             }
         })
 }
