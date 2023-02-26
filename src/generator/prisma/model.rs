@@ -251,18 +251,18 @@ impl From<AstModel> for Model {
         let mut fields = vec![Field::id(), Field::created_at()];
 
         for AstField { r#type, name } in ast_fields.values().rev() {
-            let (array, required, scalar) = match r#type.clone() {
+            let (array, scalar) = match r#type.clone() {
                 AstType::Scalar(scalar @ AstScalar::Reference(_)) => {
-                    (false, false, scalar)
+                    (false, scalar)
                 }
-                AstType::Scalar(scalar) => (false, true, scalar),
-                AstType::Array(scalar) => (true, true, scalar),
+                AstType::Scalar(scalar) => (false, scalar),
+                AstType::Array(scalar) => (true, scalar),
             };
 
             let field = Field {
                 name: name.clone(),
                 array,
-                required,
+                required: true,
                 r#type: scalar.into(),
                 attributes: vec![],
             };
