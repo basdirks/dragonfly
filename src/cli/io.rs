@@ -3,6 +3,7 @@ use {
         ast::Ast,
         generator::{
             printer::Print,
+            prisma::Schema,
             typescript::{
                 Enum as TypescriptEnum,
                 Interface as TypescriptInterface,
@@ -131,7 +132,7 @@ pub fn generate_prisma(
     }
 
     let file = path.join(format!("application.{PRISMA_FILE_EXTENSION}"));
-    let source = ast.to_prisma_schema();
+    let source = Schema::from(ast.clone()).to_string();
 
     write_to_file(&file, source)
 }

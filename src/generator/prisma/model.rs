@@ -192,7 +192,7 @@ impl Display for Model {
 
         let indent = indent::psl(1);
 
-        let fields = fields
+        let mut fields = fields
             .iter()
             .map(|field| {
                 let Field {
@@ -216,6 +216,8 @@ impl Display for Model {
                 string
             })
             .collect::<Vec<_>>();
+
+        fields.sort();
 
         let fields = newline_separated(&fields);
 
@@ -247,7 +249,7 @@ impl From<AstModel> for Model {
     ) -> Self {
         let mut fields = vec![Field::id(), Field::created_at()];
 
-        for AstField { r#type, name } in ast_fields.values() {
+        for AstField { r#type, name } in ast_fields.values().rev() {
             let (array, scalar) = match r#type.clone() {
                 AstType::Array(scalar) => (true, scalar),
                 AstType::Scalar(scalar) => (false, scalar),
@@ -328,20 +330,6 @@ mod tests {
                     }],
                 },
                 Field {
-                    name: "firstName".to_owned(),
-                    r#type: FieldType::Name("String".to_owned()),
-                    required: true,
-                    array: false,
-                    attributes: vec![],
-                },
-                Field {
-                    name: "lastName".to_owned(),
-                    r#type: FieldType::Name("String".to_owned()),
-                    required: true,
-                    array: false,
-                    attributes: vec![],
-                },
-                Field {
                     name: "isAdmin".to_owned(),
                     r#type: FieldType::Name("Boolean".to_owned()),
                     required: true,
@@ -354,6 +342,20 @@ mod tests {
                             value: Value::Boolean(false),
                         }],
                     }],
+                },
+                Field {
+                    name: "firstName".to_owned(),
+                    r#type: FieldType::Name("String".to_owned()),
+                    required: true,
+                    array: false,
+                    attributes: vec![],
+                },
+                Field {
+                    name: "lastName".to_owned(),
+                    r#type: FieldType::Name("String".to_owned()),
+                    required: true,
+                    array: false,
+                    attributes: vec![],
                 },
             ],
             attributes: vec![attribute::Block {
@@ -373,10 +375,10 @@ mod tests {
             model.to_string(),
             "\
 model User {
-  id        Int     @default(autoincrement())
   firstName String
-  lastName  String
+  id        Int     @default(autoincrement())
   isAdmin   Boolean @default(false)
+  lastName  String
 
   @@unique([firstName, lastName])
 }"

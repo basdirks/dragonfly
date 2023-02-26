@@ -193,12 +193,9 @@ impl Print for Interface {
 
 impl From<Model> for Interface {
     fn from(value: Model) -> Self {
-        let Model { name, fields } = value;
-        let mut properties = fields.into_iter().collect::<Vec<_>>();
+        let Model { name, fields, .. } = value;
 
-        properties.sort_by_key(|(identifier, _)| identifier.clone());
-
-        let properties = properties
+        let fields = fields
             .into_iter()
             .map(|(identifier, Field { r#type, .. })| {
                 Property {
@@ -213,7 +210,7 @@ impl From<Model> for Interface {
             extends: vec![],
             identifier: name,
             type_parameters: vec![],
-            properties,
+            properties: fields,
         }
     }
 }

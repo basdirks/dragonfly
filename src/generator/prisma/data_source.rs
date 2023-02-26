@@ -7,11 +7,12 @@ use {
 };
 
 /// How referential integrity is enforced.
-#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub enum RelationMode {
     /// Foreign keys are enforced by the database.
     ForeignKeys,
     /// Foreign keys are emulated in the client.
+    #[default]
     Prisma,
 }
 
@@ -325,7 +326,7 @@ pub struct DataSource {
     pub direct_url: Option<String>,
     /// Whether referential integrity is enforced by foreign keys in the
     /// database or emulated in the client.
-    pub relation_mode: Option<RelationMode>,
+    pub relation_mode: RelationMode,
 }
 
 impl Display for DataSource {
@@ -358,9 +359,7 @@ impl Display for DataSource {
             lines.push(format!("{indent}directUrl = \"{direct_url}\""));
         }
 
-        if let Some(relation_mode) = relation_mode {
-            lines.push(format!("{indent}relationMode = {relation_mode}"));
-        }
+        lines.push(format!("{indent}relationMode = {relation_mode}"));
 
         if let Provider::PostgreSql { extensions, .. } = provider {
             lines.push(format!(
@@ -476,7 +475,7 @@ mod tests {
             },
             shadow_database_url: Some("shadow_database_url".to_owned()),
             direct_url: Some("direct_url".to_owned()),
-            relation_mode: Some(RelationMode::ForeignKeys),
+            relation_mode: RelationMode::ForeignKeys,
         };
 
         assert_eq!(

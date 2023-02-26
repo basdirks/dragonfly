@@ -14,7 +14,7 @@ use {
         ParseResult,
     },
     std::collections::{
-        HashMap,
+        BTreeMap,
         HashSet,
     },
 };
@@ -29,7 +29,7 @@ pub struct Model {
     /// models to reference the model.
     pub name: String,
     /// The fields of the model.
-    pub fields: HashMap<String, Field>,
+    pub fields: BTreeMap<String, Field>,
 }
 
 impl Model {
@@ -121,7 +121,7 @@ impl Model {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_open(&input)?;
         let (_, input) = spaces(&input)?;
-        let mut fields = HashMap::new();
+        let mut fields = BTreeMap::new();
         let (field, input) = Field::parse(&input)?;
         let _ = fields.insert(field.name.clone(), field);
         let (_, mut input) = spaces(&input)?;

@@ -25,10 +25,6 @@ pub use self::{
 };
 use {
     crate::{
-        generator::prisma::{
-            Enum as PrismaEnum,
-            Model as PrismaModel,
-        },
         map,
         parser::{
             choice,
@@ -39,7 +35,7 @@ use {
         },
     },
     std::collections::{
-        HashMap,
+        BTreeMap,
         HashSet,
     },
 };
@@ -183,27 +179,27 @@ impl Declaration {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Ast {
     /// Component declarations.
-    pub components: HashMap<String, Component>,
+    pub components: BTreeMap<String, Component>,
     /// Enum declarations.
-    pub enums: HashMap<String, Enum>,
+    pub enums: BTreeMap<String, Enum>,
     /// Model declarations.
-    pub models: HashMap<String, Model>,
+    pub models: BTreeMap<String, Model>,
     /// Query declarations.
-    pub queries: HashMap<String, Query>,
+    pub queries: BTreeMap<String, Query>,
     /// Route declarations.
-    pub routes: HashMap<String, Route>,
+    pub routes: BTreeMap<String, Route>,
 }
 
 impl Ast {
     /// Create a new AST.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            components: HashMap::new(),
-            enums: HashMap::new(),
-            models: HashMap::new(),
-            queries: HashMap::new(),
-            routes: HashMap::new(),
+            components: BTreeMap::new(),
+            enums: BTreeMap::new(),
+            models: BTreeMap::new(),
+            queries: BTreeMap::new(),
+            routes: BTreeMap::new(),
         }
     }
 
@@ -955,6 +951,9 @@ impl Ast {
     /// * Returns `TypeError::InvalidModelFieldType` if the type of any model
     ///   field is not a primitive, a reference to a known enum or model, or an
     ///   array of any such a type.
+    /// * Returns `TypeError::UnreciprocatedRelation` if any model has a field
+    ///   that references another model, but the other model does not have a
+    ///   reciprocal field.
     pub fn check_types(&self) -> Result<(), TypeError> {
         // We could return the model relations during this pass, but it's
         // easier to understand if we do it separately.
@@ -1067,7 +1066,7 @@ impl Ast {
                 .arguments
                 .iter()
                 .map(|argument| (argument.name.clone(), argument))
-                .collect::<HashMap<_, _>>();
+                .collect::<BTreeMap<_, _>>();
 
             for condition in &r#where.conditions {
                 let field_type = self.resolve_path(
@@ -1244,73 +1243,5 @@ impl Ast {
             query_name: query_name.to_owned(),
             model_name: model_name.to_owned(),
         })
-    }
-
-    /// Print AST as a Prisma schema.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::Ast;
-    ///
-    /// let input = "
-    ///
-    /// model Country {
-    ///    name: String
-    ///    continent: Continent
-    /// }
-    ///
-    /// enum Continent {
-    ///   Africa
-    ///   Antarctica
-    ///   Asia
-    ///   Australia
-    ///   Europe
-    ///   NorthAmerica
-    ///   SouthAmerica
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let expected = "
-    ///
-    /// model Country {
-    ///   id        Int       @id @default(autoincrement())
-    ///   createdAt DateTime  @default(now())
-    ///   continent Continent
-    ///   name      String
-    /// }
-    ///
-    /// enum Continent {
-    ///   Africa
-    ///   Antarctica
-    ///   Asia
-    ///   Australia
-    ///   Europe
-    ///   NorthAmerica
-    ///   SouthAmerica
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let ast = Ast::parse(input).unwrap().0;
-    ///
-    /// assert_eq!(ast.to_prisma_schema(), expected);
-    /// ```
-    #[must_use]
-    pub fn to_prisma_schema(&self) -> String {
-        let mut schema = Vec::new();
-
-        for model in self.models.values() {
-            schema.push(PrismaModel::from(model.clone()).to_string());
-        }
-
-        for r#enum in self.enums.values() {
-            schema.push(PrismaEnum::from(r#enum.clone()).to_string());
-        }
-
-        schema.join("\n\n")
     }
 }

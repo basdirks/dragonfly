@@ -14,6 +14,7 @@ See also:
 
 # Roadmap
 
+- [ ] Align columns in PSL data sources and generators.
 - [ ] Generate foreign keys in PSL.
 - [ ] Generate full GraphQL queries.
   - [ ] CLI: generate GQL.
