@@ -273,31 +273,39 @@ impl Display for Generator {
         } = self;
 
         let indent = indent::psl(1);
-        let mut lines = vec![format!("{indent}provider = {provider}")];
+        let mut keys = vec!["provider"];
+        let mut values = vec![provider.to_string()];
 
         if let Some(output) = output {
-            lines.push(format!("{indent}output = \"{output}\""));
+            keys.push("output");
+            values.push(format!("\"{output}\""));
         }
 
         if !binary_targets.is_empty() {
-            lines.push(format!(
-                "{indent}binaryTargets = [{}]",
-                comma_separated(binary_targets)
-            ));
+            keys.push("binaryTargets");
+            values.push(format!("[{}]", comma_separated(binary_targets)));
         }
 
         if !preview_features.is_empty() {
-            lines.push(format!(
-                "{indent}previewFeatures = [{}]",
-                comma_separated(preview_features)
-            ));
+            keys.push("previewFeatures");
+            values.push(format!("[{}]", comma_separated(preview_features)));
         }
 
         if let Some(engine_type) = engine_type {
-            lines.push(format!("{indent}engineType = {engine_type}"));
+            keys.push("engineType");
+            values.push(engine_type.to_string());
         }
 
-        write!(f, "generator {name} {{\n{}\n}}", lines.join("\n"))
+        let max_key_length =
+            keys.iter().map(|s| s.len()).max().map_or(0, |n| n);
+
+        writeln!(f, "generator {name} {{")?;
+
+        for (key, value) in keys.iter().zip(values) {
+            writeln!(f, "{indent}{key:<max_key_length$} = {value}")?;
+        }
+
+        write!(f, "}}")
     }
 }
 
@@ -454,10 +462,14 @@ mod tests {
                 engine_type: None,
             }
             .to_string(),
-            "\
+            "
+
 generator client {
   provider = \"prisma-client-js\"
-}"
+}
+
+"
+            .trim()
         );
 
         assert_eq!(
@@ -489,11 +501,12 @@ generator client {
                 engine_type: Some(EngineType::Binary),
             }
             .to_string(),
-            "\
+            "
+
 generator client {
-  provider = \"prisma-client-js\"
-  output = \"path/to/client\"
-  binaryTargets = [\"linux-musl-openssl-3.0.x\", \
+  provider        = \"prisma-client-js\"
+  output          = \"path/to/client\"
+  binaryTargets   = [\"linux-musl-openssl-3.0.x\", \
              \"linux-arm64-openssl-3.0.x\", \"debian-openssl-3.0.x\", \
              \"rhel-openssl-3.0.x\"]
   previewFeatures = [\"clientExtensions\", \"deno\", \"extendedWhereUnique\", \
@@ -501,8 +514,11 @@ generator client {
              \"fullTextIndex\", \"fullTextSearch\", \"metrics\", \
              \"multiSchema\", \"orderByNulls\", \"postgresqlExtensions\", \
              \"tracing\", \"views\"]
-  engineType = \"binary\"
-}"
+  engineType      = \"binary\"
+}
+
+"
+            .trim()
         );
     }
 }

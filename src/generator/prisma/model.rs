@@ -176,14 +176,14 @@ impl Display for Model {
             attributes,
         } = self;
 
-        let longest_field_name = fields
+        let max_field_name_length = fields
             .iter()
             .map(|field| field.name.len())
             .max()
             .unwrap_or(0)
             + 1;
 
-        let longest_field_type = fields
+        let max_field_type_length = fields
             .iter()
             .map(|field| field.print_type().len())
             .max()
@@ -199,7 +199,8 @@ impl Display for Model {
                     name, attributes, ..
                 } = field;
 
-                let mut string = format!("{indent}{name:<longest_field_name$}");
+                let mut string =
+                    format!("{indent}{name:<max_field_name_length$}");
                 let r#type = field.print_type();
 
                 if attributes.is_empty() {
@@ -209,7 +210,7 @@ impl Display for Model {
 
                     let _ = write!(
                         string,
-                        "{type:<longest_field_type$}{attributes}"
+                        "{type:<max_field_type_length$}{attributes}"
                     );
                 }
 

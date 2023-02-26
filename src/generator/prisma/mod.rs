@@ -163,16 +163,16 @@ enum Baz {
         let expected = "
 
 generator client {
-  provider = \"prisma-client-js\"
-  binaryTargets = [\"darwin-arm64\"]
+  provider        = \"prisma-client-js\"
+  binaryTargets   = [\"darwin-arm64\"]
   previewFeatures = [\"deno\"]
 }
 
 datasource db {
-  provider = \"postgresql\"
-  url = \"postgresql://admin:admin@localhost:5432/db?schema=public\"
+  provider     = \"postgresql\"
+  url          = \"postgresql://admin:admin@localhost:5432/db?schema=public\"
   relationMode = \"foreignKeys\"
-  extensions = [uuid-ossp]
+  extensions   = [uuid-ossp]
 }
 
 enum Baz {

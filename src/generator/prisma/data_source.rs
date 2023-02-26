@@ -343,32 +343,38 @@ impl Display for DataSource {
         } = self;
 
         let indent = indent::psl(1);
-
-        let mut lines = vec![
-            format!("{indent}provider = {provider}"),
-            format!("{indent}url = \"{}\"", provider.url()),
-        ];
+        let mut keys = vec!["provider", "url"];
+        let mut values =
+            vec![provider.to_string(), format!("\"{}\"", provider.url())];
 
         if let Some(shadow_database_url) = shadow_database_url {
-            lines.push(format!(
-                "{indent}shadowDatabaseUrl = \"{shadow_database_url}\""
-            ));
+            keys.push("shadowDatabaseUrl");
+            values.push(format!("\"{shadow_database_url}\""));
         }
 
         if let Some(direct_url) = direct_url {
-            lines.push(format!("{indent}directUrl = \"{direct_url}\""));
+            keys.push("directUrl");
+            values.push(format!("\"{direct_url}\""));
         }
 
-        lines.push(format!("{indent}relationMode = {relation_mode}"));
+        keys.push("relationMode");
+        values.push(relation_mode.to_string());
 
         if let Provider::PostgreSql { extensions, .. } = provider {
-            lines.push(format!(
-                "{indent}extensions = [{}]",
-                comma_separated(extensions)
-            ));
+            keys.push("extensions");
+            values.push(format!("[{}]", comma_separated(extensions)));
         }
 
-        write!(f, "datasource {name} {{\n{}\n}}", lines.join("\n"))
+        let max_key_length =
+            keys.iter().map(|key| key.len()).max().map_or(0, |max| max);
+
+        writeln!(f, "datasource {name} {{")?;
+
+        for (key, value) in keys.iter().zip(values) {
+            writeln!(f, "{indent}{key:<max_key_length$} = {value}")?;
+        }
+
+        write!(f, "}}")
     }
 }
 
@@ -480,16 +486,22 @@ mod tests {
 
         assert_eq!(
             data_source.to_string(),
-            "\
+            "
+
 datasource db {
-  provider = \"postgresql\"
-  url = \"postgresql://user:password@localhost:5432/database?schema=public\"
+  provider          = \"postgresql\"
+  url               = \
+             \"postgresql://user:password@localhost:5432/database?\
+             schema=public\"
   shadowDatabaseUrl = \"shadow_database_url\"
-  directUrl = \"direct_url\"
-  relationMode = \"foreignKeys\"
-  extensions = [uuidOssp(map: \"uuid-ossp\"), pg_trgm, postgis(version: \
+  directUrl         = \"direct_url\"
+  relationMode      = \"foreignKeys\"
+  extensions        = [uuidOssp(map: \"uuid-ossp\"), pg_trgm, postgis(version: \
              \"2.1\")]
-}"
+}
+
+"
+            .trim()
         );
     }
 }
