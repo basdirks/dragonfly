@@ -15,6 +15,7 @@ See also:
 # Roadmap
 
 - [ ] Generate foreign keys in PSL.
+- [ ] Generate GraphQL types.
 - [ ] Generate full GraphQL queries.
   - [ ] CLI: generate GQL.
 - [ ] Support aggregate queries :)

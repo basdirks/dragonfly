@@ -7,7 +7,7 @@ use {
     std::fmt::Display,
 };
 
-/// An enumerated type.
+/// A Prisma enum.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Enum {
     /// The name of the enum.

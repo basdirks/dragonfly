@@ -6,6 +6,8 @@ pub mod const_argument;
 pub mod const_directive;
 /// Directives.
 pub mod directive;
+/// Enums.
+pub mod r#enum;
 /// Selection fields.
 pub mod field;
 /// Fragments.
@@ -33,6 +35,7 @@ pub use {
         Query,
         Variable as QueryVariable,
     },
+    r#enum::Enum,
     r#type::Type,
     selection::Selection,
     value::{
