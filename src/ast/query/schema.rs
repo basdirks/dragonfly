@@ -143,9 +143,14 @@ impl Node {
     /// ```rust
     /// use dragonfly::ast::QuerySchemaNode;
     ///
-    /// let input = "user {
+    /// let input = "
+    ///
+    /// user {
     ///   name
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse(input),
@@ -162,12 +167,17 @@ impl Node {
     /// ```rust
     /// use dragonfly::ast::QuerySchemaNode;
     ///
-    /// let input = "user {
+    /// let input = "
+    ///
+    /// user {
     ///   name {
     ///     first
     ///     last
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse(input),
@@ -281,9 +291,14 @@ impl Schema {
     ///     QuerySchemaNode,
     /// };
     ///
-    /// let input = "user {
+    /// let input = "
+    ///
+    /// user {
     ///   name
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     QuerySchema::parse(input),
@@ -303,12 +318,17 @@ impl Schema {
     ///     QuerySchemaNode,
     /// };
     ///
-    /// let input = "user {
+    /// let input = "
+    ///
+    /// user {
     ///   name {
     ///     first
     ///     last
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     QuerySchema::parse(input),

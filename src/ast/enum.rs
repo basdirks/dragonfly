@@ -40,10 +40,15 @@ impl Enum {
     ///     parser::ParseError,
     /// };
     ///
-    /// let input = "enum Foo {
+    /// let input = "
+    ///
+    /// enum Foo {
     ///     Bar
     ///     Baz
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Enum {
     ///     name: "Foo".to_owned(),
@@ -59,9 +64,14 @@ impl Enum {
     ///     parser::ParseError,
     /// };
     ///
-    /// let input = "enum Foo {
+    /// let input = "
+    ///
+    /// enum Foo {
     ///     bar
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Enum::parse(input),
@@ -80,10 +90,15 @@ impl Enum {
     ///     parser::ParseError,
     /// };
     ///
-    /// let input = "enum Foo {
+    /// let input = "
+    ///
+    /// enum Foo {
     ///     Bar
     ///     Bar
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Enum::parse(input),

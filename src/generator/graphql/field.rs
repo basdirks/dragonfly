@@ -104,14 +104,18 @@ mod tests {
 
         assert_eq!(
             field.print(0),
-            "\
+            "
+
 images(after: $endCursor) {
   edges {
     node {
       id @id
     }
   }
-}"
+}
+
+"
+            .trim()
             .to_owned()
         );
     }

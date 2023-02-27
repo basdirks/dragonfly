@@ -166,10 +166,14 @@ mod tests {
 
         assert_eq!(
             inline.print(0),
-            "\
+            "
+
 ... on Type {
 
-}"
+}
+
+"
+            .trim()
         );
     }
 }

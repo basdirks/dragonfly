@@ -90,9 +90,14 @@ impl Declaration {
     ///     Declaration,
     /// };
     ///
-    /// let input = "component Foo {
+    /// let input = "
+    ///
+    /// component Foo {
     ///     path: Foo
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Declaration::Component(Component {
     ///     name: "Foo".to_owned(),
@@ -108,10 +113,15 @@ impl Declaration {
     ///     Enum,
     /// };
     ///
-    /// let input = "enum Foo {
+    /// let input = "
+    ///
+    /// enum Foo {
     ///     Bar
     ///     Baz
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Declaration::Enum(Enum {
     ///     name: "Foo".to_owned(),
@@ -132,10 +142,15 @@ impl Declaration {
     ///     Type,
     /// };
     ///
-    /// let input = "model Foo {
+    /// let input = "
+    ///
+    /// model Foo {
     ///     foo: String
     ///     bar: [Bar]
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Declaration::Model(Model {
     ///     name: "Foo".to_owned(),
@@ -237,7 +252,9 @@ impl Ast {
     ///     Type,
     /// };
     ///
-    /// let input = "route / {
+    /// let input = "
+    ///
+    /// route / {
     ///   root: Home
     ///   title: Home
     /// }
@@ -308,7 +325,10 @@ impl Ast {
     ///   TrafficLight
     ///   TrafficSign
     ///   UtilityPole
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let mut expected = Ast::new();
     ///
@@ -1103,7 +1123,9 @@ impl Ast {
     /// ```rust
     /// use dragonfly::ast::Ast;
     ///
-    /// let input = "model User {
+    /// let input = "
+    ///
+    /// model User {
     ///     name: String
     /// }
     ///
@@ -1114,7 +1136,10 @@ impl Ast {
     ///
     /// model Country {
     ///     name: CountryName
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Ast::parse(input).unwrap().0.type_names(),

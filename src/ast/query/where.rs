@@ -49,19 +49,24 @@ impl Where {
     ///     QueryWhere,
     /// };
     ///
-    /// let input = "foo {
-    ///     contains: $foo
-    ///     bar {
-    ///       equals: $bar
-    ///     }
-    ///     baz {
-    ///       contains: $baz
-    ///     }
-    ///     qux {
-    ///       contains: $qux
-    ///     }
+    /// let input = "
+    ///
+    /// foo {
+    ///   contains: $foo
+    ///   bar {
+    ///     equals: $bar
     ///   }
-    /// }";
+    ///   baz {
+    ///     contains: $baz
+    ///   }
+    ///   qux {
+    ///     contains: $qux
+    ///   }
+    /// }
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let (conditions, input) = QueryWhere::parse_conditions(input).unwrap();
     ///
@@ -207,13 +212,18 @@ impl Where {
     ///     QueryWhere,
     /// };
     ///
-    /// let input = "where {
+    /// let input = "
+    ///
+    /// where {
     ///     foo {
     ///         bar {
     ///             contains: $foo
     ///         }
     ///     }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     QueryWhere::parse(input),
@@ -239,7 +249,9 @@ impl Where {
     ///     QueryWhere,
     /// };
     ///
-    /// let input = "where {
+    /// let input = "
+    ///
+    /// where {
     ///   image {
     ///     title {
     ///       equals: $title
@@ -248,7 +260,10 @@ impl Where {
     ///       }
     ///     }
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     QueryWhere::parse(input),
@@ -289,7 +304,9 @@ impl Where {
                 Ok((_, input)) => Ok(((), input)),
                 _ => {
                     Err(ParseError::Custom {
-                        message: format!("Expected closing brace for {name}."),
+                        message: format!(
+                            "Expected closing brace for `{name}`."
+                        ),
                     })
                 }
             }

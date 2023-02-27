@@ -60,10 +60,14 @@ pub fn space_separated<T: Display>(items: &[T]) -> String {
 ///
 /// assert_eq!(
 ///     newline_separated(&items),
-///     "\
+///     "
+///
 /// foo
 /// bar
-/// baz"
+/// baz
+///
+/// "
+///     .trim()
 /// );
 /// ```
 pub fn newline_separated<T: Display>(items: &[T]) -> String {

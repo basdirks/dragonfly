@@ -14,6 +14,7 @@ See also:
 
 # Roadmap
 
+- [ ] Finalize AST public API.
 - [ ] Generate foreign keys in PSL.
 - [ ] Generate GraphQL types.
 - [ ] Generate full GraphQL queries.

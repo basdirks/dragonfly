@@ -138,10 +138,15 @@ impl Route {
     /// ```rust
     /// use dragonfly::ast::Route;
     ///
-    /// let input = "route /foo/bar {
+    /// let input = "
+    ///
+    /// route /foo/bar {
     ///   root: Foo
     ///   title: Foobar
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Route::parse(input),
@@ -161,15 +166,25 @@ impl Route {
     /// ```rust
     /// use dragonfly::ast::Route;
     ///
-    /// let input1 = "route / {
-    ///   root: Index
-    ///   title: Home
-    /// }";
+    /// let input1 = "
     ///
-    /// let input2 = "route / {
+    /// route / {
+    ///   root: Index
+    ///   title: Home
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// let input2 = "
+    ///
+    /// route / {
     ///   title: Home
     ///   root: Index
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(Route::parse(input1), Route::parse(input2));
     /// ```

@@ -519,6 +519,7 @@ pub fn count<T>(
 /// use dragonfly::{
 ///     char,
 ///     parser::{
+///         alphabetic,
 ///         char,
 ///         many_once,
 ///         ParseError,
@@ -551,6 +552,11 @@ pub fn count<T>(
 /// assert_eq!(
 ///     many_once::<String>("abc", &[]),
 ///     Ok((vec![], "abc".to_owned()))
+/// );
+///
+/// assert_eq!(
+///     many_once("aaa", &[char!('a'), alphabetic]),
+///     Ok((vec!['a', 'a'], "a".to_owned()))
 /// );
 ///
 /// assert_eq!(

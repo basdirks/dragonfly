@@ -53,11 +53,16 @@ impl Model {
     ///     Type,
     /// };
     ///
-    /// let input = "model Foo {
+    /// let input = "
+    ///
+    /// model Foo {
     ///     bar: String
     ///     baz: Int
     ///     qux: [Bar]
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Model {
     ///     name: "Foo".to_owned(),
@@ -102,10 +107,15 @@ impl Model {
     ///     parser::ParseError,
     /// };
     ///
-    /// let input = "model Foo {
+    /// let input = "
+    ///
+    /// model Foo {
     ///   bar: String
     ///   bar: Int
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Model::parse(input),

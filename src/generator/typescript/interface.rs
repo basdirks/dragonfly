@@ -322,6 +322,17 @@ mod tests {
 
     #[test]
     fn test_print_interface() {
+        let expected = "
+
+interface Image<T> extends Resource<T> {
+    title: string;
+    countryName?: CountryName;
+    tags: Array<Tag>;
+}
+
+"
+        .trim();
+
         assert_eq!(
             Interface {
                 extends: vec![ExpressionWithTypeArguments {
@@ -361,37 +372,39 @@ mod tests {
                 ],
             }
             .print(0),
-            "\
-interface Image<T> extends Resource<T> {
-    title: string;
-    countryName?: CountryName;
-    tags: Array<Tag>;
-}"
+            expected
         );
     }
 
     #[test]
     fn test_from_model() {
-        let input = "\
+        let input = "
+
 model Image {
   tags: [Tag]
   title: String    
   country: Country
-}";
+}
+
+"
+        .trim();
+
+        let expected = "
+
+interface Image {
+    country: Country;
+    tags: Array<Tag>;
+    title: string;
+}
+
+"
+        .trim();
 
         let (model, _) = Model::parse(input).unwrap();
         let interface = Interface::from(model);
         let code = interface.print(0);
 
-        assert_eq!(
-            code,
-            "\
-interface Image {
-    country: Country;
-    tags: Array<Tag>;
-    title: string;
-}"
-        );
+        assert_eq!(code, expected);
     }
 
     #[test]
@@ -411,9 +424,7 @@ model Image {
         let interface = Interface::from(model);
         let code = interface.print(0);
 
-        assert_eq!(
-            code,
-            "
+        let expected = "
 
 interface Image {
     country: Country;
@@ -422,7 +433,8 @@ interface Image {
 }
 
 "
-            .trim()
-        );
+        .trim();
+
+        assert_eq!(code, expected);
     }
 }

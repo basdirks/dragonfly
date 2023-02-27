@@ -36,9 +36,14 @@ impl Component {
     /// ```rust
     /// use dragonfly::ast::Component;
     ///
-    /// let input = "component Foo {
+    /// let input = "
+    ///
+    /// component Foo {
     ///    path: foo/bar/Foo
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Component {
     ///     name: "Foo".to_owned(),
@@ -51,9 +56,14 @@ impl Component {
     /// ```rust
     /// use dragonfly::ast::component::Component;
     ///
-    /// let input = "component Foo {
+    /// let input = "
+    ///
+    /// component Foo {
     ///    path: Foo
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Component {
     ///     name: "Foo".to_owned(),

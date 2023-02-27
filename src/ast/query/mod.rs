@@ -85,7 +85,12 @@ impl ReturnType {
     ///     Ok((QueryReturnType::Array("Foo".to_owned()), "".to_owned()))
     /// );
     ///
-    /// assert!(QueryReturnType::parse("{Foo}").is_err());
+    /// assert_eq!(
+    ///     QueryReturnType::parse("String"),
+    ///     Err(ParseError::Custom {
+    ///         message: "Expected return type, found `String`.".to_owned(),
+    ///     })
+    /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (r#type, input) = Type::parse(input)?;
@@ -100,7 +105,7 @@ impl ReturnType {
             }
             _ => {
                 Err(ParseError::Custom {
-                    message: "Expected return type.".to_owned(),
+                    message: format!("Expected return type, found `{type}`."),
                 })
             }
         }
@@ -275,11 +280,16 @@ impl Query {
     ///     Type,
     /// };
     ///
-    /// let input = "query images: [Image] {
+    /// let input = "
+    ///
+    /// query images: [Image] {
     ///   image {
     ///     title
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Query {
     ///     name: "images".to_owned(),
@@ -310,7 +320,9 @@ impl Query {
     ///     Type,
     /// };
     ///
-    /// let input = "query images($tag: String, $title: String): [Image] {
+    /// let input = "
+    ///
+    /// query images($tag: String, $title: String): [Image] {
     ///   image {
     ///     title
     ///   }
@@ -324,7 +336,10 @@ impl Query {
     ///       }
     ///     }
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Query {
     ///     name: "images".to_owned(),
@@ -378,7 +393,9 @@ impl Query {
     ///     Type,
     /// };
     ///
-    /// let input = "query imagesByCountryName($name: CountryName): [Image] {
+    /// let input = "
+    ///
+    /// query imagesByCountryName($name: CountryName): [Image] {
     ///   image {
     ///     title
     ///     category
@@ -392,7 +409,10 @@ impl Query {
     ///       }
     ///     }
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let expected = Query {
     ///     name: "imagesByCountryName".to_owned(),
@@ -463,7 +483,9 @@ impl Query {
     /// ```rust
     /// use dragonfly::ast::Query;
     ///
-    /// let input = "query images: [Image] {
+    /// let input = "
+    ///
+    /// query images: [Image] {
     ///     image {
     ///         title
     ///     }
@@ -474,7 +496,10 @@ impl Query {
     ///             }
     ///         }
     ///     }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert!(Query::parse(input).unwrap().0.check_root_nodes().is_ok());
     /// ```
@@ -485,7 +510,9 @@ impl Query {
     ///     TypeError,
     /// };
     ///
-    /// let input = "query images: [Image] {
+    /// let input = "
+    ///
+    /// query images: [Image] {
     ///     image {
     ///         title
     ///     }
@@ -496,7 +523,10 @@ impl Query {
     ///             }
     ///         }
     ///     }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_root_nodes(),
@@ -532,21 +562,47 @@ impl Query {
     /// ```rust
     /// use dragonfly::ast::Query;
     ///
-    /// let input = "query images: [Image] {
+    /// let input = "
+    ///
+    /// query images: [Image] {
     ///     image {
     ///         title
     ///     }
-    /// }";
+    /// }
     ///
-    /// assert!(Query::parse(input).is_ok());
+    /// "
+    /// .trim();
+    ///
+    /// let query = Query::parse(input).unwrap().0;
+    ///
+    /// assert!(query.check_empty_schema().is_ok());
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::Query;
+    /// use dragonfly::ast::{
+    ///     Query,
+    ///     QueryReturnType,
+    ///     QuerySchema,
+    ///     TypeError,
+    /// };
     ///
-    /// let input = "query images: [Image] {}";
+    /// let query = Query {
+    ///     name: "images".to_owned(),
+    ///     arguments: vec![],
+    ///     schema: QuerySchema {
+    ///         name: "image".to_owned(),
+    ///         nodes: vec![],
+    ///     },
+    ///     r#type: QueryReturnType::Array("Image".to_owned()),
+    ///     r#where: None,
+    /// };
     ///
-    /// assert!(Query::parse(input).is_err());
+    /// assert_eq!(
+    ///     query.check_empty_schema(),
+    ///     Err(TypeError::EmptyQuerySchema {
+    ///         query_name: "images".to_owned(),
+    ///     })
+    /// );
     /// ```
     pub fn check_empty_schema(&self) -> Result<(), TypeError> {
         if self.schema.is_empty() {
@@ -575,20 +631,25 @@ impl Query {
     /// ```rust
     /// use dragonfly::ast::Query;
     ///
-    /// let input = "query images($name: CountryName): [Image] {
+    /// let input = "
+    ///
+    /// query images($name: CountryName): [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    ///   where {
     ///     image {
-    ///         title
-    ///     }
-    ///     where {
-    ///         image {
-    ///             country {
-    ///                 name {
-    ///                     equals: $name
-    ///                 }
-    ///             }
+    ///       country {
+    ///         name {
+    ///           equals: $name
     ///         }
+    ///       }
     ///     }
-    /// }";
+    ///   }
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert!(Query::parse(input)
     ///     .unwrap()
@@ -606,11 +667,16 @@ impl Query {
     ///     TypeError,
     /// };
     ///
-    /// let input = "query images($name: CountryName): [Image] {
+    /// let input = "
+    ///
+    /// query images($name: CountryName): [Image] {
     ///     image {
     ///         title
     ///     }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_unused_arguments(),
@@ -635,31 +701,52 @@ impl Query {
     ///     TypeError,
     /// };
     ///
-    /// let input = "query images($name: CountryName, $tag: String): [Image] {
-    ///     image {
-    ///         title
-    ///     }
-    ///     where {
-    ///         image {
-    ///             country {
-    ///                 name {
-    ///                     equals: $name
-    ///                 }
-    ///             }
-    ///         }
-    ///     }
-    /// }";
+    /// let input = "
+    ///
+    /// query images($name: CountryName, $tag: String): [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_unused_arguments(),
     ///     Err(TypeError::UnusedQueryArgument {
     ///         query_name: "images".to_owned(),
     ///         argument: QueryArgument {
-    ///             name: "tag".to_owned(),
-    ///             r#type: Type::Scalar(Scalar::String),
+    ///             name: "name".to_owned(),
+    ///             r#type: Type::Scalar(Scalar::Reference(
+    ///                 "CountryName".to_owned()
+    ///             )),
     ///         },
     ///     }),
     /// );
+    /// ```
+    ///
+    /// This check always passes if there are no arguments.
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Query;
+    ///
+    /// let input = "
+    ///
+    /// query images: [Image] {
+    ///   image {
+    ///     title
+    ///   }
+    /// }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert!(Query::parse(input)
+    ///     .unwrap()
+    ///     .0
+    ///     .check_unused_arguments()
+    ///     .is_ok(),);
     /// ```
     pub fn check_unused_arguments(&self) -> Result<(), TypeError> {
         if self.arguments.is_empty() {
@@ -709,7 +796,9 @@ impl Query {
     /// ```rust
     /// use dragonfly::ast::Query;
     ///
-    /// let input = "query images($name: CountryName): [Image] {
+    /// let input = "
+    ///
+    /// query images($name: CountryName): [Image] {
     ///   image {
     ///     title
     ///   }
@@ -722,7 +811,10 @@ impl Query {
     ///       }
     ///     }
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert!(Query::parse(input)
     ///     .unwrap()
@@ -740,7 +832,9 @@ impl Query {
     ///     TypeError,
     /// };
     ///
-    /// let input = "query images($name: CountryName): [Image] {
+    /// let input = "
+    ///
+    /// query images($name: CountryName): [Image] {
     ///   image {
     ///     title
     ///   }
@@ -753,7 +847,10 @@ impl Query {
     ///       }
     ///     }
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// assert_eq!(
     ///     Query::parse(input).unwrap().0.check_condition_references(),
@@ -808,11 +905,16 @@ impl Query {
     ///     Query,
     /// };
     ///
-    /// let input = "query images($name: CountryName): [Image] {
+    /// let input = "
+    ///
+    /// query images($name: CountryName): [Image] {
     ///   image {
     ///     title
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let query = Query::parse(input).unwrap().0;
     /// let enum_names = vec!["CountryName".to_owned()].into_iter().collect();
@@ -826,12 +928,17 @@ impl Query {
     ///     std::collections::HashSet,
     /// };
     ///
-    /// let input = "query foo($p: Boolean, $date: DateTime, $rate: Float, \
-    ///              $population: Int, $name: String): [Image] {
+    /// let input = "
+    ///
+    /// query foo($p: Boolean, $date: DateTime, $rate: Float, $population: Int, $name: \
+    ///              String): [Image] {
     ///   image {
     ///     title
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let query = Query::parse(input).unwrap().0;
     ///
@@ -848,11 +955,16 @@ impl Query {
     ///     TypeError,
     /// };
     ///
-    /// let input = "query images($name: CountryName): [Image] {
+    /// let input = "
+    ///
+    /// query images($name: CountryName): [Image] {
     ///   image {
     ///     title
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let query = Query::parse(input).unwrap().0;
     /// let enum_names = vec!["ContinentName".to_owned()].into_iter().collect();
@@ -908,11 +1020,16 @@ impl Query {
     ///     Query,
     /// };
     ///
-    /// let input = "query images: [Image] {
+    /// let input = "
+    ///
+    /// query images: [Image] {
     ///   image {
     ///     title
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let query = Query::parse(input).unwrap().0;
     /// let models = vec!["Image".to_owned()].into_iter().collect();
@@ -931,11 +1048,16 @@ impl Query {
     ///     std::collections::HashSet,
     /// };
     ///
-    /// let input = "query images: [Image] {
+    /// let input = "
+    ///
+    /// query images: [Image] {
     ///   image {
     ///     title
     ///   }
-    /// }";
+    /// }
+    ///
+    /// "
+    /// .trim();
     ///
     /// let query = Query::parse(input).unwrap().0;
     ///

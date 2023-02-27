@@ -251,14 +251,18 @@ mod tests {
                 ],
             }
             .print(0),
-            "\
+            "
+
 query imagesByCountryName($country: String!, $limit: Int = 10) @bar @baz {
   images(country: $country) {
     url @deprecated(reason: \"Use `link` instead.\")
     link
     title
   }
-}"
+}
+
+"
+            .trim()
         );
     }
 }

@@ -377,7 +377,8 @@ mod tests {
 
         assert_eq!(
             model.to_string(),
-            "\
+            "
+
 model User {
   firstName String
   id        Int     @default(autoincrement())
@@ -385,7 +386,10 @@ model User {
   lastName  String
 
   @@unique([firstName, lastName])
-}"
+}
+
+"
+            .trim()
         );
     }
 
