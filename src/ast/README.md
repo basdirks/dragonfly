@@ -24,11 +24,12 @@ Scalar types are:
 - `Float`: a 64-bit floating point number,
 - `Int`: a 64-bit integer,
 - `Reference`: a reference to an enumerated type or another model,
+- `Owned`: a reference to a model that is owned by the current model,
 - `String`: a sequence of UTF-8 characters.
 
 ### Relationships
 
-A reference points to an enumerated type or a model. A reference to a model implies a relationship between two models. Three three types of relationships exist: one-to-one, one-to-many, and many-to-many.
+A reference points to an enumerated type or a model. A reference to a model implies a relationship between two models. Three types of relationships exist: one-to-one, one-to-many, and many-to-many. Similarly, an owned reference points to a model and implies that the referenced model is owned by the current model.
 
 #### One-to-one
 

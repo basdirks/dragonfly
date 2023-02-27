@@ -93,6 +93,28 @@ impl Field {
     ///     })
     /// );
     /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::{
+    ///         Field,
+    ///         Scalar,
+    ///         Type,
+    ///     },
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// assert_eq!(
+    ///     Field::parse("foo: @Bar"),
+    ///     Ok((
+    ///         Field {
+    ///             name: "foo".to_owned(),
+    ///             r#type: Type::Scalar(Scalar::Owned("Bar".to_owned())),
+    ///         },
+    ///         "".to_owned(),
+    ///     ))
+    /// );
+    /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (name, input) = camel_case(input)?;
         let (_, input) = colon(&input)?;

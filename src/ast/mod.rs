@@ -147,6 +147,7 @@ impl Declaration {
     /// model Foo {
     ///     foo: String
     ///     bar: [Bar]
+    ///     baz: @Bar
     /// }
     ///
     /// "
@@ -167,6 +168,13 @@ impl Declaration {
     ///             Field {
     ///                 name: "bar".to_owned(),
     ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
+    ///             },
+    ///         ),
+    ///         (
+    ///             "baz".to_owned(),
+    ///             Field {
+    ///                 name: "baz".to_owned(),
+    ///                 r#type: Type::Scalar(Scalar::Owned("Bar".to_owned())),
     ///             },
     ///         ),
     ///     ]
@@ -264,10 +272,15 @@ impl Ast {
     /// }
     ///
     /// model Image {
-    ///   id: ID
     ///   title: String
     ///   country: Country
     ///   category: [Category]
+    ///   dimensions: @Dimensions
+    /// }
+    ///
+    /// model Dimensions {
+    ///   width: Int
+    ///   height: Int
     /// }
     ///
     /// query images: [Image] {
@@ -302,7 +315,6 @@ impl Ast {
     /// }
     ///
     /// model Country {
-    ///   id: ID
     ///   domain: String
     ///   drivingSide: DrivingSide
     ///   flag: String
@@ -355,15 +367,6 @@ impl Ast {
     ///         name: "Image".to_owned(),
     ///         fields: vec![
     ///             (
-    ///                 "id".to_owned(),
-    ///                 Field {
-    ///                     name: "id".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "ID".to_owned(),
-    ///                     )),
-    ///                 },
-    ///             ),
-    ///             (
     ///                 "title".to_owned(),
     ///                 Field {
     ///                     name: "title".to_owned(),
@@ -388,6 +391,40 @@ impl Ast {
     ///                     )),
     ///                 },
     ///             ),
+    ///             (
+    ///                 "dimensions".to_owned(),
+    ///                 Field {
+    ///                     name: "dimensions".to_owned(),
+    ///                     r#type: Type::Scalar(Scalar::Owned(
+    ///                         "Dimensions".to_owned(),
+    ///                     )),
+    ///                 },
+    ///             ),
+    ///         ]
+    ///         .into_iter()
+    ///         .collect(),
+    ///     },
+    /// );
+    ///
+    /// expected.models.insert(
+    ///     "Dimensions".to_owned(),
+    ///     Model {
+    ///         name: "Dimensions".to_owned(),
+    ///         fields: vec![
+    ///             (
+    ///                 "width".to_owned(),
+    ///                 Field {
+    ///                     name: "width".to_owned(),
+    ///                     r#type: Type::Scalar(Scalar::Int),
+    ///                 },
+    ///             ),
+    ///             (
+    ///                 "height".to_owned(),
+    ///                 Field {
+    ///                     name: "height".to_owned(),
+    ///                     r#type: Type::Scalar(Scalar::Int),
+    ///                 },
+    ///             ),
     ///         ]
     ///         .into_iter()
     ///         .collect(),
@@ -399,15 +436,6 @@ impl Ast {
     ///     Model {
     ///         name: "Country".to_owned(),
     ///         fields: vec![
-    ///             (
-    ///                 "id".to_owned(),
-    ///                 Field {
-    ///                     name: "id".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "ID".to_owned(),
-    ///                     )),
-    ///                 },
-    ///             ),
     ///             (
     ///                 "domain".to_owned(),
     ///                 Field {

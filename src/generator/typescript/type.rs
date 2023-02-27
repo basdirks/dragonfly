@@ -224,7 +224,8 @@ impl From<AstScalarType> for Type {
             // opt-in or opt-out.
             AstScalarType::Int => Self::Keyword(Keyword::BigInt),
             AstScalarType::String => Self::Keyword(Keyword::String),
-            AstScalarType::Reference(identifier) => {
+            AstScalarType::Owned(identifier)
+            | AstScalarType::Reference(identifier) => {
                 Self::TypeReference {
                     identifier,
                     type_references: vec![],

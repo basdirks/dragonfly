@@ -38,6 +38,12 @@ model Image {
   title: String
   country: Country
   category: [Category]
+  dimensions: @Dimensions
+}
+
+model Dimensions {
+  width: Int
+  height: Int
 }
 
 query images: [Image] {

@@ -75,15 +75,13 @@ enum Category {
 
 ```dfly
 model User {
-  posts: [Post]
-  birthday: DateTime
   name: String
-  admin: Boolean
+  profile: @Profile
 }
 
-model Post {
+model Profile {
+  birthday: DateTime
   title: String
-  author: User
 }
 
 enum Country {
@@ -98,18 +96,18 @@ enum Country {
 
 ```prisma
 model User {
-  id Int @id @default(autoincrement())
-  birthday DateTime
-  name String
-  admin Boolean
-  posts Post[]
+  createdAt DateTime  @default(now())
+  id        Int       @id @default(autoincrement())
+  name      String
+  profile   Profile?
 }
 
-model Post {
-  id Int @id @default(autoincrement())
-  title String
-  author User @relation(fields: [authorId], references: [id])
-  authorId Int
+model Profile {
+  birthday  DateTime
+  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  user      User     @relation("profileOnUser", fields: [userId], references: [id])
+  userId    Int      @unique
 }
 
 enum Country {

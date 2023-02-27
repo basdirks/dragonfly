@@ -3,6 +3,7 @@ use {
         literal,
         map,
         parser::{
+            at,
             between,
             capitalized,
             choice,
@@ -27,7 +28,9 @@ pub enum Scalar {
     Float,
     /// A 64-bit integer.
     Int,
-    /// A reference to an enum or model. Might deserve its own type.
+    /// A reference to a unique model.
+    Owned(String),
+    /// A reference to an enum or model.
     Reference(String),
     /// A UTF-8 string.
     String,
@@ -62,7 +65,6 @@ impl Scalar {
     ///
     /// assert_eq!(Scalar::parse("Float"), Ok((Scalar::Float, "".to_owned())));
     /// assert_eq!(Scalar::parse("Int"), Ok((Scalar::Int, "".to_owned())));
-    ///
     /// assert_eq!(Scalar::parse("String"), Ok((Scalar::String, "".to_owned())));
     /// ```
     ///
@@ -74,6 +76,15 @@ impl Scalar {
     ///     Ok((Scalar::Reference("Foo".to_owned()), "".to_owned()))
     /// );
     /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Scalar;
+    ///
+    /// assert_eq!(
+    ///     Scalar::parse("@Foo"),
+    ///     Ok((Scalar::Owned("Foo".to_owned()), "".to_owned()))
+    /// );
+    /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice::<Self>(
             input,
@@ -83,6 +94,15 @@ impl Scalar {
                 tag!(literal!("Float"), Self::Float),
                 tag!(literal!("Int"), Self::Int),
                 tag!(literal!("String"), Self::String),
+                map!(
+                    |input| {
+                        let (_, input) = at(input)?;
+                        let (name, input) = capitalized(&input)?;
+
+                        Ok((name, input))
+                    },
+                    Self::Owned
+                ),
                 map!(capitalized, Self::Reference),
             ],
         )
@@ -99,6 +119,7 @@ impl Display for Scalar {
             Self::DateTime => write!(f, "DateTime"),
             Self::Float => write!(f, "Float"),
             Self::Int => write!(f, "Int"),
+            Self::Owned(name) => write!(f, "&{name}"),
             Self::Reference(name) => write!(f, "{name}"),
             Self::String => write!(f, "String"),
         }

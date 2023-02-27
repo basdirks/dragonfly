@@ -11,6 +11,7 @@ pub mod parse_error;
 
 pub use {
     self::char::{
+        at,
         brace_close,
         brace_open,
         colon,

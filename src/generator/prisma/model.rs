@@ -51,7 +51,9 @@ impl From<AstScalar> for FieldType {
             AstScalar::DateTime => Self::Name("DateTime".to_owned()),
             AstScalar::Float => Self::Name("Float".to_owned()),
             AstScalar::Int => Self::Name("Int".to_owned()),
-            AstScalar::Reference(name) => Self::Name(name),
+            AstScalar::Owned(name) | AstScalar::Reference(name) => {
+                Self::Name(name)
+            }
             AstScalar::String => Self::Name("String".to_owned()),
         }
     }
@@ -251,18 +253,21 @@ impl From<AstModel> for Model {
         let mut fields = vec![Field::id(), Field::created_at()];
 
         for AstField { r#type, name } in ast_fields.values().rev() {
-            let (array, scalar) = match r#type.clone() {
-                AstType::Scalar(scalar @ AstScalar::Reference(_)) => {
-                    (false, scalar)
+            let (array, required, scalar) = match r#type.clone() {
+                AstType::Scalar(scalar @ AstScalar::Owned(_)) => {
+                    (false, false, scalar)
                 }
-                AstType::Scalar(scalar) => (false, scalar),
-                AstType::Array(scalar) => (true, scalar),
+                AstType::Scalar(scalar @ AstScalar::Reference(_)) => {
+                    (false, true, scalar)
+                }
+                AstType::Scalar(scalar) => (false, true, scalar),
+                AstType::Array(scalar) => (true, true, scalar),
             };
 
             let field = Field {
                 name: name.clone(),
                 array,
-                required: true,
+                required,
                 r#type: scalar.into(),
                 attributes: vec![],
             };

@@ -39,7 +39,7 @@ impl From<AstType> for Type {
                 AstScalar::Float => "Float".to_owned(),
                 AstScalar::Int => "Int".to_owned(),
                 AstScalar::String => "String".to_owned(),
-                AstScalar::Reference(name) => name,
+                AstScalar::Reference(name) | AstScalar::Owned(name) => name,
             }
         };
 

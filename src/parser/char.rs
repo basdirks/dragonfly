@@ -19,7 +19,7 @@ use super::{
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::brace_open,
+///     brace_open,
 ///     ParseError,
 /// };
 ///
@@ -53,7 +53,7 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::brace_close,
+///     brace_close,
 ///     ParseError,
 /// };
 ///
@@ -87,7 +87,7 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::hyphen,
+///     hyphen,
 ///     ParseError,
 /// };
 ///
@@ -121,7 +121,7 @@ pub fn hyphen(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::forward_slash,
+///     forward_slash,
 ///     ParseError,
 /// };
 ///
@@ -154,7 +154,7 @@ pub fn forward_slash(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::colon,
+///     colon,
 ///     ParseError,
 /// };
 ///
@@ -188,7 +188,7 @@ pub fn colon(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::paren_open,
+///     paren_open,
 ///     ParseError,
 /// };
 ///
@@ -222,7 +222,7 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::paren_close,
+///     paren_close,
 ///     ParseError,
 /// };
 ///
@@ -256,7 +256,7 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::dollar,
+///     dollar,
 ///     ParseError,
 /// };
 ///
@@ -290,7 +290,7 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::underscore,
+///     underscore,
 ///     ParseError,
 /// };
 ///
@@ -323,7 +323,7 @@ pub fn underscore(input: &str) -> ParseResult<char> {
 ///
 /// ```rust
 /// use dragonfly::parser::{
-///     char::comma,
+///     comma,
 ///     ParseError,
 /// };
 ///
@@ -339,4 +339,37 @@ pub fn underscore(input: &str) -> ParseResult<char> {
 /// ```
 pub fn comma(input: &str) -> ParseResult<char> {
     char(input, ',')
+}
+
+/// Parse an at sign.
+///
+/// # Arguments
+///
+/// * `input` - The input string to parse.
+///
+/// # Errors
+///
+/// * Returns `ParseError::UnexpectedEof` if the input is empty.
+/// * Returns `ParseError::UnexpectedChar` if the next character is not an at
+///  sign.
+///
+/// # Examples
+///
+/// ```rust
+/// use dragonfly::parser::{
+///     at,
+///     ParseError,
+/// };
+///
+/// assert_eq!(at("@"), Ok(('@', "".to_owned())));
+/// assert_eq!(
+///     at("a"),
+///     Err(ParseError::UnexpectedChar {
+///         message: "Expected character '@', found 'a'.".to_owned(),
+///         actual: 'a'
+///     })
+/// );
+/// ```
+pub fn at(input: &str) -> ParseResult<char> {
+    char(input, '@')
 }

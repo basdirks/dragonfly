@@ -59,6 +59,7 @@ impl Model {
     ///     bar: String
     ///     baz: Int
     ///     qux: [Bar]
+    ///     quz: [@Bar]
     /// }
     ///
     /// "
@@ -86,6 +87,13 @@ impl Model {
     ///             Field {
     ///                 name: "qux".to_owned(),
     ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
+    ///             },
+    ///         ),
+    ///         (
+    ///             "quz".to_owned(),
+    ///             Field {
+    ///                 name: "quz".to_owned(),
+    ///                 r#type: Type::Array(Scalar::Owned("Bar".to_owned())),
     ///             },
     ///         ),
     ///     ]

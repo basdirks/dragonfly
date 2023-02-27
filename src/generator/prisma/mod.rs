@@ -103,11 +103,23 @@ impl Display for Schema {
     }
 }
 
+/// Relation cardinality.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum Cardinality {
+    /// One to one.
+    One,
+    /// One to many.
+    Many,
+}
+
 /// A model augmentation.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Augmentation {
-    /// The type of a model field implies a relation.
+    /// The type of a model field implies that another model belongs to one or
+    /// many of this model.
     BelongsTo {
+        /// The cardinality of the relation.
+        cardinality: Cardinality,
         /// The name of the model that the field belongs to.
         belongs_to: String,
         /// The name of the model that the field is a relation to.
@@ -132,7 +144,10 @@ impl Augmentation {
     /// ```rust
     /// use dragonfly::{
     ///     ast::Ast,
-    ///     generator::prisma::Augmentation,
+    ///     generator::prisma::{
+    ///         Augmentation,
+    ///         Cardinality,
+    ///     },
     /// };
     ///
     /// let source = "
@@ -140,7 +155,7 @@ impl Augmentation {
     /// model Foo {
     ///   bar: String
     ///   baz: Int
-    ///   qux: Bar
+    ///   qux: @Bar
     /// }
     ///
     /// model Bar {
@@ -157,6 +172,7 @@ impl Augmentation {
     /// assert_eq!(
     ///     augmentations[0],
     ///     Augmentation::BelongsTo {
+    ///         cardinality: Cardinality::One,
     ///         belongs_to: "Foo".to_string(),
     ///         model_name: "Bar".to_string(),
     ///         relation_name: "qux".to_string(),
@@ -170,11 +186,12 @@ impl Augmentation {
         for field in ast_model.fields.values() {
             if let AstField {
                 name: relation_name,
-                r#type: AstType::Scalar(AstScalar::Reference(model_name)),
+                r#type: AstType::Scalar(AstScalar::Owned(model_name)),
             } = field
             {
                 augmentations.push(Self::BelongsTo {
                     belongs_to: ast_model.name.clone(),
+                    cardinality: Cardinality::One,
                     model_name: model_name.clone(),
                     relation_name: relation_name.clone(),
                 });
@@ -202,6 +219,7 @@ impl Augmentation {
     ///     generator::prisma::{
     ///         Argument,
     ///         Augmentation,
+    ///         Cardinality,
     ///         Field,
     ///         FieldAttribute,
     ///         FieldType,
@@ -230,6 +248,7 @@ impl Augmentation {
     ///
     /// assert_eq!(
     ///     Augmentation::BelongsTo {
+    ///         cardinality: Cardinality::One,
     ///         belongs_to: "User".to_string(),
     ///         model_name: "Profile".to_string(),
     ///         relation_name: "profile".to_string(),
@@ -262,6 +281,7 @@ impl Augmentation {
     ) -> Result<(), String> {
         return match self {
             Self::BelongsTo {
+                cardinality: Cardinality::One,
                 belongs_to,
                 model_name,
                 relation_name,
@@ -315,6 +335,7 @@ impl Augmentation {
                     Err(format!("Model {model_name} not found"))
                 }
             }
+            Self::BelongsTo { .. } => Err("Not implemented".to_owned()),
         };
     }
 }
@@ -357,6 +378,7 @@ model Foo {
     bar: String
     baz: Int
     qux: [Bar]
+    quz: @Bar
 }
 
 model Bar {
@@ -424,6 +446,8 @@ enum Baz {
 
 model Bar {
   createdAt DateTime @default(now())
+  foo       Foo      @relation(\"quzOnFoo\", fields: [fooId], references: [id])
+  fooId     Int      @unique
   id        Int      @id @default(autoincrement())
   quux      String
   quuz      Baz
@@ -435,6 +459,7 @@ model Foo {
   createdAt DateTime @default(now())
   id        Int      @id @default(autoincrement())
   qux       Bar[]
+  quz       Bar?
 }
 
 "

@@ -168,11 +168,11 @@ impl Query {
     /// };
     ///
     /// assert_eq!(
-    ///     Query::parse_arguments("($id: UUID)"),
+    ///     Query::parse_arguments("($id: Int)"),
     ///     Ok((
     ///         vec![QueryArgument {
     ///             name: "id".to_owned(),
-    ///             r#type: Type::Scalar(Scalar::Reference("UUID".to_owned()))
+    ///             r#type: Type::Scalar(Scalar::Int),
     ///         }],
     ///         "".to_owned()
     ///     ))
@@ -188,12 +188,12 @@ impl Query {
     /// };
     ///
     /// assert_eq!(
-    ///     Query::parse_arguments("($id: UUID, $name: [String])"),
+    ///     Query::parse_arguments("($id: Int, $name: [String])"),
     ///     Ok((
     ///         vec![
     ///             QueryArgument {
     ///                 name: "id".to_owned(),
-    ///                 r#type: Type::Scalar(Scalar::Reference("UUID".to_owned()))
+    ///                 r#type: Type::Scalar(Scalar::Int),
     ///             },
     ///             QueryArgument {
     ///                 name: "name".to_owned(),
