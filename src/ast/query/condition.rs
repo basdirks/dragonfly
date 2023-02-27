@@ -316,7 +316,7 @@ mod tests {
 
         assert_eq!(
             Condition {
-                field_path: FieldPath::new(&["foo", "bar", "baz",]),
+                field_path: FieldPath::new(&["foo", "bar", "baz"]),
                 operator: Operator::Equals,
                 argument: "baz".to_owned(),
             }

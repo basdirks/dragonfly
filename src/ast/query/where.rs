@@ -74,17 +74,17 @@ impl Where {
     ///             argument: "foo".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: FieldPath::new(&["foo", "bar",]),
+    ///             field_path: FieldPath::new(&["foo", "bar"]),
     ///             operator: QueryOperator::Equals,
     ///             argument: "bar".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: FieldPath::new(&["foo", "baz",]),
+    ///             field_path: FieldPath::new(&["foo", "baz"]),
     ///             operator: QueryOperator::Contains,
     ///             argument: "baz".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: FieldPath::new(&["foo", "qux",]),
+    ///             field_path: FieldPath::new(&["foo", "qux"]),
     ///             operator: QueryOperator::Contains,
     ///             argument: "qux".to_owned(),
     ///         }
@@ -262,7 +262,7 @@ impl Where {
     ///                     argument: "title".to_owned(),
     ///                 },
     ///                 QueryCondition {
-    ///                     field_path: FieldPath::new(&["title", "tags",]),
+    ///                     field_path: FieldPath::new(&["title", "tags"]),
     ///                     operator: QueryOperator::Contains,
     ///                     argument: "tag".to_owned(),
     ///                 }

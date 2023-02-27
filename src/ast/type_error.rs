@@ -291,7 +291,7 @@ mod tests {
                 query_name: "foo".to_owned(),
                 condition: QueryCondition {
                     operator: QueryOperator::Equals,
-                    field_path: FieldPath::new(&["foo", "bar", "baz",]),
+                    field_path: FieldPath::new(&["foo", "bar", "baz"]),
                     argument: "baz".to_owned(),
                 },
                 argument_type: Type::Scalar(Scalar::String),
@@ -387,7 +387,7 @@ mod tests {
             TypeError::UnknownQueryConditionReference {
                 condition: QueryCondition {
                     operator: QueryOperator::Equals,
-                    field_path: FieldPath::new(&["foo", "bar", "baz",]),
+                    field_path: FieldPath::new(&["foo", "bar", "baz"]),
                     argument: "baz".to_owned(),
                 },
                 query_name: "bar".to_owned(),
@@ -428,7 +428,7 @@ mod tests {
     fn test_display_unresolved_path_error() {
         assert_eq!(
             TypeError::UnresolvedPath {
-                path: FieldPath::new(&["foo", "bar", "baz",]),
+                path: FieldPath::new(&["foo", "bar", "baz"]),
                 model_name: "foo".to_owned(),
                 query_name: "bar".to_owned(),
             }

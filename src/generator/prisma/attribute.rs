@@ -59,7 +59,7 @@ impl Field {
     /// ```rust
     /// use dragonfly::generator::prisma::attribute::Field;
     ///
-    /// assert_eq!(Field::id().to_string(), "@id",);
+    /// assert_eq!(Field::id().to_string(), "@id");
     /// ```
     #[must_use]
     pub fn id() -> Self {

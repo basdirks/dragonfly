@@ -760,7 +760,7 @@ impl Query {
     ///     Err(TypeError::UnknownQueryConditionReference {
     ///         query_name: "images".to_owned(),
     ///         condition: QueryCondition {
-    ///             field_path: FieldPath::new(&["country", "name",]),
+    ///             field_path: FieldPath::new(&["country", "name"]),
     ///             operator: QueryOperator::Equals,
     ///             argument: "tag".to_owned(),
     ///         }
