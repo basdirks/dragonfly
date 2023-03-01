@@ -7,32 +7,48 @@ component Home {
   path: Home
 }
 
-model Image {
-  title: String
-  country: Country
-  category: [Category]
+model User {
+  birthday: DateTime
+  name: String
+  profile: @Profile
 }
 
-query images: [Image] {
-  image {
-    title
-    country {
-      name
+model Profile {
+  firstName: String
+  lastName: String
+  country: Country
+}
+
+model Country {
+  domain: String
+  drivingSide: DrivingSide
+  flag: String
+  name: CountryName
+}
+
+query users: [User] {
+  user {
+    name
+    birthday
+    profile {
+      firstName
+      lastName
     }
-    category
   }
 }
 
-query imagesByCountryName($name: CountryName): [Image] {
-  image {
-    title
-    category
+query usersByCountryName($name: CountryName): [User] {
+  user {
+    name
+    birthday
   }
   where {
-    image {
-      country {
-        name {
-          equals: $name
+    user {
+      profile {
+        country {
+          name {
+            equals: $name
+          }
         }
       }
     }
@@ -42,13 +58,6 @@ query imagesByCountryName($name: CountryName): [Image] {
 enum DrivingSide {
   Left
   Right
-}
-
-model Country {
-  domain: String
-  drivingSide: DrivingSide
-  flag: String
-  name: CountryName
 }
 
 enum CountryName {

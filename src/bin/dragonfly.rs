@@ -71,12 +71,12 @@ pub fn main() {
         }
         Command::Build { input, output } => {
             if let Err(error) = compile(&input, output.as_deref()) {
-                println!("An error occurred during compilation: {error}");
+                println!("An error occurred during compilation. {error}");
             }
         }
         Command::Check { input } => {
             if let Err(error) = check_file(&input) {
-                println!("Error while checking `{input}`:\n{error}");
+                println!("Error while checking `{input}`.\n{error}");
             } else {
                 println!("No errors found in `{input}`.");
             }

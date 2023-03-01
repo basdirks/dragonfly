@@ -1,43 +1,11 @@
 use {
-    crate::{
-        ast::{
-            Scalar as AstScalarType,
-            Type as AstType,
-        },
-        generator::printer::{
-            comma_separated,
-            separated,
-        },
+    super::literal::Literal,
+    crate::generator::printer::{
+        comma_separated,
+        separated,
     },
     std::fmt::Display,
 };
-
-/// A JavaScript literal.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Literal {
-    /// A BigInt literal: a number followed by `n`.
-    BigInt(String),
-    /// A boolean literal: `true` or `false`.
-    Boolean(bool),
-    /// A number literal.
-    Number(String),
-    /// A string literal: characters surrounded by double quotes.
-    String(String),
-}
-
-impl Display for Literal {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        match self {
-            Self::BigInt(value) => write!(f, "{value}n"),
-            Self::Boolean(value) => write!(f, "{value}"),
-            Self::Number(value) => write!(f, "{value}"),
-            Self::String(value) => write!(f, "\"{value}\""),
-        }
-    }
-}
 
 /// A TypeScript type keyword.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -70,6 +38,229 @@ pub enum Keyword {
     Void,
 }
 
+impl Keyword {
+    /// Create a new `any` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::any(), Type::Keyword(Keyword::Any));
+    /// ```
+    #[must_use]
+    pub const fn any() -> Type {
+        Type::Keyword(Self::Any)
+    }
+
+    /// Create a new `bigint` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::bigint(), Type::Keyword(Keyword::BigInt));
+    /// ```
+    #[must_use]
+    pub const fn bigint() -> Type {
+        Type::Keyword(Self::BigInt)
+    }
+
+    /// Create a new `boolean` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::boolean(), Type::Keyword(Keyword::Boolean));
+    /// ```
+    #[must_use]
+    pub const fn boolean() -> Type {
+        Type::Keyword(Self::Boolean)
+    }
+
+    /// Create a new `intrinsic` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::intrinsic(), Type::Keyword(Keyword::Intrinsic));
+    /// ```
+    #[must_use]
+    pub const fn intrinsic() -> Type {
+        Type::Keyword(Self::Intrinsic)
+    }
+
+    /// Create a new `never` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::never(), Type::Keyword(Keyword::Never));
+    /// ```
+    #[must_use]
+    pub const fn never() -> Type {
+        Type::Keyword(Self::Never)
+    }
+
+    /// Create a new `null` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::null(), Type::Keyword(Keyword::Null));
+    /// ```
+    #[must_use]
+    pub const fn null() -> Type {
+        Type::Keyword(Self::Null)
+    }
+
+    /// Create a new `number` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::number(), Type::Keyword(Keyword::Number));
+    /// ```
+    #[must_use]
+    pub const fn number() -> Type {
+        Type::Keyword(Self::Number)
+    }
+
+    /// Create a new `object` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::object(), Type::Keyword(Keyword::Object));
+    /// ```
+    #[must_use]
+    pub const fn object() -> Type {
+        Type::Keyword(Self::Object)
+    }
+
+    /// Create a new `string` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::string(), Type::Keyword(Keyword::String));
+    /// ```
+    #[must_use]
+    pub const fn string() -> Type {
+        Type::Keyword(Self::String)
+    }
+
+    /// Create a new `symbol` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::symbol(), Type::Keyword(Keyword::Symbol));
+    /// ```
+    #[must_use]
+    pub const fn symbol() -> Type {
+        Type::Keyword(Self::Symbol)
+    }
+
+    /// Create a new `undefined` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::undefined(), Type::Keyword(Keyword::Undefined));
+    /// ```
+    #[must_use]
+    pub const fn undefined() -> Type {
+        Type::Keyword(Self::Undefined)
+    }
+
+    /// Create a new `unknown` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::unknown(), Type::Keyword(Keyword::Unknown));
+    /// ```
+    #[must_use]
+    pub const fn unknown() -> Type {
+        Type::Keyword(Self::Unknown)
+    }
+
+    /// Create a new `void` type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::{
+    ///     Keyword,
+    ///     Type,
+    /// };
+    ///
+    /// assert_eq!(Keyword::void(), Type::Keyword(Keyword::Void));
+    /// ```
+    #[must_use]
+    pub const fn void() -> Type {
+        Type::Keyword(Self::Void)
+    }
+}
+
 impl Display for Keyword {
     fn fmt(
         &self,
@@ -100,6 +291,38 @@ pub struct FunctionArgument {
     pub name: String,
     /// The type of the argument.
     pub r#type: Type,
+}
+
+impl FunctionArgument {
+    /// Create a new array argument.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the argument.
+    /// * `inner` - The inner type of the array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use dragonfly::generator::typescript::type::FunctionArgument;
+    /// use dragonfly::generator::typescript::type::Keyword;
+    /// use dragonfly::generator::typescript::type::Type;
+    ///
+    /// let argument = FunctionArgument::array("foo", Keyword::number());
+    ///
+    /// assert_eq!(argument.name, "foo".to_owned());
+    /// assert_eq!(argument.r#type, Type::array(Type::keyword("Number")));
+    /// ```
+    #[must_use]
+    pub fn array(
+        name: &str,
+        inner: Type,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            r#type: Type::array(inner),
+        }
+    }
 }
 
 impl Display for FunctionArgument {
@@ -162,6 +385,70 @@ pub enum Type {
     Union(Vec<Type>),
 }
 
+impl Type {
+    /// Create an array type.
+    ///
+    /// # Arguments
+    ///
+    /// * `inner` - The inner type of the array.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::type::Keyword;
+    /// use dragonfly::generator::typescript::type::Type;
+    ///
+    /// let array = Type::array(Keyword::number());
+    ///
+    /// assert_eq!(array, Type::Array(Box::new(Type::Keyword(Keyword::Number))));
+    /// ```
+    #[must_use]
+    pub fn array(inner: Self) -> Self {
+        Self::Array(Box::new(inner))
+    }
+
+    /// Create a function type.
+    ///
+    /// # Arguments
+    ///
+    /// * `arguments` - The function arguments.
+    /// * `return_type` - The return type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::type::FunctionArgument;
+    /// use dragonfly::generator::typescript::type::Keyword;
+    /// use dragonfly::generator::typescript::type::Type;
+    ///
+    /// let function = Type::function(
+    ///     &[FunctionArgument::array("foo", Keyword::number())],
+    ///     Keyword::string(),
+    /// );
+    ///
+    /// assert_eq!(
+    ///    function,
+    ///   Type::Function {
+    ///      arguments: vec![FunctionArgument {
+    ///         name: "foo".to_owned(),
+    ///        r#type: Type::Array(Box::new(Type::Keyword(Keyword::Number))),
+    ///    }],
+    ///   return_type: Box::new(Type::Keyword(Keyword::String)),
+    /// },
+    /// );
+    /// ```
+    #[must_use]
+    pub fn function(
+        arguments: &[FunctionArgument],
+        return_type: Self,
+    ) -> Self {
+        Self::Function {
+            arguments: arguments.to_owned(),
+            return_type: Box::new(return_type),
+        }
+    }
+}
+
 impl Display for Type {
     fn fmt(
         &self,
@@ -204,42 +491,6 @@ impl Display for Type {
             Self::Union(types) => {
                 write!(f, "{}", separated(types, " | "))
             }
-        }
-    }
-}
-
-impl From<AstScalarType> for Type {
-    fn from(value: AstScalarType) -> Self {
-        match value {
-            AstScalarType::Boolean => Self::Keyword(Keyword::Boolean),
-            // This should be fine in combination with https://date-fns.org/.
-            AstScalarType::DateTime => {
-                Self::TypeReference {
-                    identifier: "Date".to_owned(),
-                    type_references: vec![],
-                }
-            }
-            AstScalarType::Float => Self::Keyword(Keyword::Number),
-            // Not ideal, but an integer should be an integer. Perhaps make this
-            // opt-in or opt-out.
-            AstScalarType::Int => Self::Keyword(Keyword::BigInt),
-            AstScalarType::String => Self::Keyword(Keyword::String),
-            AstScalarType::Owned(identifier)
-            | AstScalarType::Reference(identifier) => {
-                Self::TypeReference {
-                    identifier,
-                    type_references: vec![],
-                }
-            }
-        }
-    }
-}
-
-impl From<AstType> for Type {
-    fn from(r#type: AstType) -> Self {
-        match r#type {
-            AstType::Scalar(r#type) => r#type.into(),
-            AstType::Array(r#type) => Self::Array(Box::new(r#type.into())),
         }
     }
 }
@@ -315,19 +566,19 @@ mod tests {
 
     #[test]
     fn test_display_keyword() {
-        assert_eq!(Type::Keyword(Keyword::Any).to_string(), "any");
-        assert_eq!(Type::Keyword(Keyword::BigInt).to_string(), "bigint");
-        assert_eq!(Type::Keyword(Keyword::Boolean).to_string(), "boolean");
-        assert_eq!(Type::Keyword(Keyword::Intrinsic).to_string(), "intrinsic");
-        assert_eq!(Type::Keyword(Keyword::Never).to_string(), "never");
-        assert_eq!(Type::Keyword(Keyword::Null).to_string(), "null");
-        assert_eq!(Type::Keyword(Keyword::Number).to_string(), "number");
-        assert_eq!(Type::Keyword(Keyword::Object).to_string(), "object");
-        assert_eq!(Type::Keyword(Keyword::String).to_string(), "string");
-        assert_eq!(Type::Keyword(Keyword::Symbol).to_string(), "symbol");
-        assert_eq!(Type::Keyword(Keyword::Undefined).to_string(), "undefined");
-        assert_eq!(Type::Keyword(Keyword::Unknown).to_string(), "unknown");
-        assert_eq!(Type::Keyword(Keyword::Void).to_string(), "void");
+        assert_eq!(Keyword::any().to_string(), "any");
+        assert_eq!(Keyword::bigint().to_string(), "bigint");
+        assert_eq!(Keyword::boolean().to_string(), "boolean");
+        assert_eq!(Keyword::intrinsic().to_string(), "intrinsic");
+        assert_eq!(Keyword::never().to_string(), "never");
+        assert_eq!(Keyword::null().to_string(), "null");
+        assert_eq!(Keyword::number().to_string(), "number");
+        assert_eq!(Keyword::object().to_string(), "object");
+        assert_eq!(Keyword::string().to_string(), "string");
+        assert_eq!(Keyword::symbol().to_string(), "symbol");
+        assert_eq!(Keyword::undefined().to_string(), "undefined");
+        assert_eq!(Keyword::unknown().to_string(), "unknown");
+        assert_eq!(Keyword::void().to_string(), "void");
     }
 
     #[test]
@@ -555,59 +806,5 @@ mod tests {
     #[test]
     fn test_display_void() {
         assert_eq!(Keyword::Void.to_string(), "void");
-    }
-
-    #[test]
-    fn test_from_ast_scalar_boolean() {
-        assert_eq!(
-            Type::from(AstScalarType::Boolean),
-            Type::Keyword(Keyword::Boolean)
-        );
-    }
-
-    #[test]
-    fn test_from_ast_scalar_date_time() {
-        assert_eq!(
-            Type::from(AstScalarType::DateTime),
-            Type::TypeReference {
-                identifier: "Date".to_owned(),
-                type_references: vec![]
-            }
-        );
-    }
-
-    #[test]
-    fn test_from_ast_scalar_float() {
-        assert_eq!(
-            Type::from(AstScalarType::Float),
-            Type::Keyword(Keyword::Number)
-        );
-    }
-
-    #[test]
-    fn test_from_ast_scalar_integer() {
-        assert_eq!(
-            Type::from(AstScalarType::Int),
-            Type::Keyword(Keyword::BigInt)
-        );
-    }
-
-    #[test]
-    fn test_from_ast_scalar_string() {
-        assert_eq!(
-            Type::from(AstScalarType::String),
-            Type::Keyword(Keyword::String)
-        );
-    }
-
-    #[test]
-    fn test_from_ast_scalar_identifier() {
-        assert_eq!(
-            Type::from(AstScalarType::Reference("Image".to_owned())),
-            Type::TypeReference {
-                identifier: "Image".to_owned(),
-                type_references: vec![]
-            }
-        );
     }
 }

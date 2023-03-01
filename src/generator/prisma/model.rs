@@ -1,21 +1,15 @@
 use {
     super::{
-        attribute,
         value::Function,
+        BlockAttribute,
+        FieldAttribute,
+        Value,
     },
-    crate::{
-        ast::{
-            Field as AstField,
-            Model as AstModel,
-            Scalar as AstScalar,
-            Type as AstType,
-        },
-        generator::printer::{
-            indent,
-            newline_separated,
-            space_separated,
-            Print,
-        },
+    crate::generator::printer::{
+        indent,
+        newline_separated,
+        space_separated,
+        Print,
     },
     std::fmt::{
         Display,
@@ -32,6 +26,65 @@ pub enum FieldType {
     Function(Function),
 }
 
+impl FieldType {
+    /// Create a new `Name` field type.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::FieldType;
+    ///
+    /// let field_type = FieldType::new("foo");
+    ///
+    /// assert_eq!(field_type, FieldType::Name("foo".to_owned()));
+    /// ```
+    #[must_use]
+    pub fn name(name: &str) -> Self {
+        Self::Name(name.to_owned())
+    }
+
+    /// Create a new `Function` field type.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the function.
+    /// * `parameters` - The parameters of the function.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::FieldType;
+    ///
+    /// let field_type = FieldType::function("foo", &[]);
+    ///
+    /// assert_eq!(field_type, FieldType::Function(Function::new("foo", &[])));
+    ///
+    /// let field_type = FieldType::function(
+    ///     "foo",
+    ///     &[Value::Boolean(true), Value::String("bar".to_owned())],
+    /// );
+    ///
+    /// assert_eq!(
+    ///     field_type,
+    ///     FieldType::Function(Function::new(
+    ///         "foo",
+    ///         &[Value::Boolean(true), Value::String("bar".to_owned())]
+    ///     ))
+    /// );
+    /// ```
+    #[must_use]
+    pub fn function(
+        name: &str,
+        parameters: &[Value],
+    ) -> Self {
+        Self::Function(Function::new(name, parameters))
+    }
+}
+
 impl Display for FieldType {
     fn fmt(
         &self,
@@ -40,21 +93,6 @@ impl Display for FieldType {
         match self {
             Self::Name(name) => write!(f, "{name}"),
             Self::Function(function) => write!(f, "{function}"),
-        }
-    }
-}
-
-impl From<AstScalar> for FieldType {
-    fn from(scalar: AstScalar) -> Self {
-        match scalar {
-            AstScalar::Boolean => Self::Name("Boolean".to_owned()),
-            AstScalar::DateTime => Self::Name("DateTime".to_owned()),
-            AstScalar::Float => Self::Name("Float".to_owned()),
-            AstScalar::Int => Self::Name("Int".to_owned()),
-            AstScalar::Owned(name) | AstScalar::Reference(name) => {
-                Self::Name(name)
-            }
-            AstScalar::String => Self::Name("String".to_owned()),
         }
     }
 }
@@ -73,47 +111,199 @@ pub struct Field {
     /// Is the field an array?
     pub array: bool,
     /// Field attributes.
-    pub attributes: Vec<attribute::Field>,
+    pub attributes: Vec<FieldAttribute>,
 }
 
 impl Field {
+    /// Create a new field.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    /// * `r#type` - The type of the field.
+    /// * `required` - Is the field required?
+    /// * `array` - Is the field an array?
+    /// * `attributes` - Field attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     Field,
+    ///     FieldType,
+    /// };
+    ///
+    /// let field = Field::new("foo", FieldType::name("Int"), true, false, &[]);
+    ///
+    /// assert_eq!(field.name, "foo");
+    /// assert_eq!(field.r#type, FieldType::name("Int"));
+    /// assert_eq!(field.required, true);
+    /// assert_eq!(field.array, false);
+    /// assert_eq!(field.attributes, vec![]);
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        r#type: FieldType,
+        required: bool,
+        array: bool,
+        attributes: &[FieldAttribute],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            r#type,
+            required,
+            array,
+            attributes: attributes.to_owned(),
+        }
+    }
+
+    /// Create a new boolean field.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    /// * `attributes` - Field attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     Field,
+    ///     FieldType,
+    /// };
+    ///
+    /// let field = Field::boolean("foo", &[]);
+    ///
+    /// assert_eq!(field.name, "foo");
+    /// assert_eq!(field.r#type, FieldType::name("Boolean"));
+    /// assert_eq!(field.required, true);
+    /// assert_eq!(field.array, false);
+    /// assert_eq!(field.attributes, vec![]);
+    /// ```
+    #[must_use]
+    pub fn boolean(
+        name: &str,
+        attributes: &[FieldAttribute],
+    ) -> Self {
+        Self::new(name, FieldType::name("Boolean"), true, false, attributes)
+    }
+
+    /// Create a new integer field.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    /// * `attributes` - Field attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     Field,
+    ///     FieldType,
+    /// };
+    ///
+    /// let field = Field::int("foo", &[]);
+    ///
+    /// assert_eq!(field.name, "foo");
+    /// assert_eq!(field.r#type, FieldType::name("Int"));
+    /// assert_eq!(field.required, true);
+    /// assert_eq!(field.array, false);
+    /// assert_eq!(field.attributes, vec![]);
+    /// ```
+    #[must_use]
+    pub fn int(
+        name: &str,
+        attributes: &[FieldAttribute],
+    ) -> Self {
+        Self::new(name, FieldType::name("Int"), true, false, attributes)
+    }
+
+    /// Create a new date time field.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    /// * `attributes` - Field attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     Field,
+    ///     FieldType,
+    /// };
+    ///
+    /// let field = Field::datetime("foo", &[]);
+    ///
+    /// assert_eq!(field.name, "foo");
+    /// assert_eq!(field.r#type, FieldType::name("DateTime"));
+    /// assert_eq!(field.required, true);
+    /// assert_eq!(field.array, false);
+    /// assert_eq!(field.attributes, vec![]);
+    /// ```
+    #[must_use]
+    pub fn datetime(
+        name: &str,
+        attributes: &[FieldAttribute],
+    ) -> Self {
+        Self::new(name, FieldType::name("DateTime"), true, false, attributes)
+    }
+
+    /// Create a new string field.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    /// * `attributes` - Field attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     Field,
+    ///     FieldType,
+    /// };
+    ///
+    /// let field = Field::string("foo", &[]);
+    ///
+    /// assert_eq!(field.name, "foo");
+    /// assert_eq!(field.r#type, FieldType::name("String"));
+    /// assert_eq!(field.required, true);
+    /// assert_eq!(field.array, false);
+    /// assert_eq!(field.attributes, vec![]);
+    /// ```
+    #[must_use]
+    pub fn string(
+        name: &str,
+        attributes: &[FieldAttribute],
+    ) -> Self {
+        Self::new(name, FieldType::name("String"), true, false, attributes)
+    }
+
     /// Standard `id` field.
     #[must_use]
     pub fn id() -> Self {
-        Self {
-            name: "id".to_owned(),
-            r#type: FieldType::Name("Int".to_owned()),
-            required: true,
-            array: false,
-            attributes: vec![
-                attribute::Field::id(),
-                attribute::Field::default_auto_increment(),
+        Self::int(
+            "id",
+            &[
+                FieldAttribute::id(),
+                FieldAttribute::default_auto_increment(),
             ],
-        }
+        )
     }
 
     /// Standard `createdAt` field.
     #[must_use]
     pub fn created_at() -> Self {
-        Self {
-            name: "createdAt".to_owned(),
-            r#type: FieldType::Name("DateTime".to_owned()),
-            required: true,
-            array: false,
-            attributes: vec![attribute::Field::default_now()],
-        }
+        Self::datetime("createdAt", &[FieldAttribute::default_now()])
     }
 
     /// Standard `updatedAt` field.
     #[must_use]
     pub fn updated_at() -> Self {
-        Self {
-            name: "updatedAt".to_owned(),
-            r#type: FieldType::Name("DateTime".to_owned()),
-            required: true,
-            array: false,
-            attributes: vec![],
-        }
+        Self::datetime("updatedAt", &[])
     }
 
     /// Print the type of the field.
@@ -164,7 +354,91 @@ pub struct Model {
     /// The fields of the model.
     pub fields: Vec<Field>,
     /// Block attributes.
-    pub attributes: Vec<attribute::Block>,
+    pub attributes: Vec<BlockAttribute>,
+}
+
+impl Model {
+    /// Create a new model.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the model.
+    /// * `fields` - The fields of the model.
+    /// * `attributes` - Block attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     BlockAttribute,
+    ///     Field,
+    ///     FieldType,
+    ///     Model,
+    /// };
+    ///
+    /// let model = Model::new(
+    ///     "Foo",
+    ///     &[Field::int("bar", &[]), Field::int("baz", &[])],
+    ///     &[BlockAttribute::map("foo")],
+    /// );
+    ///
+    /// assert_eq!(model.name, "Foo");
+    /// assert_eq!(model.fields.len(), 2);
+    /// assert_eq!(model.attributes.len(), 1);
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        fields: &[Field],
+        attributes: &[BlockAttribute],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            fields: fields.to_owned(),
+            attributes: attributes.to_owned(),
+        }
+    }
+
+    /// Create a new model with the standard `id`, `createdAt`, and `updatedAt`
+    /// fields.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the model.
+    /// * `fields` - The fields of the model.
+    /// * `attributes` - Block attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::model::{
+    ///     BlockAttribute,
+    ///     Field,
+    ///     FieldType,
+    ///     Model,
+    /// };
+    ///
+    /// let model = Model::standard(
+    ///     "Foo",
+    ///     &[Field::int("bar", &[]), Field::int("baz", &[])],
+    ///     &[BlockAttribute::map("foo")],
+    /// );
+    ///
+    /// assert_eq!(model.name, "Foo");
+    /// assert_eq!(model.fields.len(), 4);
+    /// assert_eq!(model.attributes.len(), 1);
+    /// ```
+    #[must_use]
+    pub fn standard(
+        name: &str,
+        fields: &mut Vec<Field>,
+        attributes: &[BlockAttribute],
+    ) -> Self {
+        fields.push(Field::id());
+        fields.push(Field::created_at());
+
+        Self::new(name, fields, attributes)
+    }
 }
 
 impl Display for Model {
@@ -243,52 +517,6 @@ impl Print for Model {
     }
 }
 
-impl From<AstModel> for Model {
-    fn from(
-        AstModel {
-            name,
-            fields: ast_fields,
-        }: AstModel
-    ) -> Self {
-        let mut fields = vec![Field::id(), Field::created_at()];
-
-        for AstField { r#type, name } in ast_fields.values().rev() {
-            let (array, required, scalar) = match r#type.clone() {
-                AstType::Scalar(scalar @ AstScalar::Owned(_)) => {
-                    (false, false, scalar)
-                }
-                AstType::Scalar(scalar @ AstScalar::Reference(_)) => {
-                    (false, true, scalar)
-                }
-                AstType::Scalar(scalar) => (false, true, scalar),
-                AstType::Array(scalar) => (true, true, scalar),
-            };
-
-            let field = Field {
-                name: name.clone(),
-                array,
-                required,
-                r#type: scalar.into(),
-                attributes: vec![],
-            };
-
-            fields.push(field);
-        }
-
-        Self {
-            name,
-            fields,
-            attributes: vec![],
-        }
-    }
-}
-
-impl From<&AstModel> for Model {
-    fn from(model: &AstModel) -> Self {
-        model.clone().into()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use {
@@ -301,16 +529,16 @@ mod tests {
 
     #[test]
     fn test_display_field_type() {
-        assert_eq!(FieldType::Name("Int".to_owned()).to_string(), "Int");
+        assert_eq!(FieldType::name("Int").to_string(), "Int");
 
         assert_eq!(
-            FieldType::Function(Function {
-                name: "unique".to_owned(),
-                parameters: vec![Value::Array(vec![
-                    Value::Keyword("firstName".to_owned()),
-                    Value::Keyword("lastName".to_owned()),
+            FieldType::function(
+                "unique",
+                &[Value::array(&[
+                    Value::keyword("firstName"),
+                    Value::keyword("lastName"),
                 ])],
-            })
+            )
             .to_string(),
             "unique([firstName, lastName])"
         );
@@ -321,63 +549,36 @@ mod tests {
         let model = Model {
             name: "User".to_owned(),
             fields: vec![
-                Field {
-                    name: "id".to_owned(),
-                    r#type: FieldType::Name("Int".to_owned()),
-                    required: true,
-                    array: false,
-                    attributes: vec![attribute::Field {
+                Field::int(
+                    "id",
+                    &[FieldAttribute {
                         group: None,
                         name: "default".to_owned(),
-                        arguments: vec![Argument {
-                            name: None,
-                            value: Value::Function(Function {
-                                name: "autoincrement".to_owned(),
-                                parameters: vec![],
-                            }),
-                        }],
+                        arguments: vec![Argument::unnamed(&Value::function(
+                            "autoincrement",
+                            &[],
+                        ))],
                     }],
-                },
-                Field {
-                    name: "isAdmin".to_owned(),
-                    r#type: FieldType::Name("Boolean".to_owned()),
-                    required: true,
-                    array: false,
-                    attributes: vec![attribute::Field {
-                        group: None,
-                        name: "default".to_owned(),
-                        arguments: vec![Argument {
-                            name: None,
-                            value: Value::Boolean(false),
-                        }],
-                    }],
-                },
-                Field {
-                    name: "firstName".to_owned(),
-                    r#type: FieldType::Name("String".to_owned()),
-                    required: true,
-                    array: false,
-                    attributes: vec![],
-                },
-                Field {
-                    name: "lastName".to_owned(),
-                    r#type: FieldType::Name("String".to_owned()),
-                    required: true,
-                    array: false,
-                    attributes: vec![],
-                },
+                ),
+                Field::boolean(
+                    "isAdmin",
+                    &[FieldAttribute::new(
+                        "default",
+                        &[Argument::unnamed(&Value::Boolean(false))],
+                        None,
+                    )],
+                ),
+                Field::string("firstName", &[]),
+                Field::string("lastName", &[]),
             ],
-            attributes: vec![attribute::Block {
-                group: None,
-                name: "unique".to_owned(),
-                arguments: vec![Argument {
-                    name: None,
-                    value: Value::Array(vec![
-                        Value::Keyword("firstName".to_owned()),
-                        Value::Keyword("lastName".to_owned()),
-                    ]),
-                }],
-            }],
+            attributes: vec![BlockAttribute::new(
+                "unique",
+                &[Argument::unnamed(&Value::Array(vec![
+                    Value::keyword("firstName"),
+                    Value::keyword("lastName"),
+                ]))],
+                None,
+            )],
         };
 
         assert_eq!(
@@ -395,54 +596,6 @@ model User {
 
 "
             .trim()
-        );
-    }
-
-    #[test]
-    fn test_field_type_from_string() {
-        assert_eq!(
-            FieldType::from(AstScalar::String),
-            FieldType::Name("String".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_field_type_from_int() {
-        assert_eq!(
-            FieldType::from(AstScalar::Int),
-            FieldType::Name("Int".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_field_type_from_float() {
-        assert_eq!(
-            FieldType::from(AstScalar::Float),
-            FieldType::Name("Float".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_field_type_from_boolean() {
-        assert_eq!(
-            FieldType::from(AstScalar::Boolean),
-            FieldType::Name("Boolean".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_field_type_from_datetime() {
-        assert_eq!(
-            FieldType::from(AstScalar::DateTime),
-            FieldType::Name("DateTime".to_owned())
-        );
-    }
-
-    #[test]
-    fn test_field_type_from_reference() {
-        assert_eq!(
-            FieldType::from(AstScalar::Reference("User".to_owned())),
-            FieldType::Name("User".to_owned())
         );
     }
 }

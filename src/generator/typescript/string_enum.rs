@@ -1,28 +1,17 @@
 use {
     crate::{
-        ast::Enum as AstEnum,
         generator::printer::{
             indent,
             newline_separated,
             Print,
         },
+        ir::Enum as IrEnum,
     },
     std::fmt::Display,
 };
 
 /// A TypeScript enum variant, usually called `member` in TypeScript ASTs. A
 /// variant's value may differ from its name.
-///
-/// # Examples
-///
-/// `France` and `Germany` are variants:
-///
-/// ```typescript
-/// enum CountryName {
-///     France = "France",
-///     Germany = "Germany",
-/// }
-/// ```
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Variant {
     /// The name of the variant. Must be unique within the enum. Usually
@@ -30,6 +19,36 @@ pub struct Variant {
     name: String,
     /// The value of the variant. May differ from the name.
     value: String,
+}
+
+impl Variant {
+    /// Create a new variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the variant.
+    /// * `value` - The value of the variant.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::Variant;
+    ///
+    /// let variant = Variant::new("France", "France");
+    ///
+    /// assert_eq!(variant.name, "France");
+    /// assert_eq!(variant.value, "France");
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        value: &str,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            value: value.to_owned(),
+        }
+    }
 }
 
 impl Print for Variant {
@@ -84,6 +103,39 @@ pub struct StringEnum {
     variants: Vec<Variant>,
 }
 
+impl StringEnum {
+    /// Create a new enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `identifier` - The name of the enum.
+    /// * `variants` - The variants of the enum.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::StringEnum;
+    ///
+    /// let r#enum = StringEnum::new("CountryName", &["France", "Germany"]);
+    ///
+    /// assert_eq!(r#enum.identifier, "CountryName".to_owned());
+    /// assert_eq!(r#enum.variants.len(), 2);
+    /// ```
+    #[must_use]
+    pub fn new(
+        identifier: &str,
+        variants: &[&str],
+    ) -> Self {
+        Self {
+            identifier: identifier.to_owned(),
+            variants: variants
+                .iter()
+                .map(|variant| Variant::new(variant, variant))
+                .collect::<Vec<_>>(),
+        }
+    }
+}
+
 impl Print for StringEnum {
     fn print(
         &self,
@@ -107,28 +159,23 @@ impl Print for StringEnum {
     }
 }
 
-impl From<AstEnum> for StringEnum {
-    fn from(ast_enum: AstEnum) -> Self {
-        let AstEnum { name, variants } = ast_enum;
+impl From<IrEnum> for StringEnum {
+    fn from(ir_enum: IrEnum) -> Self {
+        let IrEnum { name, values } = ir_enum;
 
         Self {
             identifier: name,
-            variants: variants
+            variants: values
                 .iter()
-                .map(|variant| {
-                    Variant {
-                        name: variant.clone(),
-                        value: variant.clone(),
-                    }
-                })
+                .map(|value| Variant::new(value, value))
                 .collect::<Vec<_>>(),
         }
     }
 }
 
-impl From<&AstEnum> for StringEnum {
-    fn from(ast_enum: &AstEnum) -> Self {
-        Self::from(ast_enum.clone())
+impl From<&IrEnum> for StringEnum {
+    fn from(ir_enum: &IrEnum) -> Self {
+        Self::from(ir_enum.clone())
     }
 }
 
@@ -137,83 +184,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_ast_enum() {
+    fn test_from_ir_enum() {
         assert_eq!(
-            StringEnum::from(AstEnum {
-                name: "CountryName".to_owned(),
-                variants: vec![
-                    "France".to_owned(),
-                    "Germany".to_owned(),
-                    "Italy".to_owned(),
-                    "Spain".to_owned(),
-                    "UnitedKingdom".to_owned(),
-                    "UnitedStates".to_owned(),
-                ]
-            }),
-            StringEnum {
-                identifier: "CountryName".to_owned(),
-                variants: vec![
-                    Variant {
-                        name: "France".to_owned(),
-                        value: "France".to_owned()
-                    },
-                    Variant {
-                        name: "Germany".to_owned(),
-                        value: "Germany".to_owned()
-                    },
-                    Variant {
-                        name: "Italy".to_owned(),
-                        value: "Italy".to_owned()
-                    },
-                    Variant {
-                        name: "Spain".to_owned(),
-                        value: "Spain".to_owned()
-                    },
-                    Variant {
-                        name: "UnitedKingdom".to_owned(),
-                        value: "UnitedKingdom".to_owned()
-                    },
-                    Variant {
-                        name: "UnitedStates".to_owned(),
-                        value: "UnitedStates".to_owned()
-                    },
-                ]
-            }
+            StringEnum::from(IrEnum::new(
+                "CountryName",
+                &["France", "Germany", "Italy",]
+            )),
+            StringEnum::new("CountryName", &["France", "Germany", "Italy",])
         );
     }
 
     #[test]
     fn test_print_enum() {
         assert_eq!(
-            StringEnum {
-                identifier: "CountryName".to_owned(),
-                variants: vec![
-                    Variant {
-                        name: "France".to_owned(),
-                        value: "France".to_owned()
-                    },
-                    Variant {
-                        name: "Germany".to_owned(),
-                        value: "Germany".to_owned()
-                    },
-                    Variant {
-                        name: "Italy".to_owned(),
-                        value: "Italy".to_owned()
-                    },
-                    Variant {
-                        name: "Spain".to_owned(),
-                        value: "Spain".to_owned()
-                    },
-                    Variant {
-                        name: "UnitedKingdom".to_owned(),
-                        value: "UnitedKingdom".to_owned()
-                    },
-                    Variant {
-                        name: "UnitedStates".to_owned(),
-                        value: "UnitedStates".to_owned()
-                    },
+            StringEnum::new(
+                "CountryName",
+                &[
+                    "France",
+                    "Germany",
+                    "Italy",
+                    "Spain",
+                    "UnitedKingdom",
+                    "UnitedStates"
                 ]
-            }
+            )
             .print(1),
             "    enum CountryName {
         France = \"France\",
@@ -229,60 +223,38 @@ mod tests {
     #[test]
     fn test_display_variant() {
         assert_eq!(
-            Variant {
-                name: "France".to_owned(),
-                value: "France".to_owned()
-            }
-            .to_string(),
+            Variant::new("France", "France").to_string(),
             "France = \"France\""
         );
     }
 
     #[test]
-    fn test_enum_from_ast_enum() {
-        let ast_enum = AstEnum {
-            name: "CountryName".to_owned(),
-            variants: vec![
-                "France".to_owned(),
-                "Germany".to_owned(),
-                "Italy".to_owned(),
-                "Spain".to_owned(),
-                "UnitedKingdom".to_owned(),
-                "UnitedStates".to_owned(),
+    fn test_enum_from_ir_enum() {
+        let ir_enum = IrEnum::new(
+            "CountryName",
+            &[
+                "France",
+                "Germany",
+                "Italy",
+                "Spain",
+                "UnitedKingdom",
+                "UnitedStates",
             ],
-        };
+        );
 
-        let expected = StringEnum {
-            identifier: "CountryName".to_owned(),
-            variants: vec![
-                Variant {
-                    name: "France".to_owned(),
-                    value: "France".to_owned(),
-                },
-                Variant {
-                    name: "Germany".to_owned(),
-                    value: "Germany".to_owned(),
-                },
-                Variant {
-                    name: "Italy".to_owned(),
-                    value: "Italy".to_owned(),
-                },
-                Variant {
-                    name: "Spain".to_owned(),
-                    value: "Spain".to_owned(),
-                },
-                Variant {
-                    name: "UnitedKingdom".to_owned(),
-                    value: "UnitedKingdom".to_owned(),
-                },
-                Variant {
-                    name: "UnitedStates".to_owned(),
-                    value: "UnitedStates".to_owned(),
-                },
+        let expected = StringEnum::new(
+            "CountryName",
+            &[
+                "France",
+                "Germany",
+                "Italy",
+                "Spain",
+                "UnitedKingdom",
+                "UnitedStates",
             ],
-        };
+        );
 
-        assert_eq!(StringEnum::from(ast_enum.clone()), expected);
-        assert_eq!(StringEnum::from(&ast_enum), expected);
+        assert_eq!(StringEnum::from(ir_enum.clone()), expected);
+        assert_eq!(StringEnum::from(&ir_enum), expected);
     }
 }

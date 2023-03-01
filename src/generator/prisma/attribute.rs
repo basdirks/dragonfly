@@ -19,6 +19,40 @@ pub struct Block {
     pub arguments: Vec<Argument>,
 }
 
+impl Block {
+    /// Create a new block attribute.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the attribute.
+    /// * `arguments` - The fields of the attribute.
+    /// * `group` - The name of the group to which the attribute belongs.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::attribute::Block;
+    ///
+    /// let attribute = Block::new("foo", &[], None);
+    ///
+    /// assert_eq!(attribute.name, "foo");
+    /// assert!(attribute.arguments.is_empty());
+    /// assert!(attribute.group.is_none());
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        arguments: &[Argument],
+        group: Option<&str>,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            arguments: arguments.iter().map(ToOwned::to_owned).collect(),
+            group: group.map(ToString::to_string),
+        }
+    }
+}
+
 impl Display for Block {
     fn fmt(
         &self,
@@ -52,10 +86,48 @@ pub struct Field {
 }
 
 impl Field {
-    /// Standard `@id` attribute.
+    /// Create a new field attribute.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the attribute.
+    /// * `arguments` - The fields of the attribute.
+    /// * `group` - The name of the group to which the attribute belongs.
     ///
     /// # Examples
     ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::attribute::Field;
+    ///
+    /// let attribute = Field::new("foo", &[], None);
+    ///
+    /// assert_eq!(attribute.name, "foo");
+    /// assert!(attribute.arguments.is_empty());
+    /// assert!(attribute.group.is_none());
+    ///
+    /// let attribute =
+    ///     Field::new("foo", &[Argument::boolean("bar", true)], Some("bar"));
+    ///
+    /// assert_eq!(attribute.name, "foo");
+    /// assert_eq!(attribute.arguments.len(), 1);
+    /// assert_eq!(attribute.group, Some("bar".to_owned()));
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        arguments: &[Argument],
+        group: Option<&str>,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            arguments: arguments.iter().map(ToOwned::to_owned).collect(),
+            group: group.map(ToString::to_string),
+        }
+    }
+
+    /// Standard `@id` attribute.
+    ///
+    /// # Examples
     /// ```rust
     /// use dragonfly::generator::prisma::attribute::Field;
     ///
@@ -138,6 +210,61 @@ impl Field {
             }],
         }
     }
+
+    /// A relation attribute.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the relation.
+    /// * `references` - The fields to which the relation refers.
+    /// * `fields` - The relation scalar fields.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::attribute::Field;
+    ///
+    /// assert_eq!(
+    ///     Field::relation("foo", "bar", "baz").to_string(),
+    ///     "@relation(name: \"foo\", references: [bar], fields: [baz])"
+    /// );
+    /// ```
+    #[must_use]
+    pub fn relation(
+        name: &str,
+        references: &[&str],
+        fields: &[&str],
+    ) -> Self {
+        let mut arguments = Vec::new();
+
+        arguments.push(Argument::string("name", name));
+
+        if !fields.is_empty() {
+            arguments.push(Argument::array(
+                "fields",
+                &fields
+                    .iter()
+                    .map(|field| Value::keyword(field))
+                    .collect::<Vec<Value>>(),
+            ));
+        }
+
+        if !references.is_empty() {
+            arguments.push(Argument::array(
+                "references",
+                &references
+                    .iter()
+                    .map(|reference| Value::keyword(reference))
+                    .collect::<Vec<Value>>(),
+            ));
+        }
+
+        Self {
+            group: None,
+            name: "relation".to_owned(),
+            arguments,
+        }
+    }
 }
 
 impl Display for Field {
@@ -171,23 +298,10 @@ mod tests {
 
     #[test]
     fn test_display_block() {
-        assert_eq!(
-            Block {
-                group: None,
-                name: "foo".to_owned(),
-                arguments: vec![],
-            }
-            .to_string(),
-            "  @@foo"
-        );
+        assert_eq!(Block::new("foo", &[], None).to_string(), "  @@foo");
 
         assert_eq!(
-            Block {
-                group: Some("bar".to_owned()),
-                name: "foo".to_owned(),
-                arguments: vec![],
-            }
-            .to_string(),
+            Block::new("foo", &[], Some("bar")).to_string(),
             "  @@bar.foo"
         );
 
@@ -196,21 +310,9 @@ mod tests {
                 group: None,
                 name: "foo".to_owned(),
                 arguments: vec![
-                    Argument {
-                        name: Some("foo".to_owned()),
-                        value: Value::Keyword("bar".to_owned()),
-                    },
-                    Argument {
-                        name: None,
-                        value: Value::Keyword("baz".to_owned()),
-                    },
-                    Argument {
-                        name: None,
-                        value: Value::Function(Function {
-                            name: "qux".to_owned(),
-                            parameters: vec![],
-                        }),
-                    },
+                    Argument::keyword("foo", "bar"),
+                    Argument::unnamed(&Value::keyword("baz")),
+                    Argument::unnamed(&Value::function("qux", &[])),
                 ],
             }
             .to_string(),
@@ -220,46 +322,17 @@ mod tests {
 
     #[test]
     fn test_display_field() {
-        assert_eq!(
-            Field {
-                group: None,
-                name: "foo".to_owned(),
-                arguments: vec![],
-            }
-            .to_string(),
-            "@foo"
-        );
-
-        assert_eq!(
-            Field {
-                group: Some("bar".to_owned()),
-                name: "foo".to_owned(),
-                arguments: vec![],
-            }
-            .to_string(),
-            "@bar.foo"
-        );
+        assert_eq!(Field::new("foo", &[], None).to_string(), "@foo");
+        assert_eq!(Field::new("foo", &[], Some("bar")).to_string(), "@bar.foo");
 
         assert_eq!(
             Field {
                 group: None,
                 name: "foo".to_owned(),
                 arguments: vec![
-                    Argument {
-                        name: Some("foo".to_owned()),
-                        value: Value::Keyword("bar".to_owned()),
-                    },
-                    Argument {
-                        name: None,
-                        value: Value::Keyword("baz".to_owned()),
-                    },
-                    Argument {
-                        name: None,
-                        value: Value::Function(Function {
-                            name: "qux".to_owned(),
-                            parameters: vec![],
-                        }),
-                    },
+                    Argument::keyword("foo", "bar"),
+                    Argument::unnamed(&Value::keyword("baz")),
+                    Argument::unnamed(&Value::function("qux", &[])),
                 ],
             }
             .to_string(),

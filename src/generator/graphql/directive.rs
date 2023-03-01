@@ -13,6 +13,36 @@ pub struct Directive {
     pub arguments: Vec<Argument>,
 }
 
+impl Directive {
+    /// Create a new directive.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the directive.
+    /// * `arguments` - The arguments of the directive.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::graphql::Directive;
+    ///
+    /// let directive = Directive::new("foo", &[]);
+    ///
+    /// assert_eq!(directive.name, "foo");
+    /// assert!(directive.arguments.is_empty());
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        arguments: &[Argument],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            arguments: arguments.iter().map(ToOwned::to_owned).collect(),
+        }
+    }
+}
+
 impl Display for Directive {
     fn fmt(
         &self,

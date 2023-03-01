@@ -1,23 +1,26 @@
-use {
-    super::{
-        condition::{
-            FieldPath,
-            Operator,
-        },
-        Condition,
-    },
-    crate::parser::{
-        brace_close,
-        brace_open,
-        camel_case,
-        colon,
-        dollar,
-        literal,
-        spaces,
-        ParseError,
-        ParseResult,
-    },
+pub use self::{
+    condition::Condition,
+    operator::Operator,
+    path::Path,
 };
+use crate::parser::{
+    brace_close,
+    brace_open,
+    camel_case,
+    colon,
+    dollar,
+    literal,
+    spaces,
+    ParseError,
+    ParseResult,
+};
+
+/// A condition.
+pub mod condition;
+/// A condition operator.
+pub mod operator;
+/// A path to a field.
+pub mod path;
 
 /// The conditions that queried data must meet.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -74,22 +77,22 @@ impl Where {
     ///     conditions,
     ///     vec![
     ///         QueryCondition {
-    ///             field_path: FieldPath::new(&["foo"]),
+    ///             path: FieldPath::new(&["foo"]),
     ///             operator: QueryOperator::Contains,
     ///             argument: "foo".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: FieldPath::new(&["foo", "bar"]),
+    ///             path: FieldPath::new(&["foo", "bar"]),
     ///             operator: QueryOperator::Equals,
     ///             argument: "bar".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: FieldPath::new(&["foo", "baz"]),
+    ///             path: FieldPath::new(&["foo", "baz"]),
     ///             operator: QueryOperator::Contains,
     ///             argument: "baz".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             field_path: FieldPath::new(&["foo", "qux"]),
+    ///             path: FieldPath::new(&["foo", "qux"]),
     ///             operator: QueryOperator::Contains,
     ///             argument: "qux".to_owned(),
     ///         }
@@ -116,7 +119,7 @@ impl Where {
     /// ```
     pub fn parse_conditions(input: &str) -> ParseResult<Vec<Condition>> {
         let mut input = input.to_owned();
-        let mut field_path = FieldPath::new(&[]);
+        let mut path = Path::new(&[]);
         let mut conditions: Vec<Condition> = vec![];
 
         loop {
@@ -130,7 +133,7 @@ impl Where {
                 Ok::<(String, String), ParseError>((segment, input))
             })(&input)
             {
-                field_path.push(segment);
+                path.push(segment);
 
                 input = new_input;
 
@@ -152,7 +155,7 @@ impl Where {
                 ))
             })(&input)
             {
-                if field_path.is_empty() {
+                if path.is_empty() {
                     return Err(ParseError::Custom {
                         message: "A condition must refer to a field."
                             .to_owned(),
@@ -160,9 +163,9 @@ impl Where {
                 }
 
                 conditions.push(Condition {
-                    field_path: field_path.clone(),
+                    path: path.clone(),
                     operator,
-                    argument,
+                    argument_name: argument,
                 });
 
                 input = new_input;
@@ -171,7 +174,7 @@ impl Where {
             }
 
             // Parse `}`.
-            if !field_path.is_empty() {
+            if !path.is_empty() {
                 if let Ok((_, new_input)) = (|input: &str| {
                     let (_, input) = brace_close(input)?;
                     let (_, input) = spaces(&input)?;
@@ -181,7 +184,7 @@ impl Where {
                 {
                     input = new_input;
 
-                    let _ = field_path.pop_back();
+                    let _ = path.pop_back();
 
                     continue;
                 }
@@ -231,7 +234,7 @@ impl Where {
     ///         QueryWhere {
     ///             name: "foo".to_owned(),
     ///             conditions: vec![QueryCondition {
-    ///                 field_path: FieldPath::new(&["bar"]),
+    ///                 path: FieldPath::new(&["bar"]),
     ///                 operator: QueryOperator::Contains,
     ///                 argument: "foo".to_owned(),
     ///             }]
@@ -272,12 +275,12 @@ impl Where {
     ///             name: "image".to_owned(),
     ///             conditions: vec![
     ///                 QueryCondition {
-    ///                     field_path: FieldPath::new(&["title"]),
+    ///                     path: FieldPath::new(&["title"]),
     ///                     operator: QueryOperator::Equals,
     ///                     argument: "title".to_owned(),
     ///                 },
     ///                 QueryCondition {
-    ///                     field_path: FieldPath::new(&["title", "tags"]),
+    ///                     path: FieldPath::new(&["title", "tags"]),
     ///                     operator: QueryOperator::Contains,
     ///                     argument: "tag".to_owned(),
     ///                 }

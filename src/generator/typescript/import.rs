@@ -1,35 +1,8 @@
 use {
+    super::NamedSpecifier,
     crate::generator::printer::comma_separated,
     std::fmt::Display,
 };
-
-/// A named import specifier.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum NamedSpecifier {
-    /// An import of a named export with an alias.
-    AliasedName {
-        /// The local name of the import.
-        alias: String,
-        /// The exported name of the import.
-        identifier: String,
-    },
-    /// An import of a named export.
-    Name(String),
-}
-
-impl Display for NamedSpecifier {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        match self {
-            Self::AliasedName { alias, identifier } => {
-                write!(f, "{identifier} as {alias}")
-            }
-            Self::Name(identifier) => write!(f, "{identifier}"),
-        }
-    }
-}
 
 /// An import declaration.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -55,6 +28,92 @@ pub enum Import {
         /// The local name of the import.
         alias: String,
     },
+}
+
+impl Import {
+    /// Create a new named import.
+    ///
+    /// # Arguments
+    ///
+    /// * `module` - The module to import from.
+    /// * `specifiers` - The import specifiers.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::Import;
+    ///
+    /// let import = Import::named("foo", &[]);
+    ///
+    /// assert_eq!(import.module, "foo".to_owned());
+    /// assert!(import.specifiers.is_empty());
+    /// ```
+    #[must_use]
+    pub fn named(
+        module: &str,
+        specifiers: &[NamedSpecifier],
+    ) -> Self {
+        Self::Named {
+            module: module.to_owned(),
+            specifiers: specifiers.iter().map(ToOwned::to_owned).collect(),
+        }
+    }
+
+    /// Create a new star import.
+    ///
+    /// # Arguments
+    ///
+    /// * `module` - The module to import from.
+    /// * `alias` - The local name of the import.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::Import;
+    ///
+    /// let import = Import::star("foo", "bar");
+    ///
+    /// assert_eq!(import.module, "foo".to_owned());
+    /// assert_eq!(import.alias, "bar".to_owned());
+    /// ```
+    #[must_use]
+    pub fn star(
+        module: &str,
+        alias: &str,
+    ) -> Self {
+        Self::Star {
+            module: module.to_owned(),
+            alias: alias.to_owned(),
+        }
+    }
+
+    /// Create a new default import.
+    ///
+    /// # Arguments
+    ///
+    /// * `module` - The module to import from.
+    /// * `alias` - The local name of the import.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::typescript::Import;
+    ///
+    /// let import = Import::default("foo", "bar");
+    ///
+    /// assert_eq!(import.module, "foo".to_owned());
+    /// assert_eq!(import.alias, "bar".to_owned());
+    /// ```
+    #[must_use]
+    pub fn default(
+        module: &str,
+        alias: &str,
+    ) -> Self {
+        Self::Default {
+            module: module.to_owned(),
+            alias: alias.to_owned(),
+        }
+    }
 }
 
 impl Display for Import {
@@ -83,31 +142,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn display_named_specifier() {
-        let specifier = NamedSpecifier::AliasedName {
-            alias: "foo".to_owned(),
-            identifier: "bar".to_owned(),
-        };
-
-        assert_eq!(specifier.to_string(), "bar as foo");
-
-        let specifier = NamedSpecifier::Name("foo".to_owned());
-
-        assert_eq!(specifier.to_string(), "foo");
-    }
-
-    #[test]
-    fn named_import() {
-        let import = Import::Named {
-            module: "foo".to_owned(),
-            specifiers: vec![
-                NamedSpecifier::AliasedName {
-                    alias: "foo".to_owned(),
-                    identifier: "bar".to_owned(),
-                },
-                NamedSpecifier::Name("baz".to_owned()),
+    fn test_display_named_import() {
+        let import = Import::named(
+            "foo",
+            &[
+                NamedSpecifier::aliased_name("foo", "bar"),
+                NamedSpecifier::name("baz"),
             ],
-        };
+        );
 
         assert_eq!(
             import.to_string(),
@@ -116,21 +158,15 @@ mod tests {
     }
 
     #[test]
-    fn star_import() {
-        let import = Import::Star {
-            module: "foo".to_owned(),
-            alias: "bar".to_owned(),
-        };
+    fn test_display_star_import() {
+        let import = Import::star("foo", "bar");
 
         assert_eq!(import.to_string(), "import * as bar from \"foo\";");
     }
 
     #[test]
-    fn default_import() {
-        let import = Import::Default {
-            module: "foo".to_owned(),
-            alias: "bar".to_owned(),
-        };
+    fn test_display_default_import() {
+        let import = Import::default("foo", "bar");
 
         assert_eq!(import.to_string(), "import bar from \"foo\";");
     }

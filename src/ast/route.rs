@@ -22,7 +22,7 @@ pub struct Route {
     pub path: String,
     /// The root component of the route.
     pub root: String,
-    /// The title of the page that is rendered.
+    /// The title of the page of the route.
     pub title: String,
 }
 

@@ -3,12 +3,10 @@ use {
         ast::Ast,
         generator::{
             printer::Print,
-            prisma::Schema,
-            typescript::{
-                Enum as TypescriptEnum,
-                Interface as TypescriptInterface,
-            },
+            prisma,
+            typescript,
         },
+        ir::Ir,
     },
     std::{
         fs::{
@@ -32,56 +30,6 @@ const PRISMA_FILE_EXTENSION: &str = "prisma";
 /// The file extension for generated TypeScript files.
 const TYPESCRIPT_FILE_EXTENSION: &str = "ts";
 
-/// Write a string to a file.
-///
-/// # Arguments
-///
-/// * `file` - The file to write to.
-/// * `source` - The source code to write.
-///
-/// # Errors
-///
-/// Returns an error if the file could not be written.
-fn write_to_file(
-    file: &Path,
-    source: String,
-) -> Result<(), String> {
-    let file_display = file.display();
-
-    if let Err(error) = write(file, source) {
-        return Err(format!(
-            "Could not write file `{file_display}`: `{error}`"
-        ));
-    }
-
-    println!("Generated `{file_display}`");
-
-    Ok(())
-}
-
-/// Generate a file for one printable entity.
-///
-/// # Arguments
-///
-/// * `name` - The name of the entity.
-/// * `entity` - The entity to generate code from.
-/// * `output` - The output directory.
-/// * `extension` - The file extension.
-///
-/// # Errors
-///
-/// Returns an error if the file could not be written.
-pub fn print_to_file<T: Print>(
-    name: &str,
-    entity: &T,
-    output: &Path,
-    extension: &str,
-) -> Result<(), String> {
-    let path = output.join(format!("{name}.{extension}"));
-
-    write_to_file(&path, entity.print(0))
-}
-
 /// Check a source file for errors.
 ///
 /// # Arguments
@@ -95,10 +43,10 @@ pub fn check_file(input: &str) -> Result<(), String> {
     let input = determine_input(input)?;
 
     let input = read_to_string(input)
-        .map_err(|error| format!("Could not read input file: {error}"))?;
+        .map_err(|error| format!("Could not read input file. {error}"))?;
 
     let (ast, _) = Ast::parse(&input)
-        .map_err(|error| format!("Could not parse input file: {error}"))?;
+        .map_err(|error| format!("Could not parse input file. {error}"))?;
 
     if let Err(error) = ast.check() {
         return Err(error.to_string());
@@ -120,21 +68,22 @@ pub fn check_file(input: &str) -> Result<(), String> {
 ///   created.
 /// * Returns an error if a file could not be written.
 pub fn generate_prisma(
-    ast: &Ast,
+    ir: &Ir,
     output: &Path,
 ) -> Result<(), String> {
     let path = output.join(PRISMA_OUTPUT_DIR);
 
     if !path.is_dir() {
         create_dir(&path).map_err(|error| {
-            format!("Could not create prisma output directory: {error}")
+            format!("Could not create prisma output directory. {error}")
         })?;
     }
 
     let file = path.join(format!("application.{PRISMA_FILE_EXTENSION}"));
-    let source = Schema::from(ast.clone()).to_string();
+    let source = prisma::Schema::from(ir).to_string();
 
-    write_to_file(&file, source)
+    write(file, source)
+        .map_err(|error| format!("Could not write prisma file. {error}"))
 }
 
 /// Generate TypeScript interfaces and enums from an AST.
@@ -150,36 +99,32 @@ pub fn generate_prisma(
 ///   created.
 /// * Returns an error if a file could not be written.
 pub fn generate_typescript(
-    ast: &Ast,
+    ast: &Ir,
     output: &Path,
 ) -> Result<(), String> {
     let path = output.join(TYPESCRIPT_OUTPUT_DIR);
 
     if !path.is_dir() {
         create_dir(&path).map_err(|error| {
-            format!("Could not create typescript output directory: {error}")
+            format!("Could not create typescript output directory. {error}")
         })?;
     }
 
-    for (name, model) in &ast.models {
-        print_to_file(
-            name,
-            &TypescriptInterface::from(model),
-            &path,
-            TYPESCRIPT_FILE_EXTENSION,
-        )?;
+    let mut source = Vec::new();
+
+    for model in ast.models.values() {
+        source.push(typescript::Interface::from(model).print(0));
     }
 
-    for (name, r#enum) in &ast.enums {
-        print_to_file(
-            name,
-            &TypescriptEnum::from(r#enum),
-            &path,
-            TYPESCRIPT_FILE_EXTENSION,
-        )?;
+    for r#enum in ast.enums.values() {
+        source.push(typescript::Enum::from(r#enum).print(0));
     }
 
-    Ok(())
+    write(
+        path.join(format!("application.{TYPESCRIPT_FILE_EXTENSION}")),
+        source.join("\n\n"),
+    )
+    .map_err(|error| format!("Could not write typescript file. {error}"))
 }
 
 /// Generate code from a source file.
@@ -199,17 +144,17 @@ pub fn generate_all(
     output: &Path,
 ) -> Result<(), String> {
     let input = read_to_string(input)
-        .map_err(|error| format!("Could not read input file: {error}"))?;
+        .map_err(|error| format!("Could not read input file. {error}"))?;
 
     let (ast, _) = Ast::parse(&input)
-        .map_err(|error| format!("Could not parse input file: {error}"))?;
+        .map_err(|error| format!("Could not parse input file. {error}"))?;
 
-    if let Err(error) = ast.check() {
-        return Err(error.to_string());
-    }
+    let ir = Ir::from(ast).map_err(|error| {
+        format!("Could not generate intermediate representation. {error}")
+    })?;
 
-    generate_typescript(&ast, output)?;
-    generate_prisma(&ast, output)?;
+    generate_typescript(&ir, output)?;
+    generate_prisma(&ir, output)?;
 
     Ok(())
 }

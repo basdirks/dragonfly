@@ -1,9 +1,5 @@
 pub use self::field::Field;
 use {
-    super::{
-        Scalar,
-        TypeError,
-    },
     crate::parser::{
         brace_close,
         brace_open,
@@ -13,10 +9,7 @@ use {
         ParseError,
         ParseResult,
     },
-    std::collections::{
-        BTreeMap,
-        HashSet,
-    },
+    std::collections::BTreeMap,
 };
 
 /// A field belonging to a model.
@@ -59,6 +52,7 @@ impl Model {
     ///     bar: String
     ///     baz: Int
     ///     qux: [Bar]
+    ///     quy: @Bar
     ///     quz: [@Bar]
     /// }
     ///
@@ -87,6 +81,13 @@ impl Model {
     ///             Field {
     ///                 name: "qux".to_owned(),
     ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
+    ///             },
+    ///         ),
+    ///         (
+    ///             "quy".to_owned(),
+    ///             Field {
+    ///                 name: "quy".to_owned(),
+    ///                 r#type: Type::Scalar(Scalar::Owned("Bar".to_owned())),
     ///             },
     ///         ),
     ///         (
@@ -163,107 +164,5 @@ impl Model {
         let (_, input) = brace_close(&input)?;
 
         Ok((Self { name, fields }, input))
-    }
-
-    /// Check whether the type of each field is a primitive, a reference to
-    /// an existing enum or model, or an array of such a type.
-    ///
-    /// # Arguments
-    ///
-    /// * `model_names` - The names of all models.
-    /// * `enum_names` - The names of all enums.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::UnknownModelFieldType` if the type of a field is
-    /// not a primitive, a reference to an existing enum or model, or an
-    /// array of such a type.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Field,
-    ///         Model,
-    ///         Scalar,
-    ///         Type,
-    ///         TypeError,
-    ///     },
-    ///     std::collections::HashSet,
-    /// };
-    ///
-    /// let model = Model {
-    ///     name: "Foo".to_owned(),
-    ///     fields: vec![
-    ///         (
-    ///             "bar".to_owned(),
-    ///             Field {
-    ///                 name: "bar".to_owned(),
-    ///                 r#type: Type::Scalar(Scalar::String),
-    ///             },
-    ///         ),
-    ///         (
-    ///             "baz".to_owned(),
-    ///             Field {
-    ///                 name: "baz".to_owned(),
-    ///                 r#type: Type::Scalar(Scalar::Int),
-    ///             },
-    ///         ),
-    ///         (
-    ///             "qux".to_owned(),
-    ///             Field {
-    ///                 name: "qux".to_owned(),
-    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
-    ///             },
-    ///         ),
-    ///     ]
-    ///     .into_iter()
-    ///     .collect(),
-    /// };
-    ///
-    /// assert!(model
-    ///     .check_field_types(
-    ///         &["Foo".to_owned(), "Bar".to_owned()]
-    ///             .iter()
-    ///             .cloned()
-    ///             .collect(),
-    ///         &HashSet::new()
-    ///     )
-    ///     .is_ok());
-    ///
-    /// assert_eq!(
-    ///     model.check_field_types(
-    ///         &["Foo".to_owned()].iter().cloned().collect(),
-    ///         &HashSet::new()
-    ///     ),
-    ///     Err(TypeError::UnknownModelFieldType {
-    ///         model_name: "Foo".to_owned(),
-    ///         field: Field {
-    ///             name: "qux".to_owned(),
-    ///             r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
-    ///         },
-    ///     })
-    /// );
-    /// ```
-    pub fn check_field_types(
-        &self,
-        model_names: &HashSet<String>,
-        enum_names: &HashSet<String>,
-    ) -> Result<(), TypeError> {
-        for field @ Field { r#type, .. } in self.fields.values() {
-            if let Scalar::Reference(reference) = r#type.scalar() {
-                if !model_names.contains(reference)
-                    && !enum_names.contains(reference)
-                {
-                    return Err(TypeError::UnknownModelFieldType {
-                        model_name: self.name.clone(),
-                        field: field.clone(),
-                    });
-                }
-            }
-        }
-
-        Ok(())
     }
 }

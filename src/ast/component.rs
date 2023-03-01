@@ -1,14 +1,17 @@
-use crate::parser::{
-    brace_close,
-    brace_open,
-    colon,
-    forward_slash,
-    kebab_case,
-    literal,
-    many,
-    pascal_case,
-    spaces,
-    ParseResult,
+use {
+    crate::parser::{
+        brace_close,
+        brace_open,
+        colon,
+        forward_slash,
+        kebab_case,
+        literal,
+        many,
+        pascal_case,
+        spaces,
+        ParseResult,
+    },
+    std::path::PathBuf,
 };
 
 /// A JSX component.
@@ -17,7 +20,7 @@ pub struct Component {
     /// The name of the component.
     pub name: String,
     /// The path to the file that exports the component.
-    pub path: String,
+    pub path: PathBuf,
 }
 
 impl Component {
@@ -95,13 +98,9 @@ impl Component {
         let component = Self {
             name,
             path: if segments.is_empty() {
-                file_name
+                file_name.into()
             } else {
-                format!(
-                    "{}/{file_name}",
-                    segments.join("/"),
-                    file_name = file_name
-                )
+                format!("{}/{file_name}", segments.join("/")).into()
             },
         };
 

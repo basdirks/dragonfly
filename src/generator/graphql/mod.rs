@@ -39,7 +39,7 @@ pub use {
     r#type::Type,
     selection::Selection,
     value::{
-        Const as ConstValue,
+        Const,
         ConstObjectField,
         ObjectField,
         Value,

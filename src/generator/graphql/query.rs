@@ -1,18 +1,15 @@
 use {
     super::{
+        Const,
         ConstDirective,
-        ConstValue,
         Directive,
         Selection,
         Type,
     },
-    crate::{
-        ast::QueryArgument as AstQueryArgument,
-        generator::printer::{
-            comma_separated,
-            space_separated,
-            Print,
-        },
+    crate::generator::printer::{
+        comma_separated,
+        space_separated,
+        Print,
     },
     std::fmt::{
         Display,
@@ -28,20 +25,9 @@ pub struct Variable {
     /// The type of the variable.
     pub r#type: Type,
     /// The default value of the variable.
-    pub default_value: Option<ConstValue>,
+    pub default_value: Option<Const>,
     /// The directives of the variable.
     pub directives: Vec<ConstDirective>,
-}
-
-impl From<AstQueryArgument> for Variable {
-    fn from(AstQueryArgument { name, r#type }: AstQueryArgument) -> Self {
-        Self {
-            name,
-            r#type: r#type.into(),
-            default_value: None,
-            directives: vec![],
-        }
-    }
 }
 
 impl Display for Variable {
@@ -103,44 +89,18 @@ impl Print for Query {
 mod tests {
     use {
         super::*,
-        crate::{
-            ast::{
-                QueryArgument as AstQueryArgument,
-                Scalar as AstScalar,
-                Type as AstType,
-            },
-            generator::graphql::{
-                Argument,
-                Field,
-                Value,
-            },
+        crate::generator::graphql::{
+            Argument,
+            Field,
         },
     };
-
-    #[test]
-    fn test_variable_from_ast() {
-        assert_eq!(
-            Variable::from(AstQueryArgument {
-                name: "foo".to_owned(),
-                r#type: AstType::Array(AstScalar::String),
-            }),
-            Variable {
-                name: "foo".to_owned(),
-                r#type: Type::NonNull(Box::new(Type::List(Box::new(
-                    Type::Name("String".to_owned())
-                )))),
-                default_value: None,
-                directives: vec![],
-            }
-        );
-    }
 
     #[test]
     fn test_display_variable() {
         assert_eq!(
             Variable {
                 name: "foo".to_owned(),
-                r#type: Type::Name("String".to_owned()),
+                r#type: Type::name("String"),
                 default_value: None,
                 directives: vec![],
             }
@@ -151,8 +111,8 @@ mod tests {
         assert_eq!(
             Variable {
                 name: "foo".to_owned(),
-                r#type: Type::Name("String".to_owned()),
-                default_value: Some(ConstValue::String("bar".to_owned())),
+                r#type: Type::name("String"),
+                default_value: Some(Const::string("bar")),
                 directives: vec![],
             }
             .to_string(),
@@ -162,19 +122,13 @@ mod tests {
         assert_eq!(
             Variable {
                 name: "foo".to_owned(),
-                r#type: Type::NonNull(Box::new(Type::List(Box::new(
-                    Type::NonNull(Box::new(Type::Name("String".to_owned())))
+                r#type: Type::non_null(Type::list(Type::non_null(Type::name(
+                    "String"
                 )))),
                 default_value: None,
                 directives: vec![
-                    ConstDirective {
-                        name: "bar".to_owned(),
-                        arguments: vec![],
-                    },
-                    ConstDirective {
-                        name: "baz".to_owned(),
-                        arguments: vec![],
-                    },
+                    ConstDirective::new("bar", &[]),
+                    ConstDirective::new("baz", &[]),
                 ],
             }
             .to_string(),
@@ -188,49 +142,28 @@ mod tests {
             Query {
                 name: "imagesByCountryName".to_owned(),
                 directives: vec![
-                    Directive {
-                        name: "bar".to_owned(),
-                        arguments: vec![],
-                    },
-                    Directive {
-                        name: "baz".to_owned(),
-                        arguments: vec![],
-                    },
+                    Directive::new("bar", &[]),
+                    Directive::new("baz", &[]),
                 ],
                 selections: vec![Selection::Field(Field {
                     name: "images".to_owned(),
-                    arguments: vec![Argument {
-                        name: "country".to_owned(),
-                        value: Value::Variable("country".to_owned()),
-                    }],
+                    arguments: vec![Argument::variable("country", "country")],
                     directives: vec![],
                     selections: vec![
                         Selection::Field(Field {
                             name: "url".to_owned(),
                             arguments: vec![],
-                            directives: vec![Directive {
-                                name: "deprecated".to_owned(),
-                                arguments: vec![Argument {
-                                    name: "reason".to_owned(),
-                                    value: Value::String(
-                                        "Use `link` instead.".to_owned()
-                                    ),
-                                }],
-                            }],
+                            directives: vec![Directive::new(
+                                "deprecated",
+                                &[Argument::string(
+                                    "reason",
+                                    "Use `link` instead."
+                                )],
+                            )],
                             selections: vec![],
                         }),
-                        Selection::Field(Field {
-                            name: "link".to_owned(),
-                            arguments: vec![],
-                            directives: vec![],
-                            selections: vec![],
-                        }),
-                        Selection::Field(Field {
-                            name: "title".to_owned(),
-                            arguments: vec![],
-                            directives: vec![],
-                            selections: vec![],
-                        }),
+                        Selection::Field(Field::new("link")),
+                        Selection::Field(Field::new("title")),
                     ],
                 })],
                 variables: vec![
@@ -244,8 +177,8 @@ mod tests {
                     },
                     Variable {
                         name: "limit".to_owned(),
-                        r#type: Type::Name("Int".to_owned()),
-                        default_value: Some(ConstValue::Int("10".to_owned())),
+                        r#type: Type::name("Int"),
+                        default_value: Some(Const::int("10")),
                         directives: vec![],
                     },
                 ],

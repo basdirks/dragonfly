@@ -1,15 +1,13 @@
 use {
-    super::Query,
-    crate::{
-        ast::{
-            Scalar,
-            Type,
-        },
-        parser::{
-            colon,
-            spaces,
-            ParseResult,
-        },
+    super::{
+        Query,
+        Scalar,
+        Type,
+    },
+    crate::parser::{
+        colon,
+        spaces,
+        ParseResult,
     },
     std::fmt::Display,
 };

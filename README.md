@@ -14,6 +14,7 @@ See also:
 
 # Roadmap
 
+- [ ] Make AST more stupid, throw `TypeError` in AST -> IR conversion.
 - [ ] Finalize AST public API.
 - [ ] Generate foreign keys in PSL.
 - [ ] Generate GraphQL types.

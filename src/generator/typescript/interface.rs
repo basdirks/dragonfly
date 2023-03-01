@@ -1,15 +1,12 @@
 use {
     super::r#type::Type,
     crate::{
-        ast::{
-            Field,
-            Model,
-        },
         generator::printer::{
             common::comma_separated,
             indent,
             Print,
         },
+        ir,
     },
     std::fmt::Display,
 };
@@ -191,33 +188,9 @@ impl Print for Interface {
     }
 }
 
-impl From<Model> for Interface {
-    fn from(model: Model) -> Self {
-        let Model { name, fields, .. } = model;
-
-        let fields = fields
-            .into_iter()
-            .map(|(identifier, Field { r#type, .. })| {
-                Property {
-                    identifier,
-                    r#type: r#type.into(),
-                    optional: false,
-                }
-            })
-            .collect();
-
-        Self {
-            extends: vec![],
-            identifier: name,
-            type_parameters: vec![],
-            properties: fields,
-        }
-    }
-}
-
-impl From<&Model> for Interface {
-    fn from(model: &Model) -> Self {
-        Self::from(model.clone())
+impl From<&ir::Model> for Interface {
+    fn from(_model: &ir::Model) -> Self {
+        unimplemented!()
     }
 }
 
@@ -374,67 +347,5 @@ interface Image<T> extends Resource<T> {
             .print(0),
             expected
         );
-    }
-
-    #[test]
-    fn test_from_model() {
-        let input = "
-
-model Image {
-  tags: [Tag]
-  title: String    
-  country: Country
-}
-
-"
-        .trim();
-
-        let expected = "
-
-interface Image {
-    country: Country;
-    tags: Array<Tag>;
-    title: string;
-}
-
-"
-        .trim();
-
-        let (model, _) = Model::parse(input).unwrap();
-        let interface = Interface::from(model);
-        let code = interface.print(0);
-
-        assert_eq!(code, expected);
-    }
-
-    #[test]
-    fn test_interface_from_model() {
-        let input = "
-
-model Image {
-  tags: [Tag]
-  title: String
-  country: Country
-}
-
-"
-        .trim();
-
-        let (model, _) = Model::parse(input).unwrap();
-        let interface = Interface::from(model);
-        let code = interface.print(0);
-
-        let expected = "
-
-interface Image {
-    country: Country;
-    tags: Array<Tag>;
-    title: string;
-}
-
-"
-        .trim();
-
-        assert_eq!(code, expected);
     }
 }

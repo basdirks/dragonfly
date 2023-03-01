@@ -22,6 +22,34 @@ pub struct Enum {
 }
 
 impl Enum {
+    /// Create a new enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the enum.
+    /// * `variants` - The variants of the enum.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::r#enum::Enum;
+    ///
+    /// let r#enum = Enum::new("Foo", &["Bar", "Baz"]);
+    ///
+    /// assert_eq!(r#enum.name, "Foo".to_owned());
+    /// assert_eq!(r#enum.variants, vec!["Bar".to_owned(), "Baz".to_owned()]);
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        variants: &[&str],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            variants: variants.iter().map(ToString::to_string).collect(),
+        }
+    }
+
     /// Parse an enum from the given input.
     ///
     /// # Arguments

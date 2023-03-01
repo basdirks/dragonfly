@@ -4,17 +4,7 @@ pub use self::{
         Field,
         Model,
     },
-    query::{
-        Argument as QueryArgument,
-        Condition as QueryCondition,
-        FieldPath,
-        Operator as QueryOperator,
-        Query,
-        ReturnType as QueryReturnType,
-        Schema as QuerySchema,
-        SchemaNode as QuerySchemaNode,
-        Where as QueryWhere,
-    },
+    query::Query,
     r#enum::Enum,
     r#type::{
         Scalar,
@@ -34,10 +24,7 @@ use {
             ParseResult,
         },
     },
-    std::collections::{
-        BTreeMap,
-        HashSet,
-    },
+    std::collections::BTreeMap,
 };
 
 /// A JSX component.
@@ -52,7 +39,7 @@ pub mod query;
 pub mod route;
 /// Types used inside models and queries.
 pub mod r#type;
-/// Type checking errors.
+/// Type errors.
 pub mod type_error;
 
 /// A declaration of a component, enum, model, query, or route.
@@ -548,7 +535,7 @@ impl Ast {
     ///         r#where: Some(QueryWhere {
     ///             name: "image".to_owned(),
     ///             conditions: vec![QueryCondition {
-    ///                 field_path: FieldPath::new(&["country", "name"]),
+    ///                 path: FieldPath::new(&["country", "name"]),
     ///                 operator: QueryOperator::Equals,
     ///                 argument: "name".to_owned(),
     ///             }],
@@ -877,9 +864,9 @@ impl Ast {
     ///   query is not a reference to a known model.
     /// * Returns `TypeError::UnknownRouteRoot` if the root of any route is not
     ///   a reference to a known component.
-    /// * Returns `TypeError::UnknownModelFieldType` if the type of any model
-    ///   field is not a primitive, a reference to a known enum or model, or an
-    ///   array of any such a type.
+    /// * Returns `TypeError::UnknownFieldType` if the type of any model field
+    ///   is not a primitive, a reference to a known enum or model, or an array
+    ///   of any such a type.
     ///
     /// # Examples
     ///
@@ -906,7 +893,7 @@ impl Ast {
     ///
     /// assert_eq!(
     ///     ast.check(),
-    ///     Err(TypeError::UnknownModelFieldType {
+    ///     Err(TypeError::UnknownFieldType {
     ///         model_name: "Post".to_owned(),
     ///         field: Field {
     ///             name: "tags".to_owned(),
@@ -955,7 +942,6 @@ impl Ast {
     /// ```
     pub fn check(&self) -> Result<(), TypeError> {
         self.check_entities()?;
-        self.check_types()?;
 
         Ok(())
     }
@@ -979,322 +965,8 @@ impl Ast {
         for query in self.queries.values() {
             query.check_unused_arguments()?;
             query.check_empty_schema()?;
-            query.check_root_nodes()?;
-            query.check_condition_references()?;
         }
 
         Ok(())
-    }
-
-    /// Check for cross-entity type errors.
-    ///
-    /// # Errors
-    ///
-    /// * Returns `TypeError::InvalidQueryArgumentType` if the type of any query
-    ///   is not a primitive or a reference to an enum.
-    /// * Returns `TypeError::InvalidQueryReturnType` if the return type of any
-    ///   query is not a reference to a known model.
-    /// * Returns `TypeError::UnknownRouteRoot` if the root of any route is not
-    ///   a reference to a known component.
-    /// * Returns `TypeError::InvalidModelFieldType` if the type of any model
-    ///   field is not a primitive, a reference to a known enum or model, or an
-    ///   array of any such a type.
-    /// * Returns `TypeError::UnreciprocatedRelation` if any model has a field
-    ///   that references another model, but the other model does not have a
-    ///   reciprocal field.
-    pub fn check_types(&self) -> Result<(), TypeError> {
-        // We could return the model relations during this pass, but it's
-        // easier to understand if we do it separately.
-
-        let enum_names = self.enums.keys().cloned().collect::<HashSet<_>>();
-        let model_names = self.models.keys().cloned().collect::<HashSet<_>>();
-
-        for model in self.models.values() {
-            model.check_field_types(&model_names, &enum_names)?;
-        }
-
-        for query in self.queries.values() {
-            self.check_query_condition_types(query)?;
-            query.check_argument_types(&enum_names)?;
-            query.check_return_type(&model_names)?;
-        }
-
-        if !self.routes.is_empty() {
-            let component_names =
-                self.components.keys().cloned().collect::<HashSet<_>>();
-
-            for route in self.routes.values() {
-                route.check_root(&component_names)?;
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Check that the types of the condition operands are valid.
-    ///
-    /// # Arguments
-    ///
-    /// * `query` - The query to check.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::IncompatibleQueryOperator` if the types of the
-    /// condition operands are not compatible with one another or with the type
-    /// of condition.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Ast,
-    ///     FieldPath,
-    ///     Query,
-    ///     QueryCondition,
-    ///     QueryOperator,
-    ///     Scalar,
-    ///     Type,
-    ///     TypeError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// model Post {
-    ///   title: String
-    ///   tags: [Tag]
-    /// }
-    ///
-    /// enum Tag {
-    ///   A
-    ///   B
-    /// }
-    ///
-    /// query posts($title: String): [Post] {
-    ///   post {
-    ///     title
-    ///     tags
-    ///   }
-    ///   where {
-    ///     post {
-    ///       title {
-    ///         equals: $title
-    ///       }
-    ///       tags {
-    ///         contains: $title
-    ///       }
-    ///     }
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let ast = Ast::parse(&input).unwrap().0;
-    ///
-    /// assert_eq!(
-    ///     ast.check_query_condition_types(&ast.queries["posts"]),
-    ///     Err(TypeError::IncompatibleQueryOperator {
-    ///         query_name: "posts".to_owned(),
-    ///         condition: QueryCondition {
-    ///             field_path: FieldPath::new(&["tags"]),
-    ///             operator: QueryOperator::Contains,
-    ///             argument: "title".to_owned(),
-    ///         },
-    ///         field_type: Type::Array(Scalar::Reference("Tag".to_owned())),
-    ///         argument_type: Type::Scalar(Scalar::String),
-    ///     })
-    /// );
-    /// ```
-    pub fn check_query_condition_types(
-        &self,
-        query: &Query,
-    ) -> Result<(), TypeError> {
-        if let Some(r#where) = &query.r#where {
-            let argument_map = query
-                .arguments
-                .iter()
-                .map(|argument| (argument.name.clone(), argument))
-                .collect::<BTreeMap<_, _>>();
-
-            for condition in &r#where.conditions {
-                let field_type = self.resolve_path(
-                    &query.name,
-                    query.r#type.model(),
-                    &mut condition.field_path.clone(),
-                )?;
-
-                if let Some(argument) = argument_map.get(&condition.argument) {
-                    let argument_type = argument.r#type.clone();
-
-                    if !condition
-                        .operator
-                        .check_operands(&field_type, &argument_type)
-                    {
-                        return Err(TypeError::IncompatibleQueryOperator {
-                            condition: condition.clone(),
-                            query_name: query.name.clone(),
-                            field_type,
-                            argument_type,
-                        });
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Return the names of all top-level types in the AST.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::Ast;
-    ///
-    /// let input = "
-    ///
-    /// model User {
-    ///     name: String
-    /// }
-    ///
-    /// enum CountryName {
-    ///     Germany
-    ///     France
-    /// }
-    ///
-    /// model Country {
-    ///     name: CountryName
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(input).unwrap().0.type_names(),
-    ///     vec!["User", "Country", "CountryName"]
-    ///         .iter()
-    ///         .map(ToString::to_string)
-    ///         .collect()
-    /// )
-    /// ```
-    #[must_use]
-    pub fn type_names(&self) -> HashSet<String> {
-        let mut names = self
-            .models
-            .values()
-            .map(|model| model.name.clone())
-            .collect::<HashSet<_>>();
-
-        names.extend(self.enums.values().map(|r#enum| r#enum.name.clone()));
-
-        names
-    }
-
-    /// Resolve the type of a path.
-    ///
-    /// # Arguments
-    ///
-    /// * `model` - The name of the model that the path is relative to.
-    /// * `path` - The path to resolve.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::UnresolvedPath` if the path cannot be resolved.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Ast,
-    ///     FieldPath,
-    ///     Scalar,
-    ///     Type,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// model User {
-    ///   name: String
-    ///   country: Country
-    ///   friends: [User]
-    /// }
-    ///
-    /// model Country {
-    ///   name: String
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let ast = Ast::parse(input).unwrap().0;
-    ///
-    /// assert_eq!(
-    ///     ast.resolve_path("Foo", "User", &mut FieldPath::new(&["name"])),
-    ///     Ok(Type::Scalar(Scalar::String)),
-    /// );
-    ///
-    /// assert_eq!(
-    ///     ast.resolve_path(
-    ///         "Foo",
-    ///         "User",
-    ///         &mut FieldPath::new(&["country", "name"])
-    ///     ),
-    ///     Ok(Type::Scalar(Scalar::String)),
-    /// );
-    ///
-    /// assert_eq!(
-    ///     ast.resolve_path(
-    ///         "Foo",
-    ///         "User",
-    ///         &mut FieldPath::new(&["friends", "name"])
-    ///     ),
-    ///     Ok(Type::Scalar(Scalar::String)),
-    /// );
-    ///
-    /// assert_eq!(
-    ///     ast.resolve_path(
-    ///         "Foo",
-    ///         "User",
-    ///         &mut FieldPath::new(&["friends", "country"])
-    ///     ),
-    ///     Ok(Type::Scalar(Scalar::Reference("Country".to_owned()))),
-    /// );
-    /// ```
-    pub fn resolve_path(
-        &self,
-        query_name: &str,
-        model_name: &str,
-        path: &mut FieldPath,
-    ) -> Result<Type, TypeError> {
-        if let Some(model) = self.models.get(model_name) {
-            if let Some(segment) = path.pop_front() {
-                if let Some(Field { r#type, .. }) = model.fields.get(&segment) {
-                    // The path is empty, we must return a type.
-                    if path.is_empty() {
-                        match r#type.scalar() {
-                            Scalar::Reference(reference) => {
-                                if self.models.contains_key(reference)
-                                    || self.enums.contains_key(reference)
-                                {
-                                    return Ok(r#type.clone());
-                                }
-                            }
-                            _ => return Ok(r#type.clone()),
-                        }
-                    } else if let Scalar::Reference(model) = r#type.scalar() {
-                        if let Some(Model { name, .. }) = self.models.get(model)
-                        {
-                            return self.resolve_path(query_name, name, path);
-                        }
-                    }
-                }
-            }
-        }
-
-        Err(TypeError::UnresolvedPath {
-            path: path.clone(),
-            query_name: query_name.to_owned(),
-            model_name: model_name.to_owned(),
-        })
     }
 }

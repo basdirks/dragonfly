@@ -25,6 +25,36 @@ pub struct Field {
     pub selections: Vec<Selection>,
 }
 
+impl Field {
+    /// Create a new field with just a name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::graphql::Field;
+    ///
+    /// let field = Field::new("foo");
+    ///
+    /// assert_eq!(field.name, "foo".to_owned());
+    /// assert!(field.arguments.is_empty());
+    /// assert!(field.directives.is_empty());
+    /// assert!(field.selections.is_empty());
+    /// ```
+    #[must_use]
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            arguments: Vec::new(),
+            directives: Vec::new(),
+            selections: Vec::new(),
+        }
+    }
+}
+
 impl Print for Field {
     fn print(
         &self,
@@ -52,19 +82,13 @@ impl Print for Field {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*,
-        crate::generator::graphql::Value,
-    };
+    use super::*;
 
     #[test]
     fn test_print_field() {
         let field = Field {
             name: "images".to_owned(),
-            arguments: vec![Argument {
-                name: "after".to_owned(),
-                value: Value::Variable("endCursor".to_owned()),
-            }],
+            arguments: vec![Argument::variable("after", "endCursor")],
             directives: vec![],
             selections: vec![],
         };
@@ -76,10 +100,7 @@ mod tests {
     fn test_print_field_with_selections() {
         let field = Field {
             name: "images".to_owned(),
-            arguments: vec![Argument {
-                name: "after".to_owned(),
-                value: Value::Variable("endCursor".to_owned()),
-            }],
+            arguments: vec![Argument::variable("after", "endCursor")],
             directives: vec![],
             selections: vec![Selection::Field(Field {
                 name: "edges".to_owned(),
@@ -92,10 +113,7 @@ mod tests {
                     selections: vec![Selection::Field(Field {
                         name: "id".to_owned(),
                         arguments: vec![],
-                        directives: vec![Directive {
-                            name: "id".to_owned(),
-                            arguments: vec![],
-                        }],
+                        directives: vec![Directive::new("id", &[])],
                         selections: vec![],
                     })],
                 })],

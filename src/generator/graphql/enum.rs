@@ -1,10 +1,10 @@
 use {
     crate::{
-        ast::Enum as AstEnum,
         generator::printer::{
             indent,
             Print,
         },
+        ir::Enum as IrEnum,
     },
     std::fmt::Display,
 };
@@ -16,6 +16,36 @@ pub struct Enum {
     pub name: String,
     /// The values of the enum.
     pub values: Vec<String>,
+}
+
+impl Enum {
+    /// Create a new enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the enum.
+    /// * `values` - The values of the enum.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::graphql::Enum;
+    ///
+    /// let r#enum = Enum::new("Foo", &["BAR", "BAZ"]);
+    ///
+    /// assert_eq!(r#enum.name, "Foo");
+    /// assert_eq!(r#enum.values, vec!["BAR".to_owned(), "BAZ".to_owned()]);
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        values: &[&str],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            values: values.iter().map(ToString::to_string).collect(),
+        }
+    }
 }
 
 impl Display for Enum {
@@ -45,18 +75,18 @@ impl Print for Enum {
     }
 }
 
-impl From<AstEnum> for Enum {
-    fn from(ast_enum: AstEnum) -> Self {
+impl From<IrEnum> for Enum {
+    fn from(ir_enum: IrEnum) -> Self {
         Self {
-            name: ast_enum.name,
-            values: ast_enum.variants,
+            name: ir_enum.name,
+            values: ir_enum.values,
         }
     }
 }
 
-impl From<&AstEnum> for Enum {
-    fn from(ast_enum: &AstEnum) -> Self {
-        Self::from(ast_enum.clone())
+impl From<&IrEnum> for Enum {
+    fn from(ir_enum: &IrEnum) -> Self {
+        Self::from(ir_enum.clone())
     }
 }
 
@@ -66,10 +96,7 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let r#enum = Enum {
-            name: "Test".to_owned(),
-            values: vec!["A".to_owned(), "B".to_owned()],
-        };
+        let r#enum = Enum::new("Test", &["A", "B"]);
 
         assert_eq!(
             r#enum.to_string(),
@@ -87,10 +114,7 @@ enum Test {
 
     #[test]
     fn test_print() {
-        let r#enum = Enum {
-            name: "Test".to_owned(),
-            values: vec!["A".to_owned(), "B".to_owned()],
-        };
+        let r#enum = Enum::new("Test", &["A", "B"]);
 
         assert_eq!(
             r#enum.print(0),
@@ -108,17 +132,10 @@ enum Test {
 
     #[test]
     fn test_from() {
-        let ast_enum = AstEnum {
-            name: "Test".to_owned(),
-            variants: vec!["A".to_owned(), "B".to_owned()],
-        };
+        let ir_enum = IrEnum::new("Test", &["A", "B"]);
+        let expected = Enum::new("Test", &["A", "B"]);
 
-        let expected = Enum {
-            name: "Test".to_owned(),
-            values: vec!["A".to_owned(), "B".to_owned()],
-        };
-
-        assert_eq!(Enum::from(ast_enum.clone()), expected);
-        assert_eq!(Enum::from(&ast_enum), expected);
+        assert_eq!(Enum::from(ir_enum.clone()), expected);
+        assert_eq!(Enum::from(&ir_enum), expected);
     }
 }

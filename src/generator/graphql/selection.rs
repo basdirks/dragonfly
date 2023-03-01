@@ -47,31 +47,18 @@ impl Selection {
     /// let selections = vec![
     ///     Selection::Field(Field {
     ///         name: "images".to_owned(),
-    ///         arguments: vec![Argument {
-    ///             name: "after".to_owned(),
-    ///             value: Value::Variable("endCursor".to_owned()),
-    ///         }],
+    ///         arguments: vec![Argument::new(
+    ///             "after",
+    ///             Value::variable("endCursor"),
+    ///         )],
     ///         directives: vec![],
-    ///         selections: vec![Selection::Field(Field {
-    ///             name: "id".to_owned(),
-    ///             arguments: vec![],
-    ///             directives: vec![],
-    ///             selections: vec![],
-    ///         })],
+    ///         selections: vec![Selection::Field(Field::new("id"))],
     ///     }),
-    ///     Selection::FragmentSpread(FragmentSpread {
-    ///         name: "foo".to_owned(),
-    ///         directives: vec![],
-    ///     }),
+    ///     Selection::FragmentSpread(FragmentSpread::new("foo", &[])),
     ///     Selection::InlineFragment(InlineFragment {
     ///         type_condition: "Image".to_owned(),
     ///         directives: vec![],
-    ///         selections: vec![Selection::Field(Field {
-    ///             name: "id".to_owned(),
-    ///             arguments: vec![],
-    ///             directives: vec![],
-    ///             selections: vec![],
-    ///         })],
+    ///         selections: vec![Selection::Field(Field::new("id"))],
     ///     }),
     /// ];
     ///
@@ -123,10 +110,7 @@ mod tests {
     use {
         super::*,
         crate::generator::{
-            graphql::{
-                Argument,
-                Value,
-            },
+            graphql::Argument,
             printer::print::Print,
         },
     };
@@ -135,10 +119,7 @@ mod tests {
     fn test_print_selection() {
         let field = Selection::Field(Field {
             name: "images".to_owned(),
-            arguments: vec![Argument {
-                name: "after".to_owned(),
-                value: Value::Variable("endCursor".to_owned()),
-            }],
+            arguments: vec![Argument::variable("after", "endCursor")],
             directives: vec![],
             selections: vec![],
         });
@@ -148,10 +129,7 @@ mod tests {
 
     #[test]
     fn test_print_fragment_spread() {
-        let spread = FragmentSpread {
-            name: "name".to_owned(),
-            directives: vec![],
-        };
+        let spread = FragmentSpread::new("name", &[]);
 
         assert_eq!(spread.print(0), "...name");
     }

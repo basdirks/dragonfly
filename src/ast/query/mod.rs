@@ -1,7 +1,9 @@
 use {
     super::{
-        r#type::Type,
-        Scalar,
+        r#type::{
+            Scalar,
+            Type,
+        },
         TypeError,
     },
     crate::parser::{
@@ -16,118 +18,25 @@ use {
         paren_close,
         paren_open,
         spaces,
-        ParseError,
         ParseResult,
     },
     std::collections::HashSet,
 };
 pub use {
     argument::Argument,
-    condition::{
-        Condition,
-        FieldPath,
-        Operator,
-    },
     r#where::Where,
-    schema::{
-        Node as SchemaNode,
-        Schema,
-    },
+    return_type::ReturnType,
+    schema::Schema,
 };
 
 /// Query arguments.
 pub mod argument;
-/// Conditions that queried data must meet.
-pub mod condition;
+/// The return type of a query.
+pub mod return_type;
 /// The structure of the data that the query should return.
 pub mod schema;
 /// Sets of conditions that queried data must meet.
 pub mod r#where;
-
-/// The return type of a query.
-///
-/// Must be a model or an array of such a type.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum ReturnType {
-    /// The name of a model.
-    Model(String),
-    /// An array of a model.
-    Array(String),
-}
-
-impl ReturnType {
-    /// Parse a return type from the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The input to parse.
-    ///
-    /// # Errors
-    ///
-    /// Returns `ParseError` if the input does not start with a valid return
-    /// type.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::QueryReturnType,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// assert_eq!(
-    ///     QueryReturnType::parse("Foo"),
-    ///     Ok((QueryReturnType::Model("Foo".to_owned()), "".to_owned()))
-    /// );
-    ///
-    /// assert_eq!(
-    ///     QueryReturnType::parse("[Foo]"),
-    ///     Ok((QueryReturnType::Array("Foo".to_owned()), "".to_owned()))
-    /// );
-    ///
-    /// assert_eq!(
-    ///     QueryReturnType::parse("String"),
-    ///     Err(ParseError::Custom {
-    ///         message: "Expected return type, found `String`.".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    pub fn parse(input: &str) -> ParseResult<Self> {
-        let (r#type, input) = Type::parse(input)?;
-        let (_, input) = spaces(&input)?;
-
-        match r#type {
-            Type::Scalar(Scalar::Reference(name)) => {
-                Ok((Self::Model(name), input))
-            }
-            Type::Array(Scalar::Reference(name)) => {
-                Ok((Self::Array(name), input))
-            }
-            _ => {
-                Err(ParseError::Custom {
-                    message: format!("Expected return type, found `{type}`."),
-                })
-            }
-        }
-    }
-
-    /// Return the name of the model that the return type references.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QueryReturnType;
-    ///
-    /// assert_eq!(QueryReturnType::Model("Foo".to_owned()).model(), "Foo");
-    /// assert_eq!(QueryReturnType::Array("Foo".to_owned()).model(), "Foo");
-    /// ```
-    #[must_use]
-    pub fn model(&self) -> &str {
-        match self {
-            Self::Model(name) | Self::Array(name) => name,
-        }
-    }
-}
 
 /// A query.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -362,12 +271,12 @@ impl Query {
     ///         name: "image".to_owned(),
     ///         conditions: vec![
     ///             QueryCondition {
-    ///                 field_path: FieldPath::new(&["title"]),
+    ///                 path: FieldPath::new(&["title"]),
     ///                 operator: QueryOperator::Equals,
     ///                 argument: "title".to_owned(),
     ///             },
     ///             QueryCondition {
-    ///                 field_path: FieldPath::new(&["title", "tags"]),
+    ///                 path: FieldPath::new(&["title", "tags"]),
     ///                 operator: QueryOperator::Contains,
     ///                 argument: "tag".to_owned(),
     ///             },
@@ -431,7 +340,7 @@ impl Query {
     ///     r#where: Some(QueryWhere {
     ///         name: "image".to_owned(),
     ///         conditions: vec![QueryCondition {
-    ///             field_path: FieldPath::new(&["country", "name"]),
+    ///             path: FieldPath::new(&["country", "name"]),
     ///             operator: QueryOperator::Equals,
     ///             argument: "name".to_owned(),
     ///         }],
@@ -468,87 +377,6 @@ impl Query {
             },
             input,
         ))
-    }
-
-    /// Check whether the root node of the schema has the same name as the root
-    /// node of the where clause.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::IncompatibleQueryRootNodes` if the names of the
-    /// root nodes of the schema and the where clause are not the same.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::Query;
-    ///
-    /// let input = "
-    ///
-    /// query images: [Image] {
-    ///     image {
-    ///         title
-    ///     }
-    ///     where {
-    ///         image {
-    ///             title {
-    ///                 equals: $title
-    ///             }
-    ///         }
-    ///     }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert!(Query::parse(input).unwrap().0.check_root_nodes().is_ok());
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Query,
-    ///     TypeError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query images: [Image] {
-    ///     image {
-    ///         title
-    ///     }
-    ///     where {
-    ///         images {
-    ///             title {
-    ///                 equals: $title
-    ///             }
-    ///         }
-    ///     }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Query::parse(input).unwrap().0.check_root_nodes(),
-    ///     Err(TypeError::IncompatibleQueryRootNodes {
-    ///         query_name: "images".to_owned(),
-    ///         schema_root: "image".to_owned(),
-    ///         where_root: "images".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    pub fn check_root_nodes(&self) -> Result<(), TypeError> {
-        if let Some(Where { name, .. }) = &self.r#where {
-            if self.schema.name != *name {
-                return Err(TypeError::IncompatibleQueryRootNodes {
-                    query_name: self.name.clone(),
-                    schema_root: self.schema.name.clone(),
-                    where_root: name.clone(),
-                });
-            }
-        }
-
-        Ok(())
     }
 
     /// Check whether the schema is empty.
@@ -758,7 +586,7 @@ impl Query {
                 let used_arguments = r#where
                     .conditions
                     .iter()
-                    .map(|condition| condition.argument.clone())
+                    .map(|condition| condition.argument_name.clone())
                     .collect::<HashSet<_>>();
 
                 for argument in &self.arguments {
@@ -779,307 +607,6 @@ impl Query {
                     ),
                 });
             }
-        }
-
-        Ok(())
-    }
-
-    /// Check whether each condition references an existing argument.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::UnknownQueryConditionReference` if any condition
-    /// references an argument that does not exist.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::Query;
-    ///
-    /// let input = "
-    ///
-    /// query images($name: CountryName): [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    ///   where {
-    ///     image {
-    ///       country {
-    ///         name {
-    ///           equals: $name
-    ///         }
-    ///       }
-    ///     }
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert!(Query::parse(input)
-    ///     .unwrap()
-    ///     .0
-    ///     .check_condition_references()
-    ///     .is_ok());
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     FieldPath,
-    ///     Query,
-    ///     QueryCondition,
-    ///     QueryOperator,
-    ///     TypeError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query images($name: CountryName): [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    ///   where {
-    ///     image {
-    ///       country {
-    ///         name {
-    ///           equals: $tag
-    ///         }
-    ///       }
-    ///     }
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Query::parse(input).unwrap().0.check_condition_references(),
-    ///     Err(TypeError::UnknownQueryConditionReference {
-    ///         query_name: "images".to_owned(),
-    ///         condition: QueryCondition {
-    ///             field_path: FieldPath::new(&["country", "name"]),
-    ///             operator: QueryOperator::Equals,
-    ///             argument: "tag".to_owned(),
-    ///         }
-    ///     }),
-    /// );
-    /// ```
-    pub fn check_condition_references(&self) -> Result<(), TypeError> {
-        if let Some(r#where) = &self.r#where {
-            let argument_names = self
-                .arguments
-                .iter()
-                .map(|argument| argument.name.clone())
-                .collect::<HashSet<String>>();
-
-            for condition in &r#where.conditions {
-                if !argument_names.contains(&condition.argument) {
-                    return Err(TypeError::UnknownQueryConditionReference {
-                        query_name: self.name.clone(),
-                        condition: condition.clone(),
-                    });
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Check whether each query arguments is a primitive type or a reference
-    /// to an existing enum.
-    ///
-    /// # Arguments
-    ///
-    /// * `enum_names` - A list of enum names.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::InvalidQueryArgumentType` if any argument type is
-    /// not a primitive type or a reference to an existing enum.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Enum,
-    ///     Query,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query images($name: CountryName): [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let query = Query::parse(input).unwrap().0;
-    /// let enum_names = vec!["CountryName".to_owned()].into_iter().collect();
-    ///
-    /// assert!(query.check_argument_types(&enum_names).is_ok());
-    /// ```
-    ///
-    /// ```rust
-    /// use {
-    ///     dragonfly::ast::Query,
-    ///     std::collections::HashSet,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query foo($p: Boolean, $date: DateTime, $rate: Float, $population: Int, $name: \
-    ///              String): [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let query = Query::parse(input).unwrap().0;
-    ///
-    /// assert!(query.check_argument_types(&HashSet::new()).is_ok());
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Enum,
-    ///     Query,
-    ///     QueryArgument,
-    ///     Scalar,
-    ///     Type,
-    ///     TypeError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query images($name: CountryName): [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let query = Query::parse(input).unwrap().0;
-    /// let enum_names = vec!["ContinentName".to_owned()].into_iter().collect();
-    ///
-    /// assert_eq!(
-    ///     query.check_argument_types(&enum_names),
-    ///     Err(TypeError::InvalidQueryArgumentType {
-    ///         query_name: "images".to_owned(),
-    ///         argument: QueryArgument {
-    ///             name: "name".to_owned(),
-    ///             r#type: Type::Scalar(Scalar::Reference(
-    ///                 "CountryName".to_owned()
-    ///             )),
-    ///         },
-    ///     }),
-    /// );
-    /// ```
-    pub fn check_argument_types(
-        &self,
-        enum_names: &HashSet<String>,
-    ) -> Result<(), TypeError> {
-        for argument in &self.arguments {
-            if let Scalar::Reference(name) = &argument.scalar() {
-                if !enum_names.contains(name) {
-                    return Err(TypeError::InvalidQueryArgumentType {
-                        query_name: self.name.clone(),
-                        argument: argument.clone(),
-                    });
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Check that the return type of the query is a reference to an existing
-    /// model, or an array of such a type.
-    ///
-    /// # Arguments
-    ///
-    /// * `models` - An list of models.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::InvalidQueryReturnType` if the return type is
-    /// not a reference to an existing model, or an array of such a type.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Model,
-    ///     Query,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query images: [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let query = Query::parse(input).unwrap().0;
-    /// let models = vec!["Image".to_owned()].into_iter().collect();
-    ///
-    /// assert!(query.check_return_type(&models).is_ok());
-    /// ```
-    ///
-    /// ```rust
-    /// use {
-    ///     dragonfly::ast::{
-    ///         Query,
-    ///         Scalar,
-    ///         Type,
-    ///         TypeError,
-    ///     },
-    ///     std::collections::HashSet,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query images: [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let query = Query::parse(input).unwrap().0;
-    ///
-    /// assert_eq!(
-    ///     query.check_return_type(&HashSet::new()),
-    ///     Err(TypeError::UnknownQueryReturnType {
-    ///         query_name: "images".to_owned(),
-    ///         model_name: "Image".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    pub fn check_return_type(
-        &self,
-        model_names: &HashSet<String>,
-    ) -> Result<(), TypeError> {
-        let model_name = self.r#type.model();
-
-        if !model_names.contains(model_name) {
-            return Err(TypeError::UnknownQueryReturnType {
-                query_name: self.name.clone(),
-                model_name: model_name.to_owned(),
-            });
         }
 
         Ok(())

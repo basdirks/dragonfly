@@ -19,6 +19,36 @@ pub struct Spread {
     pub directives: Vec<Directive>,
 }
 
+impl Spread {
+    /// Create a new fragment spread.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the fragment.
+    /// * `directives` - The directives of the fragment.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::graphql::Spread;
+    ///
+    /// let spread = Spread::new("foo", &[]);
+    ///
+    /// assert_eq!(spread.name, "foo".to_owned());
+    /// assert!(spread.directives.is_empty());
+    /// ```
+    #[must_use]
+    pub fn new(
+        name: &str,
+        directives: &[Directive],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            directives: directives.iter().map(ToOwned::to_owned).collect(),
+        }
+    }
+}
+
 impl Print for Spread {
     fn print(
         &self,
@@ -73,29 +103,19 @@ mod tests {
         crate::generator::graphql::{
             Argument,
             Field,
-            Value,
         },
     };
 
     #[test]
     fn test_print_spread() {
-        let spread = Spread {
-            name: "foo".to_owned(),
-            directives: vec![],
-        };
+        let spread = Spread::new("foo", &[]);
 
         assert_eq!(spread.print(0), "...foo");
 
-        let spread = Spread {
-            name: "daboi".to_owned(),
-            directives: vec![Directive {
-                name: "is".to_owned(),
-                arguments: vec![Argument {
-                    name: "a".to_owned(),
-                    value: Value::String("good boy.".to_owned()),
-                }],
-            }],
-        };
+        let spread = Spread::new(
+            "daboi",
+            &[Directive::new("is", &[Argument::string("a", "good boy.")])],
+        );
 
         assert_eq!(spread.print(0), "...daboi @is(a: \"good boy.\")");
     }
@@ -104,36 +124,20 @@ mod tests {
     fn test_print_inline() {
         let inline = Inline {
             type_condition: "Foo".to_owned(),
-            directives: vec![Directive {
-                name: "bar".to_owned(),
-                arguments: vec![Argument {
-                    name: "baz".to_owned(),
-                    value: Value::String("bax".to_owned()),
-                }],
-            }],
+            directives: vec![Directive::new(
+                "bar",
+                &[Argument::string("baz", "bax")],
+            )],
             selections: vec![Selection::Field(Field {
                 name: "bar".to_owned(),
                 arguments: vec![],
-                directives: vec![Directive {
-                    name: "foo".to_owned(),
-                    arguments: vec![Argument {
-                        name: "bar".to_owned(),
-                        value: Value::String("baz".to_owned()),
-                    }],
-                }],
+                directives: vec![Directive::new(
+                    "foo",
+                    &[Argument::string("bar", "baz")],
+                )],
                 selections: vec![
-                    Selection::Field(Field {
-                        name: "baz".to_owned(),
-                        arguments: vec![],
-                        directives: vec![],
-                        selections: vec![],
-                    }),
-                    Selection::Field(Field {
-                        name: "bax".to_owned(),
-                        arguments: vec![],
-                        directives: vec![],
-                        selections: vec![],
-                    }),
+                    Selection::Field(Field::new("baz")),
+                    Selection::Field(Field::new("bax")),
                 ],
             })],
         };

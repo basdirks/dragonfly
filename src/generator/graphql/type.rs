@@ -1,10 +1,4 @@
-use {
-    crate::ast::{
-        Scalar as AstScalar,
-        Type as AstType,
-    },
-    std::fmt::Display,
-};
+use std::fmt::Display;
 
 /// GraphQL types.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -17,6 +11,71 @@ pub enum Type {
     Name(String),
 }
 
+impl Type {
+    /// Create a new list type.
+    ///
+    /// # Arguments
+    ///
+    /// * `inner` - The inner type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::graphql::Type;
+    ///
+    /// let list = Type::list(Type::name("String"));
+    ///
+    /// assert_eq!(list, Type::List(Box::new(Type::Name("String".to_owned()))));
+    /// ```
+    #[must_use]
+    pub fn list(inner: Self) -> Self {
+        Self::List(Box::new(inner))
+    }
+
+    /// Create a new non-null type.
+    ///
+    /// # Arguments
+    ///
+    /// * `inner` - The inner type.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::graphql::Type;
+    ///
+    /// let non_null = Type::non_null(Type::name("String"));
+    ///
+    /// assert_eq!(
+    ///     non_null,
+    ///     Type::NonNull(Box::new(Type::Name("String".to_owned())))
+    /// );
+    /// ```
+    #[must_use]
+    pub fn non_null(inner: Self) -> Self {
+        Self::NonNull(Box::new(inner))
+    }
+
+    /// Create a new name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::graphql::Type;
+    ///
+    /// let name = Type::name("String");
+    ///
+    /// assert_eq!(name, Type::Name("String".to_owned()));
+    /// ```
+    #[must_use]
+    pub fn name(name: &str) -> Self {
+        Self::Name(name.to_owned())
+    }
+}
+
 impl Display for Type {
     fn fmt(
         &self,
@@ -27,182 +86,5 @@ impl Display for Type {
             Self::NonNull(inner) => write!(f, "{inner}!"),
             Self::Name(name) => write!(f, "{name}"),
         }
-    }
-}
-
-impl From<AstType> for Type {
-    fn from(ast_type: AstType) -> Self {
-        let print_scalar = |scalar| {
-            match scalar {
-                AstScalar::Boolean => "Boolean".to_owned(),
-                AstScalar::DateTime => "DateTime".to_owned(),
-                AstScalar::Float => "Float".to_owned(),
-                AstScalar::Int => "Int".to_owned(),
-                AstScalar::String => "String".to_owned(),
-                AstScalar::Reference(name) | AstScalar::Owned(name) => name,
-            }
-        };
-
-        let inner = match ast_type {
-            AstType::Array(scalar) => {
-                Self::List(Box::new(Self::Name(print_scalar(scalar))))
-            }
-            AstType::Scalar(scalar) => Self::Name(print_scalar(scalar)),
-        };
-
-        Self::NonNull(Box::new(inner))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_from_ast_type() {
-        assert_eq!(
-            Type::from(AstType::Scalar(AstScalar::Boolean)),
-            Type::NonNull(Box::new(Type::Name("Boolean".to_owned())))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Scalar(AstScalar::DateTime)),
-            Type::NonNull(Box::new(Type::Name("DateTime".to_owned())))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Scalar(AstScalar::Float)),
-            Type::NonNull(Box::new(Type::Name("Float".to_owned())))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Scalar(AstScalar::Int)),
-            Type::NonNull(Box::new(Type::Name("Int".to_owned())))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Scalar(AstScalar::String)),
-            Type::NonNull(Box::new(Type::Name("String".to_owned())))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Scalar(AstScalar::Reference("Foo".to_owned()))),
-            Type::NonNull(Box::new(Type::Name("Foo".to_owned())))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Array(AstScalar::Boolean)),
-            Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Boolean".to_owned()
-            )))))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Array(AstScalar::DateTime)),
-            Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "DateTime".to_owned()
-            )))))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Array(AstScalar::Float)),
-            Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Float".to_owned()
-            )))))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Array(AstScalar::Int)),
-            Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Int".to_owned()
-            )))))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Array(AstScalar::String)),
-            Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "String".to_owned()
-            )))))
-        );
-
-        assert_eq!(
-            Type::from(AstType::Array(AstScalar::Reference("Foo".to_owned()))),
-            Type::NonNull(Box::new(Type::List(Box::new(Type::Name(
-                "Foo".to_owned()
-            )))))
-        );
-    }
-
-    #[test]
-    fn test_display() {
-        assert_eq!(
-            format!("{}", Type::from(AstType::Scalar(AstScalar::Boolean))),
-            "Boolean!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Scalar(AstScalar::DateTime))),
-            "DateTime!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Scalar(AstScalar::Float))),
-            "Float!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Scalar(AstScalar::Int))),
-            "Int!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Scalar(AstScalar::String))),
-            "String!"
-        );
-
-        assert_eq!(
-            format!(
-                "{}",
-                Type::from(AstType::Scalar(AstScalar::Reference(
-                    "Foo".to_owned()
-                )))
-            ),
-            "Foo!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Array(AstScalar::Boolean))),
-            "[Boolean]!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Array(AstScalar::DateTime))),
-            "[DateTime]!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Array(AstScalar::Float))),
-            "[Float]!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Array(AstScalar::Int))),
-            "[Int]!"
-        );
-
-        assert_eq!(
-            format!("{}", Type::from(AstType::Array(AstScalar::String))),
-            "[String]!"
-        );
-
-        assert_eq!(
-            format!(
-                "{}",
-                Type::from(AstType::Array(AstScalar::Reference(
-                    "Foo".to_owned()
-                )))
-            ),
-            "[Foo]!"
-        );
     }
 }

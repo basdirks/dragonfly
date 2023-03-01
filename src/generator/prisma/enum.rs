@@ -1,8 +1,8 @@
 use {
     super::attribute::Block,
     crate::{
-        ast::Enum as AstEnum,
         generator::printer::Print,
+        ir::Enum as IrEnum,
     },
     std::fmt::Display,
 };
@@ -16,6 +16,39 @@ pub struct Enum {
     pub values: Vec<String>,
     /// The attributes of the enum.
     pub attributes: Vec<Block>,
+}
+
+impl Enum {
+    /// Create a new enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the enum.
+    /// * `values` - The values of the enum.
+    /// * `attributes` - The attributes of the enum.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::generator::prisma::Enum;
+    ///
+    /// let r#enum = Enum::new("Foo", &["Bar"], &[]);
+    ///
+    /// assert_eq!(r#enum.name, "Foo");
+    /// assert_eq!(r#enum.values, vec!["Bar".to_owned()]);
+    /// assert!(r#enum.attributes.is_empty());
+    /// ```
+    pub fn new(
+        name: &str,
+        values: &[&str],
+        attributes: &[Block],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            values: values.iter().map(ToString::to_string).collect(),
+            attributes: attributes.to_owned(),
+        }
+    }
 }
 
 impl Display for Enum {
@@ -61,13 +94,8 @@ impl Print for Enum {
     }
 }
 
-impl From<AstEnum> for Enum {
-    fn from(
-        AstEnum {
-            name,
-            variants: values,
-        }: AstEnum
-    ) -> Self {
+impl From<IrEnum> for Enum {
+    fn from(IrEnum { name, values }: IrEnum) -> Self {
         Self {
             name,
             values,
@@ -76,9 +104,9 @@ impl From<AstEnum> for Enum {
     }
 }
 
-impl From<&AstEnum> for Enum {
-    fn from(ast_enum: &AstEnum) -> Self {
-        Self::from(ast_enum.clone())
+impl From<&IrEnum> for Enum {
+    fn from(ir_enum: &IrEnum) -> Self {
+        Self::from(ir_enum.clone())
     }
 }
 
@@ -94,22 +122,15 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let r#enum = Enum {
-            attributes: vec![Block {
-                arguments: vec![Argument {
-                    name: None,
-                    value: Value::String("colors".to_owned()),
-                }],
-                group: None,
-                name: "map".to_owned(),
-            }],
-            name: "Color".to_owned(),
-            values: vec![
-                "Red".to_owned(),
-                "Green".to_owned(),
-                "Blue".to_owned(),
-            ],
-        };
+        let r#enum = Enum::new(
+            "Color",
+            &["Red", "Green", "Blue"],
+            &[Block::new(
+                "map",
+                &[Argument::unnamed(&Value::string("colors"))],
+                None,
+            )],
+        );
 
         assert_eq!(
             r#enum.to_string(),
@@ -130,21 +151,8 @@ enum Color {
 
     #[test]
     fn test_from() {
-        let (ast_enum, _) = AstEnum::parse(
-            "
-
-enum Color {
-    Red
-    Green
-    Blue
-}
-
-"
-            .trim(),
-        )
-        .unwrap();
-
-        let r#enum = Enum::from(ast_enum);
+        let ir_enum = IrEnum::new("Color", &["Red", "Green", "Blue"]);
+        let r#enum = Enum::from(ir_enum);
 
         assert_eq!(
             r#enum.to_string(),
@@ -163,25 +171,18 @@ enum Color {
 
     #[test]
     fn test_print_enum() {
-        let enum_ = Enum {
-            attributes: vec![Block {
-                arguments: vec![Argument {
-                    name: None,
-                    value: Value::String("colors".to_owned()),
-                }],
-                group: None,
-                name: "map".to_owned(),
-            }],
-            name: "Color".to_owned(),
-            values: vec![
-                "Red".to_owned(),
-                "Green".to_owned(),
-                "Blue".to_owned(),
-            ],
-        };
+        let r#enum = Enum::new(
+            "Color",
+            &["Red", "Green", "Blue"],
+            &[Block::new(
+                "map",
+                &[Argument::unnamed(&Value::string("colors"))],
+                None,
+            )],
+        );
 
         assert_eq!(
-            enum_.print(0),
+            r#enum.print(0),
             "
 
 enum Color {
@@ -198,22 +199,9 @@ enum Color {
     }
 
     #[test]
-    fn test_enum_from_ast_enum() {
-        let (ast_enum, _) = AstEnum::parse(
-            "
-
-enum Color {
-  Red
-  Green
-  Blue
-}
-
-"
-            .trim(),
-        )
-        .unwrap();
-
-        let r#enum = Enum::from(ast_enum);
+    fn test_enum_from_ir_enum() {
+        let ir_enum = IrEnum::new("Color", &["Red", "Green", "Blue"]);
+        let r#enum = Enum::from(ir_enum);
 
         assert_eq!(
             r#enum.to_string(),

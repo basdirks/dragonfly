@@ -1,9 +1,6 @@
 use {
     super::{
-        query::condition::FieldPath,
-        Field,
-        QueryArgument,
-        QueryCondition,
+        query,
         Type,
     },
     std::fmt::Display,
@@ -12,6 +9,14 @@ use {
 /// Type checking errors.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum TypeError {
+    /// Field names must be unique within a model. This model contains two
+    /// fields with the same name.
+    DuplicateField {
+        /// The name of the model.
+        model_name: String,
+        /// The name of the field.
+        field_name: String,
+    },
     /// A query schema should contain at least one field, but the schema of
     /// this query is empty. An empty schema is not allowed because it would
     /// not return any data.
@@ -27,15 +32,15 @@ pub enum TypeError {
     /// the argument) that is not compatible with the condition.
     ///
     /// Checked in `dragonfly::ast::Ast::check_query_condition_types`.
-    IncompatibleQueryOperator {
+    InvalidQueryCondition {
         /// The name of the query.
         query_name: String,
-        /// The condition.
-        condition: QueryCondition,
+        /// The operator of the condition.
+        operator: query::r#where::Operator,
         /// The type of the condition as given by the argument.
-        argument_type: Type,
+        argument_name: String,
         /// The type of the field that the condition is applied to.
-        field_type: Type,
+        field_name: String,
     },
     /// The root node of content of the where clause should have the same name
     /// as the root node of the query schema. The name of the root node of the
@@ -43,7 +48,7 @@ pub enum TypeError {
     /// schema.
     ///
     /// Checked in `dragonfly::ast::Query::check_root_nodes`.
-    IncompatibleQueryRootNodes {
+    QuerySchemaMismatch {
         /// The name of the schema root node.
         schema_root: String,
         /// The name of the query root node.
@@ -69,7 +74,7 @@ pub enum TypeError {
     /// Checked in `dragonfly::ast::Query::check_argument_types`.
     InvalidQueryArgumentType {
         /// The argument that has an invalid type.
-        argument: QueryArgument,
+        argument: query::Argument,
         /// The name of the query.
         query_name: String,
     },
@@ -78,11 +83,13 @@ pub enum TypeError {
     /// of this model is unknown.
     ///
     /// Checked in `dragonfly::ast::Model::check_field_types`.
-    UnknownModelFieldType {
+    UnknownFieldType {
         /// The field whose type is undefined.
-        field: Field,
+        field_name: String,
         /// The name of the model.
         model_name: String,
+        /// The name of the unknown type.
+        type_name: String,
     },
     /// A condition must refer to a query argument. This query contains a
     /// condition that refers to an undefined argument.
@@ -90,7 +97,7 @@ pub enum TypeError {
     /// Checked in `dragonfly::ast::Query::check_condition_references`.
     UnknownQueryConditionReference {
         /// The condition that mentions an undefined argument.
-        condition: QueryCondition,
+        condition: query::r#where::Condition,
         /// The name of the query.
         query_name: String,
     },
@@ -121,7 +128,7 @@ pub enum TypeError {
     /// Checked in `dragonfly::ast::Ast::check_query_condition_types`.
     UnresolvedPath {
         /// The path that can not be resolved.
-        path: FieldPath,
+        path: query::r#where::Path,
         /// The name of the model.
         model_name: String,
         /// The name of the query.
@@ -133,7 +140,7 @@ pub enum TypeError {
     /// Checked in `dragonfly::ast::Query::check_unused_arguments`.
     UnusedQueryArgument {
         /// The argument that is not used.
-        argument: QueryArgument,
+        argument: query::Argument,
         /// The name of the query.
         query_name: String,
     },
@@ -146,25 +153,35 @@ impl Display for TypeError {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         match self {
+            Self::DuplicateField {
+                model_name,
+                field_name,
+            } => {
+                write!(
+                    f,
+                    "Model `{model_name}` contains a duplicate field \
+                     `{field_name}`.",
+                )
+            }
             Self::EmptyQuerySchema { query_name } => {
                 write!(f, "Query `{query_name}` has an empty schema.")
             }
-            Self::IncompatibleQueryOperator {
+            Self::InvalidQueryCondition {
                 query_name,
-                condition,
-                argument_type,
-                field_type,
+                operator,
+                argument_name,
+                field_name,
             } => {
                 write!(
                     f,
                     "Query `{query_name}` contains a condition with \
-                     incompatible operands. The condition is `{condition}`. \
-                     The type of the condition as given by the argument is \
-                     `{argument_type}`. The type of the field that the \
-                     condition is applied to is `{field_type}`.",
+                     incompatible operands. The operator is `{operator}`. The \
+                     type of the condition as given by the argument is \
+                     `{argument_name}`. The type of the field that the \
+                     condition is applied to is `{field_name}`.",
                 )
             }
-            Self::IncompatibleQueryRootNodes {
+            Self::QuerySchemaMismatch {
                 schema_root,
                 where_root,
                 query_name,
@@ -200,11 +217,16 @@ impl Display for TypeError {
                      invalid type. The argument is `{argument}`.",
                 )
             }
-            Self::UnknownModelFieldType { field, model_name } => {
+            Self::UnknownFieldType {
+                field_name,
+                model_name,
+                type_name,
+            } => {
                 write!(
                     f,
                     "Model `{model_name}` contains a field with an unknown \
-                     type. The field is `{field}`.",
+                     type. The type is `{type_name}` and the field is \
+                     `{field_name}`.",
                 )
             }
             Self::UnknownQueryConditionReference {
@@ -280,35 +302,27 @@ mod tests {
 
     #[test]
     fn test_display_incompatible_query_operator_error() {
-        use crate::ast::{
-            QueryCondition,
-            QueryOperator,
-            Scalar,
-        };
+        use crate::ast::query;
 
         assert_eq!(
-            TypeError::IncompatibleQueryOperator {
+            TypeError::InvalidQueryCondition {
                 query_name: "foo".to_owned(),
-                condition: QueryCondition {
-                    operator: QueryOperator::Equals,
-                    field_path: FieldPath::new(&["foo", "bar", "baz"]),
-                    argument: "baz".to_owned(),
-                },
-                argument_type: Type::Scalar(Scalar::String),
-                field_type: Type::Scalar(Scalar::Int),
+                operator: query::r#where::Operator::Equals,
+                argument_name: "String".to_owned(),
+                field_name: "Int".to_owned(),
             }
             .to_string(),
             "Query `foo` contains a condition with incompatible operands. The \
-             condition is `foo { bar { baz } } equals $baz`. The type of the \
-             condition as given by the argument is `String`. The type of the \
-             field that the condition is applied to is `Int`."
+             operator is `equals`. The type of the condition as given by the \
+             argument is `String`. The type of the field that the condition \
+             is applied to is `Int`."
         );
     }
 
     #[test]
     fn test_display_incompatible_query_root_nodes_error() {
         assert_eq!(
-            TypeError::IncompatibleQueryRootNodes {
+            TypeError::QuerySchemaMismatch {
                 schema_root: "foo".to_owned(),
                 where_root: "bar".to_owned(),
                 query_name: "baz".to_owned(),
@@ -346,7 +360,7 @@ mod tests {
 
         assert_eq!(
             TypeError::InvalidQueryArgumentType {
-                argument: QueryArgument {
+                argument: query::Argument {
                     name: "foo".to_owned(),
                     r#type: Type::Scalar(Scalar::String),
                 },
@@ -359,36 +373,29 @@ mod tests {
     }
 
     #[test]
-    fn test_display_unknown_model_field_type_error() {
-        use crate::ast::Scalar;
-
+    fn test_display_unknown_field_type_error() {
         assert_eq!(
-            TypeError::UnknownModelFieldType {
-                field: Field {
-                    name: "foo".to_owned(),
-                    r#type: Type::Scalar(Scalar::String),
-                },
+            TypeError::UnknownFieldType {
+                field_name: "foo".to_owned(),
+                type_name: "quz".to_owned(),
                 model_name: "bar".to_owned(),
             }
             .to_string(),
-            "Model `bar` contains a field with an unknown type. The field is \
-             `foo: String`."
+            "Model `bar` contains a field with an unknown type. The type is \
+             `quz` and the field is `foo`."
         );
     }
 
     #[test]
     fn test_display_unknown_query_condition_reference_error() {
-        use crate::ast::{
-            QueryCondition,
-            QueryOperator,
-        };
+        use crate::ast::query;
 
         assert_eq!(
             TypeError::UnknownQueryConditionReference {
-                condition: QueryCondition {
-                    operator: QueryOperator::Equals,
-                    field_path: FieldPath::new(&["foo", "bar", "baz"]),
-                    argument: "baz".to_owned(),
+                condition: query::r#where::Condition {
+                    operator: query::r#where::Operator::Equals,
+                    path: query::r#where::Path::new(&["foo", "bar", "baz"]),
+                    argument_name: "baz".to_owned(),
                 },
                 query_name: "bar".to_owned(),
             }
@@ -428,7 +435,7 @@ mod tests {
     fn test_display_unresolved_path_error() {
         assert_eq!(
             TypeError::UnresolvedPath {
-                path: FieldPath::new(&["foo", "bar", "baz"]),
+                path: query::r#where::Path::new(&["foo", "bar", "baz"]),
                 model_name: "foo".to_owned(),
                 query_name: "bar".to_owned(),
             }
@@ -442,7 +449,7 @@ mod tests {
     fn test_display_unused_query_argument_error() {
         assert_eq!(
             TypeError::UnusedQueryArgument {
-                argument: QueryArgument {
+                argument: query::Argument {
                     name: "foo".to_owned(),
                     r#type: Type::Scalar(Scalar::String),
                 },

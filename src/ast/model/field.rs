@@ -140,7 +140,7 @@ impl Display for Field {
 mod tests {
     use {
         super::*,
-        crate::ast::Scalar,
+        crate::ast::r#type::Scalar,
     };
 
     #[test]
