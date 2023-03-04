@@ -122,7 +122,10 @@ impl Value {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::Value;
+    /// use dragonfly::generator::prisma::{
+    ///     Function,
+    ///     Value,
+    /// };
     ///
     /// let value = Value::function("bar", &[Value::string("baz")]);
     ///

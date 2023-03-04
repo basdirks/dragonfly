@@ -24,6 +24,25 @@ pub struct Argument {
     pub value: Const,
 }
 
+impl Argument {
+    /// Create a new argument.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the argument.
+    /// * `value` - The value of the argument.
+    #[must_use]
+    pub fn new(
+        name: &str,
+        value: Const,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            value,
+        }
+    }
+}
+
 impl Display for Argument {
     fn fmt(
         &self,
@@ -62,14 +81,6 @@ impl Value {
     /// # Arguments
     ///
     /// * `name` - The enum name.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Value;
-    ///
-    /// assert_eq!(Value::r#enum("Foo.BAR"), Value::Enum("Foo.BAR".to_owned()));
-    /// ```
     #[must_use]
     pub fn r#enum(name: &str) -> Self {
         Self::Enum(name.to_owned())
@@ -80,14 +91,6 @@ impl Value {
     /// # Arguments
     ///
     /// * `value` - The float value.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Value;
-    ///
-    /// assert_eq!(Value::float("1.0"), Value::Float("1.0".to_owned()));
-    /// ```
     #[must_use]
     pub fn float(value: &str) -> Self {
         Self::Float(value.to_owned())
@@ -98,14 +101,6 @@ impl Value {
     /// # Arguments
     ///
     /// * `value` - The int value.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Value;
-    ///
-    /// assert_eq!(Value::int("1"), Value::Int("1".to_owned()));
-    /// ```
     #[must_use]
     pub fn int(value: &str) -> Self {
         Self::Int(value.to_owned())
@@ -118,17 +113,6 @@ impl Value {
     /// # Arguments
     ///
     /// * `values` - The list of values.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Value;
-    ///
-    /// assert_eq!(
-    ///     Value::list(&[Value::int("1"), Value::int("2")]),
-    ///     Value::List(&[Value::int("1"), Value::int("2")])
-    /// );
-    /// ```
     #[must_use]
     pub fn list(values: &[Self]) -> Self {
         Self::List(values.to_owned())
@@ -139,20 +123,6 @@ impl Value {
     /// # Arguments
     ///
     /// * `fields` - The list of fields.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// assert_eq!(
-    ///     Value::object(&[ObjectField::new("foo", Value::int("1"))]),
-    ///     Value::Object(&[ObjectField::new("foo", Value::int("1"))])
-    /// );
-    /// ```
     #[must_use]
     pub fn object(fields: &[ObjectField]) -> Self {
         Self::Object(fields.to_owned())
@@ -163,14 +133,6 @@ impl Value {
     /// # Arguments
     ///
     /// * `value` - The string value.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Value;
-    ///
-    /// assert_eq!(Value::string("foo"), Value::String("foo".to_owned()));
-    /// ```
     #[must_use]
     pub fn string(value: &str) -> Self {
         Self::String(value.to_owned())
@@ -181,14 +143,6 @@ impl Value {
     /// # Arguments
     ///
     /// * `name` - The variable name.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Value;
-    ///
-    /// assert_eq!(Value::variable("foo"), Value::Variable("foo".to_owned()));
-    /// ```
     #[must_use]
     pub fn variable(name: &str) -> Self {
         Self::Variable(name.to_owned())
@@ -217,5 +171,60 @@ impl Display for Value {
             }
             Self::String(value) => write!(f, "\"{value}\""),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_argument() {
+        assert_eq!(Argument::new("foo", Const::int("1")).to_string(), "foo: 1");
+    }
+
+    #[test]
+    fn test_enum() {
+        assert_eq!(Value::r#enum("Foo.BAR").to_string(), "Foo.BAR");
+    }
+
+    #[test]
+    fn test_float() {
+        assert_eq!(Value::float("1.0").to_string(), "1.0");
+    }
+
+    #[test]
+    fn test_int() {
+        assert_eq!(Value::int("1").to_string(), "1");
+    }
+
+    #[test]
+    fn test_list() {
+        assert_eq!(
+            Value::list(&[Value::int("1"), Value::int("2")]).to_string(),
+            "[1, 2]".to_owned()
+        );
+    }
+
+    #[test]
+    fn test_object() {
+        assert_eq!(
+            Value::object(&[
+                ObjectField::int("foo", "1"),
+                ObjectField::string("bar", "barrr")
+            ])
+            .to_string(),
+            "{foo: 1, bar: \"barrr\"}".to_owned()
+        );
+    }
+
+    #[test]
+    fn test_string() {
+        assert_eq!(Value::string("foo").to_string(), "\"foo\"".to_owned());
+    }
+
+    #[test]
+    fn test_variable() {
+        assert_eq!(Value::variable("foo").to_string(), "$foo".to_owned());
     }
 }

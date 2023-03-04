@@ -45,8 +45,13 @@ impl Import {
     ///
     /// let import = Import::named("foo", &[]);
     ///
-    /// assert_eq!(import.module, "foo".to_owned());
-    /// assert!(import.specifiers.is_empty());
+    /// assert_eq!(
+    ///     import,
+    ///     Import::Named {
+    ///         module: "foo".to_owned(),
+    ///         specifiers: vec![],
+    ///     }
+    /// );
     /// ```
     #[must_use]
     pub fn named(
@@ -73,8 +78,13 @@ impl Import {
     ///
     /// let import = Import::star("foo", "bar");
     ///
-    /// assert_eq!(import.module, "foo".to_owned());
-    /// assert_eq!(import.alias, "bar".to_owned());
+    /// assert_eq!(
+    ///     import,
+    ///     Import::Star {
+    ///         module: "foo".to_owned(),
+    ///         alias: "bar".to_owned(),
+    ///     }
+    /// );
     /// ```
     #[must_use]
     pub fn star(
@@ -101,8 +111,13 @@ impl Import {
     ///
     /// let import = Import::default("foo", "bar");
     ///
-    /// assert_eq!(import.module, "foo".to_owned());
-    /// assert_eq!(import.alias, "bar".to_owned());
+    /// assert_eq!(
+    ///     import,
+    ///     Import::Default {
+    ///         module: "foo".to_owned(),
+    ///         alias: "bar".to_owned(),
+    ///     }
+    /// );
     /// ```
     #[must_use]
     pub fn default(

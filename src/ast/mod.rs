@@ -4,7 +4,17 @@ pub use self::{
         Field,
         Model,
     },
-    query::Query,
+    query::{
+        Argument as QueryArgument,
+        Condition as QueryCondition,
+        Operator as QueryOperator,
+        Path as QueryPath,
+        Query,
+        ReturnType as QueryReturnType,
+        Schema as QuerySchema,
+        SchemaNode as QuerySchemaNode,
+        Where as QueryWhere,
+    },
     r#enum::Enum,
     r#type::{
         Scalar,
@@ -13,18 +23,15 @@ pub use self::{
     route::Route,
     type_error::TypeError,
 };
-use {
-    crate::{
+use crate::{
+    map,
+    parser::{
+        choice,
         map,
-        parser::{
-            choice,
-            map,
-            spaces,
-            ParseError,
-            ParseResult,
-        },
+        spaces,
+        ParseError,
+        ParseResult,
     },
-    std::collections::BTreeMap,
 };
 
 /// A JSX component.
@@ -88,10 +95,10 @@ impl Declaration {
     ///
     /// let expected = Declaration::Component(Component {
     ///     name: "Foo".to_owned(),
-    ///     path: "Foo".to_owned(),
+    ///     path: "Foo".to_owned().into(),
     /// });
     ///
-    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_owned())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, String::new())));
     /// ```
     ///
     /// ```rust
@@ -115,7 +122,7 @@ impl Declaration {
     ///     variants: vec!["Bar".to_owned(), "Baz".to_owned()],
     /// });
     ///
-    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_owned())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, String::new())));
     /// ```
     ///
     /// ```rust
@@ -143,33 +150,13 @@ impl Declaration {
     /// let expected = Declaration::Model(Model {
     ///     name: "Foo".to_owned(),
     ///     fields: vec![
-    ///         (
-    ///             "foo".to_owned(),
-    ///             Field {
-    ///                 name: "foo".to_owned(),
-    ///                 r#type: Type::Scalar(Scalar::String),
-    ///             },
-    ///         ),
-    ///         (
-    ///             "bar".to_owned(),
-    ///             Field {
-    ///                 name: "bar".to_owned(),
-    ///                 r#type: Type::Array(Scalar::Reference("Bar".to_owned())),
-    ///             },
-    ///         ),
-    ///         (
-    ///             "baz".to_owned(),
-    ///             Field {
-    ///                 name: "baz".to_owned(),
-    ///                 r#type: Type::Scalar(Scalar::Owned("Bar".to_owned())),
-    ///             },
-    ///         ),
-    ///     ]
-    ///     .into_iter()
-    ///     .collect(),
+    ///         Field::string("foo"),
+    ///         Field::references("bar", "Bar"),
+    ///         Field::owned_reference("baz", "Bar"),
+    ///     ],
     /// });
     ///
-    /// assert_eq!(Declaration::parse(input), Ok((expected, "".to_owned())));
+    /// assert_eq!(Declaration::parse(input), Ok((expected, String::new())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         choice(
@@ -189,27 +176,41 @@ impl Declaration {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Ast {
     /// Component declarations.
-    pub components: BTreeMap<String, Component>,
+    pub components: Vec<Component>,
     /// Enum declarations.
-    pub enums: BTreeMap<String, Enum>,
+    pub enums: Vec<Enum>,
     /// Model declarations.
-    pub models: BTreeMap<String, Model>,
+    pub models: Vec<Model>,
     /// Query declarations.
-    pub queries: BTreeMap<String, Query>,
+    pub queries: Vec<Query>,
     /// Route declarations.
-    pub routes: BTreeMap<String, Route>,
+    pub routes: Vec<Route>,
 }
 
 impl Ast {
     /// Create a new AST.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::Ast;
+    ///
+    /// let ast = Ast::new();
+    ///
+    /// assert!(ast.components.is_empty());
+    /// assert!(ast.enums.is_empty());
+    /// assert!(ast.models.is_empty());
+    /// assert!(ast.queries.is_empty());
+    /// assert!(ast.routes.is_empty());
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            components: BTreeMap::new(),
-            enums: BTreeMap::new(),
-            models: BTreeMap::new(),
-            queries: BTreeMap::new(),
-            routes: BTreeMap::new(),
+            components: Vec::new(),
+            enums: Vec::new(),
+            models: Vec::new(),
+            queries: Vec::new(),
+            routes: Vec::new(),
         }
     }
 
@@ -232,12 +233,12 @@ impl Ast {
     ///     Declaration,
     ///     Enum,
     ///     Field,
-    ///     FieldPath,
     ///     Model,
     ///     Query,
     ///     QueryArgument,
     ///     QueryCondition,
     ///     QueryOperator,
+    ///     QueryPath,
     ///     QueryReturnType,
     ///     QuerySchema,
     ///     QuerySchemaNode,
@@ -331,411 +332,104 @@ impl Ast {
     ///
     /// let mut expected = Ast::new();
     ///
-    /// expected.routes.insert(
-    ///     "/".to_owned(),
-    ///     Route {
-    ///         path: "/".to_owned(),
-    ///         root: "Home".to_owned(),
-    ///         title: "Home".to_owned(),
-    ///     },
-    /// );
+    /// expected.routes = vec![Route {
+    ///     path: "/".to_owned(),
+    ///     root: "Home".to_owned(),
+    ///     title: "Home".to_owned(),
+    /// }];
     ///
-    /// expected.components.insert(
-    ///     "Home".to_owned(),
-    ///     Component {
-    ///         name: "Home".to_owned(),
-    ///         path: "Home".to_owned(),
-    ///     },
-    /// );
+    /// expected.components = vec![Component {
+    ///     name: "Home".to_owned(),
+    ///     path: "Home".to_owned().into(),
+    /// }];
     ///
-    /// expected.models.insert(
-    ///     "Image".to_owned(),
+    /// expected.models = vec![
     ///     Model {
     ///         name: "Image".to_owned(),
     ///         fields: vec![
-    ///             (
-    ///                 "title".to_owned(),
-    ///                 Field {
-    ///                     name: "title".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::String),
-    ///                 },
-    ///             ),
-    ///             (
-    ///                 "country".to_owned(),
-    ///                 Field {
-    ///                     name: "country".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "Country".to_owned(),
-    ///                     )),
-    ///                 },
-    ///             ),
-    ///             (
-    ///                 "category".to_owned(),
-    ///                 Field {
-    ///                     name: "category".to_owned(),
-    ///                     r#type: Type::Array(Scalar::Reference(
-    ///                         "Category".to_owned(),
-    ///                     )),
-    ///                 },
-    ///             ),
-    ///             (
-    ///                 "dimensions".to_owned(),
-    ///                 Field {
-    ///                     name: "dimensions".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Owned(
-    ///                         "Dimensions".to_owned(),
-    ///                     )),
-    ///                 },
-    ///             ),
-    ///         ]
-    ///         .into_iter()
-    ///         .collect(),
+    ///             Field::string("title"),
+    ///             Field::reference("country", "Country"),
+    ///             Field::references("category", "Category"),
+    ///             Field::owned_reference("dimensions", "Dimensions"),
+    ///         ],
     ///     },
-    /// );
-    ///
-    /// expected.models.insert(
-    ///     "Dimensions".to_owned(),
     ///     Model {
     ///         name: "Dimensions".to_owned(),
-    ///         fields: vec![
-    ///             (
-    ///                 "width".to_owned(),
-    ///                 Field {
-    ///                     name: "width".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Int),
-    ///                 },
-    ///             ),
-    ///             (
-    ///                 "height".to_owned(),
-    ///                 Field {
-    ///                     name: "height".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Int),
-    ///                 },
-    ///             ),
-    ///         ]
-    ///         .into_iter()
-    ///         .collect(),
+    ///         fields: vec![Field::int("width"), Field::int("height")],
     ///     },
-    /// );
-    ///
-    /// expected.models.insert(
-    ///     "Country".to_owned(),
     ///     Model {
     ///         name: "Country".to_owned(),
     ///         fields: vec![
-    ///             (
-    ///                 "domain".to_owned(),
-    ///                 Field {
-    ///                     name: "domain".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::String),
-    ///                 },
-    ///             ),
-    ///             (
-    ///                 "drivingSide".to_owned(),
-    ///                 Field {
-    ///                     name: "drivingSide".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "DrivingSide".to_owned(),
-    ///                     )),
-    ///                 },
-    ///             ),
-    ///             (
-    ///                 "flag".to_owned(),
-    ///                 Field {
-    ///                     name: "flag".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::String),
-    ///                 },
-    ///             ),
-    ///             (
-    ///                 "name".to_owned(),
-    ///                 Field {
-    ///                     name: "name".to_owned(),
-    ///                     r#type: Type::Scalar(Scalar::Reference(
-    ///                         "CountryName".to_owned(),
-    ///                     )),
-    ///                 },
-    ///             ),
-    ///         ]
-    ///         .into_iter()
-    ///         .collect(),
-    ///     },
-    /// );
-    ///
-    /// expected.enums.insert(
-    ///     "DrivingSide".to_owned(),
-    ///     Enum {
-    ///         name: "DrivingSide".to_owned(),
-    ///         variants: vec!["Left".to_owned(), "Right".to_owned()],
-    ///     },
-    /// );
-    ///
-    /// expected.enums.insert(
-    ///     "CountryName".to_owned(),
-    ///     Enum {
-    ///         name: "CountryName".to_owned(),
-    ///         variants: vec![
-    ///             "Albania".to_owned(),
-    ///             "Andorra".to_owned(),
-    ///             "Austria".to_owned(),
-    ///             "Yemen".to_owned(),
-    ///             "Zambia".to_owned(),
-    ///             "Zimbabwe".to_owned(),
+    ///             Field::string("domain"),
+    ///             Field::reference("drivingSide", "DrivingSide"),
+    ///             Field::string("flag"),
+    ///             Field::reference("name", "CountryName"),
     ///         ],
     ///     },
-    /// );
+    /// ];
     ///
-    /// expected.enums.insert(
-    ///     "Category".to_owned(),
-    ///     Enum {
-    ///         name: "Category".to_owned(),
-    ///         variants: vec![
-    ///             "Architecture".to_owned(),
-    ///             "Bollard".to_owned(),
-    ///             "Chevron".to_owned(),
-    ///             "TrafficLight".to_owned(),
-    ///             "TrafficSign".to_owned(),
-    ///             "UtilityPole".to_owned(),
+    /// expected.enums = vec![
+    ///     Enum::new("DrivingSide", &["Left", "Right"]),
+    ///     Enum::new(
+    ///         "CountryName",
+    ///         &[
+    ///             "Albania", "Andorra", "Austria", "Yemen", "Zambia", "Zimbabwe",
     ///         ],
-    ///     },
-    /// );
+    ///     ),
+    ///     Enum::new(
+    ///         "Category",
+    ///         &[
+    ///             "Architecture",
+    ///             "Bollard",
+    ///             "Chevron",
+    ///             "TrafficLight",
+    ///             "TrafficSign",
+    ///             "UtilityPole",
+    ///         ],
+    ///     ),
+    /// ];
     ///
-    /// expected.queries.insert(
-    ///     "images".to_owned(),
+    /// expected.queries = vec![
     ///     Query {
     ///         name: "images".to_owned(),
-    ///         r#type: QueryReturnType::Array("Image".to_owned()),
+    ///         r#type: QueryReturnType::array("Image"),
     ///         schema: QuerySchema {
     ///             name: "image".to_owned(),
     ///             nodes: vec![
-    ///                 QuerySchemaNode::Field("title".to_owned()),
-    ///                 QuerySchemaNode::Model {
-    ///                     name: "country".to_owned(),
-    ///                     nodes: vec![QuerySchemaNode::Field("name".to_owned())],
-    ///                 },
-    ///                 QuerySchemaNode::Field("category".to_owned()),
+    ///                 QuerySchemaNode::field("title"),
+    ///                 QuerySchemaNode::relation(
+    ///                     "country",
+    ///                     &[QuerySchemaNode::field("name")],
+    ///                 ),
+    ///                 QuerySchemaNode::field("category"),
     ///             ],
     ///         },
     ///         r#where: None,
     ///         arguments: vec![],
     ///     },
-    /// );
-    ///
-    /// expected.queries.insert(
-    ///     "imagesByCountryName".to_owned(),
     ///     Query {
     ///         name: "imagesByCountryName".to_owned(),
-    ///         r#type: QueryReturnType::Array("Image".to_owned()),
-    ///         schema: QuerySchema {
-    ///             name: "image".to_owned(),
-    ///             nodes: vec![
-    ///                 QuerySchemaNode::Field("title".to_owned()),
-    ///                 QuerySchemaNode::Field("category".to_owned()),
+    ///         r#type: QueryReturnType::array("Image"),
+    ///         schema: QuerySchema::new(
+    ///             "image",
+    ///             &[
+    ///                 QuerySchemaNode::field("title"),
+    ///                 QuerySchemaNode::field("category"),
     ///             ],
-    ///         },
-    ///         r#where: Some(QueryWhere {
-    ///             name: "image".to_owned(),
-    ///             conditions: vec![QueryCondition {
-    ///                 path: FieldPath::new(&["country", "name"]),
+    ///         ),
+    ///         r#where: Some(QueryWhere::new(
+    ///             "image",
+    ///             &[QueryCondition {
+    ///                 path: QueryPath::new(&["country", "name"]),
     ///                 operator: QueryOperator::Equals,
-    ///                 argument: "name".to_owned(),
+    ///                 argument_name: "name".to_owned(),
     ///             }],
-    ///         }),
-    ///         arguments: vec![QueryArgument {
-    ///             name: "name".to_owned(),
-    ///             r#type: Type::Scalar(Scalar::Reference(
-    ///                 "CountryName".to_owned(),
-    ///             )),
-    ///         }],
+    ///         )),
+    ///         arguments: vec![QueryArgument::reference("name", "CountryName")],
     ///     },
-    /// );
+    /// ];
     ///
-    /// assert_eq!(Ast::parse(&input), Ok((expected, "".to_owned())));
-    /// ```
-    ///
-    /// Component names must be unique:
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::Ast,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// component Home {
-    ///   path: Home
-    /// }
-    ///
-    /// component Home {
-    ///   path: Index
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(&input),
-    ///     Err(ParseError::Custom {
-    ///         message: "Component `Home` already defined.".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    ///
-    /// Model names must be unique:
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::Ast,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// model Image {
-    ///   title: String
-    ///   country: Country
-    ///   category: Category
-    /// }
-    ///
-    /// model Image {
-    ///   file: String
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(&input),
-    ///     Err(ParseError::Custom {
-    ///         message: "Model `Image` already defined.".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    ///
-    /// Component names must be unique:
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::Ast,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// component Home {
-    ///   path: Home
-    /// }
-    ///
-    /// component Home {
-    ///   path: Index
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(&input),
-    ///     Err(ParseError::Custom {
-    ///         message: "Component `Home` already defined.".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    ///
-    /// Enum names must be unique:
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::Ast,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// enum Category {
-    ///   Architecture
-    ///   Bollard
-    ///   Chevron
-    /// }
-    ///
-    /// enum Category {
-    ///   TrafficLight
-    ///   TrafficSign
-    ///   UtilityPole
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(&input),
-    ///     Err(ParseError::Custom {
-    ///         message: "Enum `Category` already defined.".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    ///
-    /// Query names must be unique:
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::Ast,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// query images: [Image] {
-    ///   image {
-    ///     title
-    ///   }
-    /// }
-    ///
-    /// query images: [Image] {
-    ///   image {
-    ///     category
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(&input),
-    ///     Err(ParseError::Custom {
-    ///         message: "Query `images` already defined.".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    ///
-    /// Route paths must be unique:
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::Ast,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// route / {
-    ///   root: Home
-    ///   title: Home
-    /// }
-    ///
-    /// route / {
-    ///   root: Index
-    ///   title: Index
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(&input),
-    ///     Err(ParseError::Custom {
-    ///         message: "Route with path `/` already defined.".to_owned(),
-    ///     })
-    /// );
+    /// assert_eq!(Ast::parse(&input), Ok((expected, String::new())));
     /// ```
     ///
     /// ```rust
@@ -770,62 +464,30 @@ impl Ast {
             let (_, new_input) = spaces(&input)?;
 
             if let Ok((declaration, new_input)) = Component::parse(&new_input) {
-                let name = declaration.name.clone();
-
-                if ast.components.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::Custom {
-                        message: format!("Component `{name}` already defined."),
-                    });
-                }
+                ast.components.push(declaration);
 
                 input = new_input;
             } else if let Ok((declaration, new_input)) =
                 Model::parse(&new_input)
             {
-                let name = declaration.name.clone();
-
-                if ast.models.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::Custom {
-                        message: format!("Model `{name}` already defined."),
-                    });
-                }
+                ast.models.push(declaration);
 
                 input = new_input;
             } else if let Ok((declaration, new_input)) =
                 Query::parse(&new_input)
             {
-                let name = declaration.name.clone();
-
-                if ast.queries.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::Custom {
-                        message: format!("Query `{name}` already defined."),
-                    });
-                }
+                ast.queries.push(declaration);
 
                 input = new_input;
             } else if let Ok((declaration, new_input)) = Enum::parse(&new_input)
             {
-                let name = declaration.name.clone();
-
-                if ast.enums.insert(name.clone(), declaration).is_some() {
-                    return Err(ParseError::Custom {
-                        message: format!("Enum `{name}` already defined."),
-                    });
-                }
+                ast.enums.push(declaration);
 
                 input = new_input;
             } else if let Ok((declaration, new_input)) =
                 Route::parse(&new_input)
             {
-                let path = declaration.path.clone();
-
-                if ast.routes.insert(path.clone(), declaration).is_some() {
-                    return Err(ParseError::Custom {
-                        message: format!(
-                            "Route with path `{path}` already defined."
-                        ),
-                    });
-                }
+                ast.routes.push(declaration);
 
                 input = new_input;
             } else {
@@ -844,129 +506,5 @@ impl Ast {
         let (_, input) = spaces(&input)?;
 
         Ok((ast, input))
-    }
-
-    /// Check the AST for type errors.
-    ///
-    /// # Errors
-    ///
-    /// * Returns `TypeError::EmptyQuerySchema` if the schema of any query does
-    ///   not contain any fields.
-    /// * Returns `TypeError::UnusedQueryArgument` if any query argument is not
-    ///   used in the query's `where` clause.
-    /// * Returns `TypeError::IncompatibleQueryRootNodes` if the root nodes of
-    ///   any query's schema and `where` clause do not match.
-    /// * Returns `TypeError::UnknownQueryConditionReference` if any query
-    ///   selector references an argument that does not exist.
-    /// * Returns `TypeError::InvalidQueryArgumentType` if the type of any query
-    ///   is not a primitive or a reference to an enum.
-    /// * Returns `TypeError::InvalidQueryReturnType` if the return type of any
-    ///   query is not a reference to a known model.
-    /// * Returns `TypeError::UnknownRouteRoot` if the root of any route is not
-    ///   a reference to a known component.
-    /// * Returns `TypeError::UnknownFieldType` if the type of any model field
-    ///   is not a primitive, a reference to a known enum or model, or an array
-    ///   of any such a type.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Ast,
-    ///     Field,
-    ///     Scalar,
-    ///     Type,
-    ///     TypeError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// model Post {
-    ///   title: String
-    ///   tags: [Tag]
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// let ast = Ast::parse(&input).unwrap().0;
-    ///
-    /// assert_eq!(
-    ///     ast.check(),
-    ///     Err(TypeError::UnknownFieldType {
-    ///         model_name: "Post".to_owned(),
-    ///         field: Field {
-    ///             name: "tags".to_owned(),
-    ///             r#type: Type::Array(Scalar::Reference("Tag".to_owned()))
-    ///         },
-    ///     })
-    /// );
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Ast,
-    ///     TypeError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// model Post {
-    ///   title: String
-    /// }
-    ///
-    /// query posts($title: String): [Post] {
-    ///   post {
-    ///     title
-    ///   }
-    ///   where {
-    ///     posts {
-    ///       title {
-    ///         equals: $title
-    ///       }
-    ///     }
-    ///   }
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Ast::parse(&input).unwrap().0.check(),
-    ///     Err(TypeError::IncompatibleQueryRootNodes {
-    ///         query_name: "posts".to_owned(),
-    ///         where_root: "posts".to_owned(),
-    ///         schema_root: "post".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    pub fn check(&self) -> Result<(), TypeError> {
-        self.check_entities()?;
-
-        Ok(())
-    }
-
-    /// Check for errors in individual entities.
-    ///
-    /// # Errors
-    ///
-    /// * Returns `TypeError::EmptyQuerySchema` if the schema of any query does
-    ///   not contain any fields.
-    /// * Returns `TypeError::UnusedQueryArgument` if any query argument is not
-    ///   used in the query's `where` clause.
-    /// * Returns `TypeError::IncompatibleQueryRootNodes` if the root nodes of
-    ///   any query's schema and `where` clause do not match.
-    /// * Returns `TypeError::UnknownQueryConditionReference` if any query
-    ///   selector references an argument that does not exist.
-    pub fn check_entities(&self) -> Result<(), TypeError> {
-        // Many of these checks could be combined into a single pass over the
-        // AST, but doing them separately is easier to understand.
-
-        for query in self.queries.values() {
-            query.check_unused_arguments()?;
-            query.check_empty_schema()?;
-        }
-
-        Ok(())
     }
 }

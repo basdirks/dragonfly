@@ -303,15 +303,17 @@ impl FunctionArgument {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use dragonfly::generator::typescript::type::FunctionArgument;
-    /// use dragonfly::generator::typescript::type::Keyword;
-    /// use dragonfly::generator::typescript::type::Type;
+    /// ```rust
+    /// use dragonfly::generator::typescript::r#type::{
+    ///     FunctionArgument,
+    ///     Keyword,
+    ///     Type,
+    /// };
     ///
     /// let argument = FunctionArgument::array("foo", Keyword::number());
     ///
     /// assert_eq!(argument.name, "foo".to_owned());
-    /// assert_eq!(argument.r#type, Type::array(Type::keyword("Number")));
+    /// assert_eq!(argument.r#type, Type::array(Keyword::number()));
     /// ```
     #[must_use]
     pub fn array(
@@ -395,8 +397,10 @@ impl Type {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::generator::typescript::type::Keyword;
-    /// use dragonfly::generator::typescript::type::Type;
+    /// use dragonfly::generator::typescript::r#type::{
+    ///     Keyword,
+    ///     Type,
+    /// };
     ///
     /// let array = Type::array(Keyword::number());
     ///
@@ -417,9 +421,11 @@ impl Type {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::generator::typescript::type::FunctionArgument;
-    /// use dragonfly::generator::typescript::type::Keyword;
-    /// use dragonfly::generator::typescript::type::Type;
+    /// use dragonfly::generator::typescript::r#type::{
+    ///     FunctionArgument,
+    ///     Keyword,
+    ///     Type,
+    /// };
     ///
     /// let function = Type::function(
     ///     &[FunctionArgument::array("foo", Keyword::number())],
@@ -427,14 +433,14 @@ impl Type {
     /// );
     ///
     /// assert_eq!(
-    ///    function,
-    ///   Type::Function {
-    ///      arguments: vec![FunctionArgument {
-    ///         name: "foo".to_owned(),
-    ///        r#type: Type::Array(Box::new(Type::Keyword(Keyword::Number))),
-    ///    }],
-    ///   return_type: Box::new(Type::Keyword(Keyword::String)),
-    /// },
+    ///     function,
+    ///     Type::Function {
+    ///         arguments: vec![FunctionArgument {
+    ///             name: "foo".to_owned(),
+    ///             r#type: Type::array(Keyword::number()),
+    ///         }],
+    ///         return_type: Box::new(Keyword::string()),
+    ///     },
     /// );
     /// ```
     #[must_use]

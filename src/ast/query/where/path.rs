@@ -17,9 +17,9 @@ impl Path {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::FieldPath;
+    /// use dragonfly::ast::QueryPath;
     ///
-    /// let path = FieldPath::new(&["foo", "bar"]);
+    /// let path = QueryPath::new(&["foo", "bar"]);
     ///
     /// assert_eq!(path.to_string(), "foo { bar }");
     /// ```
@@ -33,9 +33,9 @@ impl Path {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::FieldPath;
+    /// use dragonfly::ast::QueryPath;
     ///
-    /// let mut path = FieldPath::new(&["foo", "bar"]);
+    /// let mut path = QueryPath::new(&["foo", "bar"]);
     ///
     /// assert_eq!(path.pop_front(), Some("foo".to_owned()));
     /// assert_eq!(path.pop_front(), Some("bar".to_owned()));
@@ -50,9 +50,9 @@ impl Path {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::FieldPath;
+    /// use dragonfly::ast::QueryPath;
     ///
-    /// let mut path = FieldPath::new(&["foo", "bar"]);
+    /// let mut path = QueryPath::new(&["foo", "bar"]);
     ///
     /// assert_eq!(path.pop_back(), Some("bar".to_owned()));
     /// assert_eq!(path.pop_back(), Some("foo".to_owned()));
@@ -67,6 +67,18 @@ impl Path {
     /// # Arguments
     ///
     /// * `segment` - The segment to push onto the path.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QueryPath;
+    ///
+    /// let mut path = QueryPath::new(&["foo"]);
+    ///
+    /// path.push("bar".to_owned());
+    ///
+    /// assert_eq!(path.to_string(), "foo { bar }");
+    /// ```
     pub fn push(
         &mut self,
         segment: String,
@@ -79,10 +91,10 @@ impl Path {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::FieldPath;
+    /// use dragonfly::ast::QueryPath;
     ///
-    /// assert!(!FieldPath::new(&["foo", "bar"]).is_empty());
-    /// assert!(FieldPath::new(&[]).is_empty());
+    /// assert!(!QueryPath::new(&["foo", "bar"]).is_empty());
+    /// assert!(QueryPath::new(&[]).is_empty());
     /// ```
     #[must_use]
     pub fn is_empty(&self) -> bool {

@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_display() {
-        assert_eq!(Directive::new("foo", &[]).to_string(), "@foo",);
+        assert_eq!(Directive::new("foo", &[]).to_string(), "@foo");
 
         assert_eq!(
             Directive::new(

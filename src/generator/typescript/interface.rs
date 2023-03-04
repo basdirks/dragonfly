@@ -105,47 +105,12 @@ pub struct Interface {
     ///
     /// Note: An interface can only extend an object type or intersection of
     /// object types with statically known members.
-    ///
-    /// # Examples
-    ///
-    /// `Bar` and `Baz` are types that the interface extends:
-    ///
-    /// ```typescript
-    /// interface Foo extends Bar, Baz {}
-    /// ```
     pub extends: Vec<ExpressionWithTypeArguments>,
     /// The name of the interface.
-    ///
-    /// # Examples
-    ///
-    /// `Foo` is the identifier:
-    ///
-    /// ```typescript
-    /// interface Foo {}
-    /// ```
     pub identifier: String,
     /// The type parameters of the interface.
-    ///
-    /// # Examples
-    ///
-    /// `T` and `U` are type parameters:
-    ///
-    /// ```typescript
-    /// interface Foo<T, U> {}
-    /// ```
     pub type_parameters: Vec<TypeParameter>,
     /// The properties of the interface.
-    ///
-    /// # Examples
-    ///
-    /// `bar` and `baz` are properties:
-    ///
-    /// ```typescript
-    /// interface Foo {
-    ///     bar: String;
-    ///     baz: Int;
-    /// }
-    /// ```
     pub properties: Vec<Property>,
 }
 

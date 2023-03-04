@@ -1,18 +1,14 @@
-use {
-    super::TypeError,
-    crate::parser::{
-        alphabetics,
-        brace_close,
-        brace_open,
-        chars_if,
-        colon,
-        literal,
-        many_once,
-        pascal_case,
-        spaces,
-        ParseResult,
-    },
-    std::collections::HashSet,
+use crate::parser::{
+    alphabetics,
+    brace_close,
+    brace_open,
+    chars_if,
+    colon,
+    literal,
+    many_once,
+    pascal_case,
+    spaces,
+    ParseResult,
 };
 
 /// A route describes access to a component.
@@ -27,6 +23,26 @@ pub struct Route {
 }
 
 impl Route {
+    /// Create a new route.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path of the route.
+    /// * `root` - The root component of the route.
+    /// * `title` - The title of the page of the route.
+    #[must_use]
+    pub fn new(
+        path: &str,
+        root: &str,
+        title: &str,
+    ) -> Self {
+        Self {
+            path: path.to_owned(),
+            root: root.to_owned(),
+            title: title.to_owned(),
+        }
+    }
+
     /// Parse the root from the given input.
     ///
     /// # Arguments
@@ -47,7 +63,7 @@ impl Route {
     ///
     /// assert_eq!(
     ///     Route::parse_root("root: Foo"),
-    ///     Ok(("Foo".to_owned(), "".to_owned()))
+    ///     Ok(("Foo".to_owned(), String::new()))
     /// );
     ///
     /// assert_eq!(
@@ -96,7 +112,7 @@ impl Route {
     ///
     /// assert_eq!(
     ///     Route::parse_title("title: Foo"),
-    ///     Ok(("Foo".to_owned(), "".to_owned()))
+    ///     Ok(("Foo".to_owned(), String::new()))
     /// );
     ///
     /// assert_eq!(
@@ -156,7 +172,7 @@ impl Route {
     ///             root: "Foo".to_owned(),
     ///             title: "Foobar".to_owned(),
     ///         },
-    ///         "".to_owned()
+    ///         String::new()
     ///     ))
     /// );
     /// ```
@@ -217,67 +233,18 @@ impl Route {
             input,
         ))
     }
+}
 
-    /// Check whether the root references a known component.
-    ///
-    /// # Arguments
-    ///
-    /// * `components` - The components to check against.
-    ///
-    /// # Errors
-    ///
-    /// Returns `TypeError::UnknownComponent` if the root does not reference a
-    /// known component.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::Route;
-    ///
-    /// let route = Route {
-    ///     path: "/".to_owned(),
-    ///     root: "Index".to_owned(),
-    ///     title: "Home".to_owned(),
-    /// };
-    ///
-    /// let components = vec!["Index".to_owned()].into_iter().collect();
-    ///
-    /// assert!(route.check_root(&components).is_ok());
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     Route,
-    ///     TypeError,
-    /// };
-    ///
-    /// let route = Route {
-    ///     path: "/".to_owned(),
-    ///     root: "Index".to_owned(),
-    ///     title: "Home".to_owned(),
-    /// };
-    ///
-    /// let components = vec!["Home".to_owned()].into_iter().collect();
-    ///
-    /// assert_eq!(
-    ///     route.check_root(&components),
-    ///     Err(TypeError::UnknownRouteRoot {
-    ///         root: "Index".to_owned(),
-    ///         route_name: "/".to_owned(),
-    ///     })
-    /// );
-    /// ```
-    pub fn check_root(
-        &self,
-        components: &HashSet<String>,
-    ) -> Result<(), TypeError> {
-        if !components.contains(&self.root) {
-            return Err(TypeError::UnknownRouteRoot {
-                root: self.root.clone(),
-                route_name: self.path.clone(),
-            });
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        Ok(())
+    #[test]
+    fn test_new() {
+        let route = Route::new("/foo/bar", "Foo", "Foobar");
+
+        assert_eq!(route.path, "/foo/bar");
+        assert_eq!(route.root, "Foo");
+        assert_eq!(route.title, "Foobar");
     }
 }

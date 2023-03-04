@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 /// Join a list of items as a comma separated string.
 ///
 /// # Arguments
@@ -14,7 +12,7 @@ use std::fmt::Display;
 /// assert_eq!(comma_separated(&["foo"]), "foo");
 /// assert_eq!(comma_separated(&["foo", "bar", "baz"]), "foo, bar, baz");
 /// ```
-pub fn comma_separated<T: Display>(items: &[T]) -> String {
+pub fn comma_separated<T: ToString>(items: &[T]) -> String {
     items
         .iter()
         .map(ToString::to_string)
@@ -37,7 +35,7 @@ pub fn comma_separated<T: Display>(items: &[T]) -> String {
 ///
 /// assert_eq!(space_separated(&items), "foo bar baz");
 /// ```
-pub fn space_separated<T: Display>(items: &[T]) -> String {
+pub fn space_separated<T: ToString>(items: &[T]) -> String {
     items
         .iter()
         .map(ToString::to_string)
@@ -70,7 +68,7 @@ pub fn space_separated<T: Display>(items: &[T]) -> String {
 ///     .trim()
 /// );
 /// ```
-pub fn newline_separated<T: Display>(items: &[T]) -> String {
+pub fn newline_separated<T: ToString>(items: &[T]) -> String {
     items
         .iter()
         .map(ToString::to_string)
@@ -95,7 +93,7 @@ pub fn newline_separated<T: Display>(items: &[T]) -> String {
 ///
 /// assert_eq!(separated(&items, separator), "foo &&& bar &&& baz");
 /// ```
-pub fn separated<T: Display>(
+pub fn separated<T: ToString>(
     items: &[T],
     separator: &str,
 ) -> String {

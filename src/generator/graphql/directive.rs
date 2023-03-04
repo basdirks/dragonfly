@@ -20,17 +20,6 @@ impl Directive {
     ///
     /// * `name` - The name of the directive.
     /// * `arguments` - The arguments of the directive.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Directive;
-    ///
-    /// let directive = Directive::new("foo", &[]);
-    ///
-    /// assert_eq!(directive.name, "foo");
-    /// assert!(directive.arguments.is_empty());
-    /// ```
     #[must_use]
     pub fn new(
         name: &str,
@@ -60,36 +49,20 @@ impl Display for Directive {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*,
-        crate::generator::graphql::Value,
-    };
+    use super::*;
 
     #[test]
     fn test_display() {
-        assert_eq!(
-            Directive {
-                name: "foo".to_owned(),
-                arguments: vec![],
-            }
-            .to_string(),
-            "@foo",
-        );
+        assert_eq!(Directive::new("foo", &[]).to_string(), "@foo");
 
         assert_eq!(
-            Directive {
-                name: "foo".to_owned(),
-                arguments: vec![
-                    Argument {
-                        name: "bar".to_owned(),
-                        value: Value::String("baz".to_owned()),
-                    },
-                    Argument {
-                        name: "qux".to_owned(),
-                        value: Value::String("quux".to_owned()),
-                    },
-                ],
-            }
+            Directive::new(
+                "foo",
+                &[
+                    Argument::string("bar", "baz"),
+                    Argument::string("qux", "quux"),
+                ]
+            )
             .to_string(),
             "@foo(bar: \"baz\", qux: \"quux\")",
         );

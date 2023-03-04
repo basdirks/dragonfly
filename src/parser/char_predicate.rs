@@ -32,7 +32,7 @@ use super::{
 ///         |c| c.is_ascii_lowercase(),
 ///         "Expected lowercase character."
 ///     ),
-///     Ok(('a', "".to_owned())),
+///     Ok(('a', String::new())),
 /// );
 ///
 /// assert_eq!(
@@ -104,7 +104,7 @@ pub fn char_if(
 ///         |c| c.is_ascii_alphabetic(),
 ///         "Expected alphabetic character."
 ///     ),
-///     Ok(("abc".to_owned(), "".to_owned())),
+///     Ok(("abc".to_owned(), String::new())),
 /// );
 ///
 /// assert_eq!(
@@ -193,7 +193,7 @@ pub fn alphabetic(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(alphabetics("abc"), Ok(("abc".to_owned(), "".to_owned())));
+/// assert_eq!(alphabetics("abc"), Ok(("abc".to_owned(), String::new())));
 ///
 /// assert_eq!(
 ///     alphabetics("123"),
@@ -231,7 +231,7 @@ pub fn alphabetics(input: &str) -> ParseResult<String> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(alphanumerics("1a3"), Ok(("1a3".to_owned(), "".to_owned())));
+/// assert_eq!(alphanumerics("1a3"), Ok(("1a3".to_owned(), String::new())));
 ///
 /// assert_eq!(
 ///     alphanumerics("_bc"),
@@ -464,7 +464,7 @@ pub fn space(input: &str) -> ParseResult<char> {
 ///
 /// assert_eq!(
 ///     spaces(" \t\r\n"),
-///     Ok((vec![' ', '\t', '\r', '\n'], "".to_owned()))
+///     Ok((vec![' ', '\t', '\r', '\n'], String::new()))
 /// );
 /// assert_eq!(spaces("abc"), Ok((vec![], "abc".to_owned())));
 /// ```

@@ -31,19 +31,6 @@ impl Field {
     /// # Arguments
     ///
     /// * `name` - The name of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Field;
-    ///
-    /// let field = Field::new("foo");
-    ///
-    /// assert_eq!(field.name, "foo".to_owned());
-    /// assert!(field.arguments.is_empty());
-    /// assert!(field.directives.is_empty());
-    /// assert!(field.selections.is_empty());
-    /// ```
     #[must_use]
     pub fn new(name: &str) -> Self {
         Self {
@@ -85,19 +72,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_print_field() {
-        let field = Field {
-            name: "images".to_owned(),
-            arguments: vec![Argument::variable("after", "endCursor")],
-            directives: vec![],
-            selections: vec![],
-        };
+    fn test_new() {
+        let field = Field::new("images");
 
-        assert_eq!(field.print(0), "images(after: $endCursor)".to_owned());
+        assert_eq!(field.name, "images");
+        assert!(field.arguments.is_empty());
+        assert!(field.directives.is_empty());
+        assert!(field.selections.is_empty());
     }
 
     #[test]
-    fn test_print_field_with_selections() {
+    fn test_print() {
         let field = Field {
             name: "images".to_owned(),
             arguments: vec![Argument::variable("after", "endCursor")],

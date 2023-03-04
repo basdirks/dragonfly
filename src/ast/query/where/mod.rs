@@ -22,7 +22,7 @@ pub mod operator;
 /// A path to a field.
 pub mod path;
 
-/// The conditions that queried data must meet.
+/// A where clause.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Where {
     /// The name of the root node.
@@ -32,6 +32,23 @@ pub struct Where {
 }
 
 impl Where {
+    /// Create a new where clause.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the root node.
+    /// * `conditions` - The conditions that must be met.
+    #[must_use]
+    pub fn new(
+        name: &str,
+        conditions: &[Condition],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            conditions: conditions.to_owned(),
+        }
+    }
+
     /// Parse conditions from the given input.
     ///
     /// # Arguments
@@ -46,9 +63,9 @@ impl Where {
     ///
     /// ```rust
     /// use dragonfly::ast::{
-    ///     FieldPath,
     ///     QueryCondition,
     ///     QueryOperator,
+    ///     QueryPath,
     ///     QueryWhere,
     /// };
     ///
@@ -77,24 +94,24 @@ impl Where {
     ///     conditions,
     ///     vec![
     ///         QueryCondition {
-    ///             path: FieldPath::new(&["foo"]),
+    ///             path: QueryPath::new(&["foo"]),
     ///             operator: QueryOperator::Contains,
-    ///             argument: "foo".to_owned(),
+    ///             argument_name: "foo".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             path: FieldPath::new(&["foo", "bar"]),
+    ///             path: QueryPath::new(&["foo", "bar"]),
     ///             operator: QueryOperator::Equals,
-    ///             argument: "bar".to_owned(),
+    ///             argument_name: "bar".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             path: FieldPath::new(&["foo", "baz"]),
+    ///             path: QueryPath::new(&["foo", "baz"]),
     ///             operator: QueryOperator::Contains,
-    ///             argument: "baz".to_owned(),
+    ///             argument_name: "baz".to_owned(),
     ///         },
     ///         QueryCondition {
-    ///             path: FieldPath::new(&["foo", "qux"]),
+    ///             path: QueryPath::new(&["foo", "qux"]),
     ///             operator: QueryOperator::Contains,
-    ///             argument: "qux".to_owned(),
+    ///             argument_name: "qux".to_owned(),
     ///         }
     ///     ]
     /// );
@@ -209,9 +226,9 @@ impl Where {
     ///
     /// ```rust
     /// use dragonfly::ast::{
-    ///     FieldPath,
     ///     QueryCondition,
     ///     QueryOperator,
+    ///     QueryPath,
     ///     QueryWhere,
     /// };
     ///
@@ -234,21 +251,21 @@ impl Where {
     ///         QueryWhere {
     ///             name: "foo".to_owned(),
     ///             conditions: vec![QueryCondition {
-    ///                 path: FieldPath::new(&["bar"]),
+    ///                 path: QueryPath::new(&["bar"]),
     ///                 operator: QueryOperator::Contains,
-    ///                 argument: "foo".to_owned(),
+    ///                 argument_name: "foo".to_owned(),
     ///             }]
     ///         },
-    ///         "".to_owned()
+    ///         String::new()
     ///     ))
     /// );
     /// ```
     ///
     /// ```rust
     /// use dragonfly::ast::{
-    ///     FieldPath,
     ///     QueryCondition,
     ///     QueryOperator,
+    ///     QueryPath,
     ///     QueryWhere,
     /// };
     ///
@@ -275,21 +292,71 @@ impl Where {
     ///             name: "image".to_owned(),
     ///             conditions: vec![
     ///                 QueryCondition {
-    ///                     path: FieldPath::new(&["title"]),
+    ///                     path: QueryPath::new(&["title"]),
     ///                     operator: QueryOperator::Equals,
-    ///                     argument: "title".to_owned(),
+    ///                     argument_name: "title".to_owned(),
     ///                 },
     ///                 QueryCondition {
-    ///                     path: FieldPath::new(&["title", "tags"]),
+    ///                     path: QueryPath::new(&["title", "tags"]),
     ///                     operator: QueryOperator::Contains,
-    ///                     argument: "tag".to_owned(),
+    ///                     argument_name: "tag".to_owned(),
     ///                 }
     ///             ]
     ///         },
-    ///         "".to_owned()
+    ///         String::new()
     ///     ))
     /// );
     /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///     ast::QueryWhere,
+    ///     parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// where {
+    ///    foo {
+    ///       bar {
+    ///         contains: $foo
+    ///       }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///     QueryWhere::parse(input),
+    ///     Err(ParseError::Custom {
+    ///         message: "Expected closing brace for root node `foo`.".to_owned(),
+    ///     })
+    /// );
+    /// ```
+    ///
+    /// ```rust
+    /// use dragonfly::{
+    ///    ast::QueryWhere,
+    ///   parser::ParseError,
+    /// };
+    ///
+    /// let input = "
+    ///
+    /// where {
+    ///   foo {
+    ///     bar {
+    ///       contains: $foo
+    ///     }
+    ///   }
+    ///
+    /// "
+    /// .trim();
+    ///
+    /// assert_eq!(
+    ///    QueryWhere::parse(input),
+    ///   Err(ParseError::Custom {
+    ///     message: "Expected closing brace for where clause.".to_owned(),
+    ///  })
+    /// );
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "where")?;
         let (_, input) = spaces(&input)?;
@@ -307,15 +374,14 @@ impl Where {
                 Ok((_, input)) => Ok(((), input)),
                 _ => {
                     Err(ParseError::Custom {
-                        message: format!(
-                            "Expected closing brace for `{name}`."
-                        ),
+                        message: format!("Expected closing brace for {name}."),
                     })
                 }
             }
         };
 
-        let (_, input) = check_closing_brace(&input, "root node")?;
+        let (_, input) =
+            check_closing_brace(&input, &format!("root node `{name}`"))?;
         let (_, input) = spaces(&input)?;
         let (_, input) = check_closing_brace(&input, "where clause")?;
 

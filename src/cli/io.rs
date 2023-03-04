@@ -48,9 +48,9 @@ pub fn check_file(input: &str) -> Result<(), String> {
     let (ast, _) = Ast::parse(&input)
         .map_err(|error| format!("Could not parse input file. {error}"))?;
 
-    if let Err(error) = ast.check() {
-        return Err(error.to_string());
-    }
+    let _ir = Ir::from(&ast).map_err(|error| {
+        format!("Could not generate intermediate representation. {error}")
+    })?;
 
     Ok(())
 }
@@ -149,7 +149,7 @@ pub fn generate_all(
     let (ast, _) = Ast::parse(&input)
         .map_err(|error| format!("Could not parse input file. {error}"))?;
 
-    let ir = Ir::from(ast).map_err(|error| {
+    let ir = Ir::from(&ast).map_err(|error| {
         format!("Could not generate intermediate representation. {error}")
     })?;
 

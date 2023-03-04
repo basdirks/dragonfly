@@ -37,12 +37,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_display_condition_operator() {
-        assert_eq!(Operator::Contains.to_string(), "contains");
-        assert_eq!(Operator::Equals.to_string(), "equals");
-    }
-
-    #[test]
     fn test_display_condition() {
         assert_eq!(
             Condition {

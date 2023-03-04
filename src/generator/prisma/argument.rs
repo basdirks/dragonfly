@@ -18,20 +18,6 @@ impl Argument {
     /// # Arguments
     ///
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::prisma::{
-    ///     argument::Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::unnamed("foo");
-    ///
-    /// assert!(argument.name.is_none());
-    /// assert_eq!(argument.value, Value::string("foo"));
-    /// ```
     #[must_use]
     pub fn unnamed(value: &Value) -> Self {
         Self {
@@ -46,20 +32,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `values` - The values of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::prisma::{
-    ///     argument::Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::array("foo", &["bar", "baz"]);
-    ///
-    /// assert_eq!(argument.name, Some("foo".to_owned()));
-    /// assert_eq!(argument.value, Value::array(&["bar", "baz"]));
-    /// ```
     #[must_use]
     pub fn array(
         name: &str,
@@ -77,20 +49,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::prisma::{
-    ///     argument::Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::boolean("foo", true);
-    ///
-    /// assert_eq!(argument.name, Some("foo".to_owned()));
-    /// assert_eq!(argument.value, Value::Boolean(true));
-    /// ```
     #[must_use]
     pub fn boolean(
         name: &str,
@@ -108,20 +66,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::prisma::{
-    ///     argument::Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::keyword("foo", "bar");
-    ///
-    /// assert_eq!(argument.name, Some("foo".to_owned()));
-    /// assert_eq!(argument.value, Value::keyword("bar"));
-    /// ```
     #[must_use]
     pub fn keyword(
         name: &str,
@@ -133,26 +77,31 @@ impl Argument {
         }
     }
 
+    /// Create a function argument.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the argument.
+    /// * `function_name` - The name of the function.
+    /// * `arguments` - The arguments of the function.
+    #[must_use]
+    pub fn function(
+        name: &str,
+        function_name: &str,
+        arguments: &[Value],
+    ) -> Self {
+        Self {
+            name: Some(name.to_owned()),
+            value: Value::function(function_name, arguments),
+        }
+    }
+
     /// Create a number argument.
     ///
     /// # Arguments
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::prisma::{
-    ///     argument::Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::number("foo", "42");
-    ///
-    /// assert_eq!(argument.name, Some("foo".to_owned()));
-    /// assert_eq!(argument.value, Value::number("42"));
-    /// ```
     #[must_use]
     pub fn number(
         name: &str,
@@ -170,20 +119,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::prisma::{
-    ///     argument::Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::string("foo", "bar");
-    ///
-    /// assert_eq!(argument.name, Some("foo".to_owned()));
-    /// assert_eq!(argument.value, Value::string("bar"));
-    /// ```
     #[must_use]
     pub fn string(
         name: &str,
@@ -220,7 +155,64 @@ mod tests {
     };
 
     #[test]
-    fn test_display_argument() {
+    fn test_unnamed() {
+        assert_eq!(
+            Argument {
+                name: None,
+                value: Value::String("bar".to_owned()),
+            }
+            .to_string(),
+            "\"bar\""
+        );
+    }
+
+    #[test]
+    fn test_array() {
+        assert_eq!(
+            Argument::array(
+                "foo",
+                &[Value::string("bar"), Value::string("baz")],
+            )
+            .to_string(),
+            "foo: [\"bar\", \"baz\"]"
+        );
+    }
+
+    #[test]
+    fn test_boolean() {
+        assert_eq!(Argument::boolean("foo", true).to_string(), "foo: true");
+    }
+
+    #[test]
+    fn test_function() {
+        assert_eq!(
+            Argument::function(
+                "foo",
+                "bar",
+                &[Value::string("baz"), Value::string("qux")],
+            )
+            .to_string(),
+            "foo: bar(\"baz\", \"qux\")"
+        );
+    }
+
+    #[test]
+    fn test_keyword() {
+        assert_eq!(Argument::keyword("foo", "bar").to_string(), "foo: bar");
+    }
+
+    #[test]
+    fn test_number() {
+        assert_eq!(Argument::number("foo", "42").to_string(), "foo: 42");
+    }
+
+    #[test]
+    fn test_string() {
+        assert_eq!(Argument::string("foo", "bar").to_string(), "foo: \"bar\"");
+    }
+
+    #[test]
+    fn test_display() {
         assert_eq!(Argument::keyword("foo", "bar").to_string(), "foo: bar");
 
         assert_eq!(

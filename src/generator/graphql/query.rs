@@ -52,10 +52,10 @@ impl Display for Variable {
 /// A GraphQL query.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Query {
-    /// The directives of the query.
-    pub directives: Vec<Directive>,
     /// The name of the query.
     pub name: String,
+    /// The directives of the query.
+    pub directives: Vec<Directive>,
     /// The selection set of the query.
     pub selections: Vec<Selection>,
     /// The variables of the query.

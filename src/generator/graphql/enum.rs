@@ -25,17 +25,6 @@ impl Enum {
     ///
     /// * `name` - The name of the enum.
     /// * `values` - The values of the enum.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Enum;
-    ///
-    /// let r#enum = Enum::new("Foo", &["BAR", "BAZ"]);
-    ///
-    /// assert_eq!(r#enum.name, "Foo");
-    /// assert_eq!(r#enum.values, vec!["BAR".to_owned(), "BAZ".to_owned()]);
-    /// ```
     #[must_use]
     pub fn new(
         name: &str,
@@ -75,18 +64,12 @@ impl Print for Enum {
     }
 }
 
-impl From<IrEnum> for Enum {
-    fn from(ir_enum: IrEnum) -> Self {
-        Self {
-            name: ir_enum.name,
-            values: ir_enum.values,
-        }
-    }
-}
-
 impl From<&IrEnum> for Enum {
     fn from(ir_enum: &IrEnum) -> Self {
-        Self::from(ir_enum.clone())
+        Self {
+            name: ir_enum.name.clone(),
+            values: ir_enum.values.clone(),
+        }
     }
 }
 
@@ -95,7 +78,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_display() {
+    fn test_new() {
         let r#enum = Enum::new("Test", &["A", "B"]);
 
         assert_eq!(
@@ -132,10 +115,9 @@ enum Test {
 
     #[test]
     fn test_from() {
-        let ir_enum = IrEnum::new("Test", &["A", "B"]);
-        let expected = Enum::new("Test", &["A", "B"]);
-
-        assert_eq!(Enum::from(ir_enum.clone()), expected);
-        assert_eq!(Enum::from(&ir_enum), expected);
+        assert_eq!(
+            Enum::from(&IrEnum::new("Test", &["A", "B"])),
+            Enum::new("Test", &["A", "B"])
+        );
     }
 }

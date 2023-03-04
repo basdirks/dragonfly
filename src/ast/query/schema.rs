@@ -16,15 +16,34 @@ pub enum Node {
     /// A leaf node: a field.
     Field(String),
     /// A node with children. Either the root node or a relation.
-    Model {
-        /// The name of the node.
-        name: String,
-        /// The children of the node; fields or relations.
-        nodes: Vec<Self>,
-    },
+    Relation(String, Vec<Self>),
 }
 
 impl Node {
+    /// Create a new field node.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    #[must_use]
+    pub fn field(name: &str) -> Self {
+        Self::Field(name.to_owned())
+    }
+
+    /// Create a new relation node.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the model.
+    /// * `nodes` - The children of the model.
+    #[must_use]
+    pub fn relation(
+        name: &str,
+        nodes: &[Self],
+    ) -> Self {
+        Self::Relation(name.to_owned(), nodes.to_owned())
+    }
+
     /// Parse a schema node from the given input.
     ///
     /// # Arguments
@@ -43,14 +62,11 @@ impl Node {
     /// assert_eq!(
     ///     QuerySchemaNode::parse("foo { bar baz }"),
     ///     Ok((
-    ///         QuerySchemaNode::Model {
-    ///             name: "foo".to_owned(),
-    ///             nodes: vec![
-    ///                 QuerySchemaNode::Field("bar".to_owned()),
-    ///                 QuerySchemaNode::Field("baz".to_owned()),
-    ///             ],
-    ///         },
-    ///         "".to_owned(),
+    ///         QuerySchemaNode::relation(
+    ///             "foo",
+    ///             &[QuerySchemaNode::field("bar"), QuerySchemaNode::field("baz"),]
+    ///         ),
+    ///         String::new(),
     ///     )),
     /// );
     /// ```
@@ -71,7 +87,7 @@ impl Node {
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
-        Ok((Self::Model { name, nodes }, input))
+        Ok((Self::Relation(name, nodes), input))
     }
 
     /// Parse a schema field from the given input.
@@ -94,7 +110,7 @@ impl Node {
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse_field("foo"),
-    ///     Ok((QuerySchemaNode::Field("foo".to_owned()), "".to_owned())),
+    ///     Ok((QuerySchemaNode::Field("foo".to_owned()), String::new())),
     /// );
     ///
     /// assert_eq!(
@@ -136,7 +152,7 @@ impl Node {
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse("user"),
-    ///     Ok((QuerySchemaNode::Field("user".to_owned()), "".to_owned())),
+    ///     Ok((QuerySchemaNode::field("user"), String::new())),
     /// );
     /// ```
     ///
@@ -155,11 +171,11 @@ impl Node {
     /// assert_eq!(
     ///     QuerySchemaNode::parse(input),
     ///     Ok((
-    ///         QuerySchemaNode::Model {
-    ///             name: "user".to_owned(),
-    ///             nodes: vec![QuerySchemaNode::Field("name".to_owned())],
-    ///         },
-    ///         "".to_owned()
+    ///         QuerySchemaNode::relation(
+    ///             "user",
+    ///             &[QuerySchemaNode::field("name")]
+    ///         ),
+    ///         String::new()
     ///     )),
     /// );
     /// ```
@@ -182,17 +198,17 @@ impl Node {
     /// assert_eq!(
     ///     QuerySchemaNode::parse(input),
     ///     Ok((
-    ///         QuerySchemaNode::Model {
-    ///             name: "user".to_owned(),
-    ///             nodes: vec![QuerySchemaNode::Model {
-    ///                 name: "name".to_owned(),
-    ///                 nodes: vec![
+    ///         QuerySchemaNode::relation(
+    ///             "user",
+    ///             &[QuerySchemaNode::relation(
+    ///                 "name",
+    ///                 &[
     ///                     QuerySchemaNode::Field("first".to_owned()),
     ///                     QuerySchemaNode::Field("last".to_owned()),
     ///                 ]
-    ///             }]
-    ///         },
-    ///         "".to_owned()
+    ///             )]
+    ///         ),
+    ///         String::new()
     ///     )),
     /// );
     /// ```
@@ -204,7 +220,7 @@ impl Node {
     ///
     /// assert_eq!(
     ///     QuerySchemaNode::parse(input),
-    ///     Ok((QuerySchemaNode::Field("user".to_owned()), "".to_owned())),
+    ///     Ok((QuerySchemaNode::Field("user".to_owned()), String::new())),
     /// );
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
@@ -219,7 +235,7 @@ impl Node {
     /// ```rust
     /// use dragonfly::ast::QuerySchemaNode;
     ///
-    /// let schema = QuerySchemaNode::Field("user".to_owned());
+    /// let schema = QuerySchemaNode::field("user");
     ///
     /// assert!(schema.is_empty());
     /// ```
@@ -227,10 +243,7 @@ impl Node {
     /// ```rust
     /// use dragonfly::ast::QuerySchemaNode;
     ///
-    /// let schema = QuerySchemaNode::Model {
-    ///     name: "user".to_owned(),
-    ///     nodes: vec![],
-    /// };
+    /// let schema = QuerySchemaNode::relation("user", &[]);
     ///
     /// assert!(schema.is_empty());
     /// ```
@@ -238,10 +251,8 @@ impl Node {
     /// ```rust
     /// use dragonfly::ast::QuerySchemaNode;
     ///
-    /// let schema = QuerySchemaNode::Model {
-    ///     name: "user".to_owned(),
-    ///     nodes: vec![QuerySchemaNode::Field("name".to_owned())],
-    /// };
+    /// let schema =
+    ///     QuerySchemaNode::relation("user", &[QuerySchemaNode::field("name")]);
     ///
     /// assert_eq!(schema.is_empty(), false);
     /// ```
@@ -249,7 +260,7 @@ impl Node {
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Field(_) => true,
-            Self::Model { nodes: schema, .. } => schema.is_empty(),
+            Self::Relation(_, schema) => schema.is_empty(),
         }
     }
 }
@@ -264,6 +275,23 @@ pub struct Schema {
 }
 
 impl Schema {
+    /// Create a new schema.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the root node.
+    /// * `nodes` - The children of the root node; fields or relations.
+    #[must_use]
+    pub fn new(
+        name: &str,
+        nodes: &[Node],
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            nodes: nodes.to_owned(),
+        }
+    }
+
     /// Parse a schema from the given input.
     ///
     /// # Arguments
@@ -307,7 +335,7 @@ impl Schema {
     ///             name: "user".to_owned(),
     ///             nodes: vec![QuerySchemaNode::Field("name".to_owned())],
     ///         },
-    ///         "".to_owned()
+    ///         String::new()
     ///     )),
     /// );
     /// ```
@@ -333,17 +361,17 @@ impl Schema {
     /// assert_eq!(
     ///     QuerySchema::parse(input),
     ///     Ok((
-    ///         QuerySchema {
-    ///             name: "user".to_owned(),
-    ///             nodes: vec![QuerySchemaNode::Model {
-    ///                 name: "name".to_owned(),
-    ///                 nodes: vec![
-    ///                     QuerySchemaNode::Field("first".to_owned()),
-    ///                     QuerySchemaNode::Field("last".to_owned()),
+    ///         QuerySchema::new(
+    ///             "user",
+    ///             &[QuerySchemaNode::relation(
+    ///                 "name",
+    ///                 &[
+    ///                     QuerySchemaNode::field("first"),
+    ///                     QuerySchemaNode::field("last"),
     ///                 ]
-    ///             }]
-    ///         },
-    ///         "".to_owned()
+    ///             )]
+    ///         ),
+    ///         String::new()
     ///     )),
     /// );
     /// ```
@@ -367,35 +395,33 @@ impl Schema {
 
     /// Check if the schema is empty. The schema is empty if the root node has
     /// no children.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QuerySchema;
-    ///
-    /// let schema = QuerySchema {
-    ///     name: "user".to_owned(),
-    ///     nodes: vec![],
-    /// };
-    ///
-    /// assert!(schema.is_empty());
-    /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::ast::{
-    ///     QuerySchema,
-    ///     QuerySchemaNode,
-    /// };
-    ///
-    /// let schema = QuerySchema {
-    ///     name: "user".to_owned(),
-    ///     nodes: vec![QuerySchemaNode::Field("name".to_owned())],
-    /// };
-    ///
-    /// assert!(!schema.is_empty());
-    /// ```
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.nodes.is_empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field_node() {
+        assert_eq!(Node::field("name"), Node::Field("name".to_owned()));
+    }
+
+    #[test]
+    fn test_model_node() {
+        assert_eq!(
+            Node::relation("user", &[Node::field("name")]),
+            Node::Relation("user".to_owned(), vec![Node::field("name")])
+        );
+    }
+
+    #[test]
+    fn test_schema_is_empty() {
+        assert!(Schema::new("user", &[]).is_empty());
+        assert!(!Schema::new("user", &[Node::field("name")]).is_empty());
+        assert!(!Schema::new("user", &[Node::relation("name", &[])]).is_empty());
     }
 }

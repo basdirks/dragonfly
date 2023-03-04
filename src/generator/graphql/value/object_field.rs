@@ -18,20 +18,6 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::boolean("foo", true);
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::Boolean(true));
-    /// ```
     #[must_use]
     pub fn boolean(
         name: &str,
@@ -49,20 +35,6 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::r#enum("foo", "bar");
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::Enum("bar".to_owned()));
-    /// ```
     #[must_use]
     pub fn r#enum(
         name: &str,
@@ -80,20 +52,6 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::float("foo", "1.0");
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::Float("1.0".to_owned()));
-    /// ```
     #[must_use]
     pub fn float(
         name: &str,
@@ -111,20 +69,6 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::int("foo", "1");
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::Int("1".to_owned()));
-    /// ```
     #[must_use]
     pub fn int(
         name: &str,
@@ -142,20 +86,6 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::list("foo", vec![Value::Int("1".to_owned())]);
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::List(vec![Value::Int("1".to_owned())]));
-    /// ```
     #[must_use]
     pub fn list(
         name: &str,
@@ -172,20 +102,6 @@ impl ObjectField {
     /// # Arguments
     ///
     /// * `name` - The name of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::null("foo");
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::Null);
-    /// ```
     #[must_use]
     pub fn null(name: &str) -> Self {
         Self {
@@ -200,28 +116,16 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::object("foo", vec![ObjectField::int("bar", 1)]);
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::Object(vec![ObjectField::int("bar", 1)]));
-    /// ```
     #[must_use]
     pub fn object(
         name: &str,
-        value: Vec<Self>,
+        fields: &[Self],
     ) -> Self {
         Self {
             name: name.to_owned(),
-            value: Value::Object(value),
+            value: Value::Object(
+                fields.iter().map(ToOwned::to_owned).collect(),
+            ),
         }
     }
 
@@ -231,20 +135,6 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::string("foo", "bar");
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::String("bar".to_owned()));
-    /// ```
     #[must_use]
     pub fn string(
         name: &str,
@@ -262,20 +152,6 @@ impl ObjectField {
     ///
     /// * `name` - The name of the field.
     /// * `value` - The value of the field.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let field = ObjectField::variable("foo", "bar");
-    ///
-    /// assert_eq!(field.name, "foo");
-    /// assert_eq!(field.value, Value::Variable("bar".to_owned()));
-    /// ```
     #[must_use]
     pub fn variable(
         name: &str,
@@ -294,5 +170,69 @@ impl Display for ObjectField {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         write!(f, "{}: {}", self.name, self.value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_boolean() {
+        assert_eq!(ObjectField::boolean("foo", true).to_string(), "foo: true");
+    }
+
+    #[test]
+    fn test_enum() {
+        assert_eq!(ObjectField::r#enum("foo", "bar").to_string(), "foo: bar");
+    }
+
+    #[test]
+    fn test_float() {
+        assert_eq!(ObjectField::float("foo", "1.23").to_string(), "foo: 1.23");
+    }
+
+    #[test]
+    fn test_int() {
+        assert_eq!(ObjectField::int("foo", "123").to_string(), "foo: 123");
+    }
+
+    #[test]
+    fn test_list() {
+        assert_eq!(
+            ObjectField::list("foo", &[Value::Int("123".to_owned())])
+                .to_string(),
+            "foo: [123]"
+        );
+    }
+
+    #[test]
+    fn test_null() {
+        assert_eq!(ObjectField::null("foo").to_string(), "foo: null");
+    }
+
+    #[test]
+    fn test_object() {
+        assert_eq!(
+            ObjectField::object("foo", &[ObjectField::int("bar", "123")])
+                .to_string(),
+            "foo: {bar: 123}"
+        );
+    }
+
+    #[test]
+    fn test_string() {
+        assert_eq!(
+            ObjectField::string("foo", "bar").to_string(),
+            "foo: \"bar\""
+        );
+    }
+
+    #[test]
+    fn test_variable() {
+        assert_eq!(
+            ObjectField::variable("foo", "bar").to_string(),
+            "foo: $bar"
+        );
     }
 }

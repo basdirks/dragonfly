@@ -22,20 +22,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::new("foo", Value::string("bar"));
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::string("bar"));
-    /// ```
     #[must_use]
     pub fn new(
         name: &str,
@@ -53,20 +39,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::boolean("foo", true);
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::Boolean(true));
-    /// ```
     #[must_use]
     pub fn boolean(
         name: &str,
@@ -81,20 +53,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::r#enum("foo", "Foo.BAR");
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::Enum("Foo.BAR".to_owned()));
-    /// ```
     #[must_use]
     pub fn r#enum(
         name: &str,
@@ -109,20 +67,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::float("foo", "1.0");
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::Float("1.0"));
-    /// ```
     #[must_use]
     pub fn float(
         name: &str,
@@ -137,22 +81,8 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::integer("foo", "1");
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::int("1"));
-    /// ```
     #[must_use]
-    pub fn integer(
+    pub fn int(
         name: &str,
         value: &str,
     ) -> Self {
@@ -165,20 +95,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::list("foo", &[Value::string("bar")]);
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::List(vec![Value::string("bar")]));
-    /// ```
     #[must_use]
     pub fn list(
         name: &str,
@@ -193,27 +109,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     ObjectField,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::object(
-    ///     "foo",
-    ///     &[ObjectField::new("bar", Value::string("baz"))],
-    /// );
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(
-    ///     argument.value,
-    ///     Value::Object(vec![ObjectField::new("bar", Value::string("baz"))]),
-    /// );
-    /// ```
     #[must_use]
     pub fn object(
         name: &str,
@@ -228,20 +123,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::string("foo", "bar");
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::string("bar"));
-    /// ```
     #[must_use]
     pub fn string(
         name: &str,
@@ -256,20 +137,6 @@ impl Argument {
     ///
     /// * `name` - The name of the argument.
     /// * `value` - The value of the argument.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Argument,
-    ///     Value,
-    /// };
-    ///
-    /// let argument = Argument::variable("foo", "bar");
-    ///
-    /// assert_eq!(argument.name, "foo");
-    /// assert_eq!(argument.value, Value::variable("bar"));
-    /// ```
     #[must_use]
     pub fn variable(
         name: &str,
@@ -293,10 +160,70 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_display() {
+    fn test_new() {
         assert_eq!(
             Argument::new("foo", Value::string("bar")).to_string(),
-            "foo: \"bar\"",
+            "foo: \"bar\""
         );
+    }
+
+    #[test]
+    fn test_boolean() {
+        assert_eq!(Argument::boolean("foo", true).to_string(), "foo: true");
+    }
+
+    #[test]
+    fn test_enum() {
+        assert_eq!(Argument::r#enum("foo", "bar").to_string(), "foo: bar");
+    }
+
+    #[test]
+    fn test_float() {
+        assert_eq!(Argument::float("foo", "1.23").to_string(), "foo: 1.23");
+    }
+
+    #[test]
+    fn test_int() {
+        assert_eq!(Argument::int("foo", "123").to_string(), "foo: 123");
+    }
+
+    #[test]
+    fn test_list() {
+        assert_eq!(
+            Argument::list(
+                "foo",
+                &[Value::string("bar"), Value::string("baz")]
+            )
+            .to_string(),
+            "foo: [\"bar\", \"baz\"]"
+        );
+    }
+
+    #[test]
+    fn test_object() {
+        assert_eq!(
+            Argument::object(
+                "foo",
+                &[
+                    ObjectField::string("bar", "baz"),
+                    ObjectField::list(
+                        "qux",
+                        &[Value::string("baz"), Value::string("qux")]
+                    )
+                ],
+            )
+            .to_string(),
+            "foo: {bar: \"baz\", qux: [\"baz\", \"qux\"]}"
+        );
+    }
+
+    #[test]
+    fn test_string() {
+        assert_eq!(Argument::string("foo", "bar").to_string(), "foo: \"bar\"");
+    }
+
+    #[test]
+    fn test_variable() {
+        assert_eq!(Argument::variable("foo", "bar").to_string(), "foo: $bar");
     }
 }

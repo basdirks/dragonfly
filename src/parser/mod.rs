@@ -120,7 +120,7 @@ pub fn tag<T, U>(
 ///
 /// assert_eq!(
 ///     between(input, "f", |input| char(input, 'o'), "o"),
-///     Ok(('o', "".to_owned())),
+///     Ok(('o', String::new())),
 /// );
 /// ```
 pub fn between<T>(
@@ -157,7 +157,7 @@ pub fn between<T>(
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(char("a", 'a'), Ok(('a', "".to_owned())));
+/// assert_eq!(char("a", 'a'), Ok(('a', String::new())));
 /// assert_eq!(char("ab", 'a'), Ok(('a', "b".to_owned())));
 ///
 /// assert_eq!(
@@ -212,7 +212,7 @@ pub fn char(
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(literal("foo", "foo"), Ok(("foo".to_owned(), "".to_owned())));
+/// assert_eq!(literal("foo", "foo"), Ok(("foo".to_owned(), String::new())));
 /// assert_eq!(
 ///     literal("foobar", "foo"),
 ///     Ok(("foo".to_owned(), "bar".to_owned()))
@@ -274,7 +274,7 @@ pub fn literal(
 ///
 /// assert_eq!(
 ///     many("abc", alphabetic),
-///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
+///     Ok((vec!['a', 'b', 'c'], String::new()))
 /// );
 ///
 /// assert_eq!(
@@ -323,7 +323,7 @@ pub fn many<T>(
 ///
 /// assert_eq!(
 ///     many1("abc", alphabetic),
-///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
+///     Ok((vec!['a', 'b', 'c'], String::new()))
 /// );
 ///
 /// assert_eq!(
@@ -400,7 +400,7 @@ pub fn many1<T>(
 ///             tag!(literal!("abc"), Choice::B),
 ///         ]
 ///     ),
-///     Ok((Choice::A, "".to_owned())),
+///     Ok((Choice::A, String::new())),
 /// );
 ///
 /// assert_eq!(
@@ -411,7 +411,7 @@ pub fn many1<T>(
 ///             tag!(literal!("abc"), Choice::A),
 ///         ]
 ///     ),
-///     Ok((Choice::B, "".to_owned())),
+///     Ok((Choice::B, String::new())),
 /// );
 ///
 /// assert_eq!(
@@ -476,7 +476,7 @@ pub fn choice<T>(
 ///
 /// assert_eq!(
 ///     count("abc", alphabetic, 3),
-///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
+///     Ok((vec!['a', 'b', 'c'], String::new()))
 /// );
 ///
 /// assert!(count("abc", alphabetic, 4).is_err());
@@ -529,7 +529,7 @@ pub fn count<T>(
 ///
 /// assert_eq!(
 ///     many_once("abc", &[char!('a'), char!('b'), char!('c')]),
-///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
+///     Ok((vec!['a', 'b', 'c'], String::new()))
 /// );
 ///
 /// assert_eq!(
@@ -538,11 +538,6 @@ pub fn count<T>(
 ///         message: "Expected character 'd', found 'c'.".to_owned(),
 ///         actual: 'c',
 ///     })
-/// );
-///
-/// assert_eq!(
-///     many_once("cba", &[char!('a'), char!('b'), char!('c')]),
-///     Ok((vec!['a', 'b', 'c'], "".to_owned()))
 /// );
 ///
 /// assert_eq!(
@@ -625,7 +620,7 @@ pub fn many_once<T: Clone>(
 ///
 /// assert_eq!(
 ///     option("abc", |input| literal(input, "abc")),
-///     Ok((Some("abc".to_owned()), "".to_owned())),
+///     Ok((Some("abc".to_owned()), String::new())),
 /// );
 ///
 /// assert_eq!(

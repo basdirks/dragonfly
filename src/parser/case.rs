@@ -31,7 +31,7 @@ use super::{
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(capitalized("Foo"), Ok(("Foo".to_owned(), "".to_owned())));
+/// assert_eq!(capitalized("Foo"), Ok(("Foo".to_owned(), String::new())));
 /// assert_eq!(capitalized("F0o"), Ok(("F".to_owned(), "0o".to_owned())));
 ///
 /// assert_eq!(
@@ -41,7 +41,7 @@ use super::{
 ///
 /// assert_eq!(
 ///     capitalized("FooBar"),
-///     Ok(("FooBar".to_owned(), "".to_owned()))
+///     Ok(("FooBar".to_owned(), String::new()))
 /// );
 ///
 /// assert_eq!(
@@ -97,7 +97,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///
 /// assert_eq!(
 ///     pascal_case("FooBar"),
-///     Ok(("FooBar".to_owned(), "".to_owned()))
+///     Ok(("FooBar".to_owned(), String::new()))
 /// );
 ///
 /// assert_eq!(
@@ -181,11 +181,11 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(kebab_case("foo"), Ok(("foo".to_owned(), "".to_owned())));
+/// assert_eq!(kebab_case("foo"), Ok(("foo".to_owned(), String::new())));
 ///
 /// assert_eq!(
 ///     kebab_case("foo-bar"),
-///     Ok(("foo-bar".to_owned(), "".to_owned()))
+///     Ok(("foo-bar".to_owned(), String::new()))
 /// );
 ///
 /// assert_eq!(
@@ -333,11 +333,11 @@ pub fn kebab(input: &str) -> ParseResult<String> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(camel_case("foo"), Ok(("foo".to_owned(), "".to_owned())));
+/// assert_eq!(camel_case("foo"), Ok(("foo".to_owned(), String::new())));
 ///
 /// assert_eq!(
 ///     camel_case("fooBar"),
-///     Ok(("fooBar".to_owned(), "".to_owned()))
+///     Ok(("fooBar".to_owned(), String::new()))
 /// );
 ///
 /// assert_eq!(

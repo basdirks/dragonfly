@@ -94,19 +94,13 @@ impl Print for Enum {
     }
 }
 
-impl From<IrEnum> for Enum {
-    fn from(IrEnum { name, values }: IrEnum) -> Self {
+impl From<&IrEnum> for Enum {
+    fn from(IrEnum { name, values }: &IrEnum) -> Self {
         Self {
-            name,
-            values,
+            name: name.clone(),
+            values: values.iter().map(ToString::to_string).collect(),
             attributes: vec![],
         }
-    }
-}
-
-impl From<&IrEnum> for Enum {
-    fn from(ir_enum: &IrEnum) -> Self {
-        Self::from(ir_enum.clone())
     }
 }
 
@@ -152,7 +146,7 @@ enum Color {
     #[test]
     fn test_from() {
         let ir_enum = IrEnum::new("Color", &["Red", "Green", "Blue"]);
-        let r#enum = Enum::from(ir_enum);
+        let r#enum = Enum::from(&ir_enum);
 
         assert_eq!(
             r#enum.to_string(),
@@ -201,7 +195,7 @@ enum Color {
     #[test]
     fn test_enum_from_ir_enum() {
         let ir_enum = IrEnum::new("Color", &["Red", "Green", "Blue"]);
-        let r#enum = Enum::from(ir_enum);
+        let r#enum = Enum::from(&ir_enum);
 
         assert_eq!(
             r#enum.to_string(),

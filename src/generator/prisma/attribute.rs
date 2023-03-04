@@ -97,7 +97,10 @@ impl Field {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::generator::prisma::attribute::Field;
+    /// use dragonfly::generator::prisma::{
+    ///     argument::Argument,
+    ///     attribute::Field,
+    /// };
     ///
     /// let attribute = Field::new("foo", &[], None);
     ///
@@ -225,8 +228,8 @@ impl Field {
     /// use dragonfly::generator::prisma::attribute::Field;
     ///
     /// assert_eq!(
-    ///     Field::relation("foo", "bar", "baz").to_string(),
-    ///     "@relation(name: \"foo\", references: [bar], fields: [baz])"
+    ///     Field::relation("foo", &["bar"], &["baz"]).to_string(),
+    ///     "@relation(name: \"foo\", fields: [baz], references: [bar])"
     /// );
     /// ```
     #[must_use]

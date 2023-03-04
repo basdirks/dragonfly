@@ -99,3 +99,98 @@ impl From<&ir::Ir> for Schema {
         unimplemented!()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        assert_eq!(
+            Schema {
+                data_source: Some(DataSource {
+                    name: "db".to_owned(),
+                    provider: DataSourceProvider::PostgreSql {
+                        user: "user".to_owned(),
+                        password: "password".to_owned(),
+                        host: "localhost".to_owned(),
+                        port: 5432,
+                        database: "database".to_owned(),
+                        schema: "public".to_owned(),
+                        extensions: vec![],
+                    },
+                    shadow_database_url: Some(
+                        "postgresql://user:password@localhost:5432/database"
+                            .to_owned()
+                    ),
+                    direct_url: Some(
+                        "postgresql://user:password@localhost:5432/database"
+                            .to_owned()
+                    ),
+                    relation_mode: RelationMode::ForeignKeys,
+                }),
+                enums: vec![
+                    Enum::new("Role", &["USER", "ADMIN"], &[]),
+                    Enum::new("Status", &["ACTIVE", "INACTIVE"], &[])
+                ],
+                generators: vec![Generator {
+                    name: "client".to_owned(),
+                    provider: GeneratorProvider::PrismaClientJs,
+                    output: Some("path/to/client".to_owned()),
+                    binary_targets: vec![BinaryTarget::AlpineOpenSsl3_0],
+                    preview_features: vec![
+                        PreviewFeature::ExtendedWhereUnique,
+                        PreviewFeature::FullTextIndex,
+                        PreviewFeature::FullTextSearch,
+                    ],
+                    engine_type: Some(EngineType::Binary),
+                }],
+                models: vec![Model::new(
+                    "User",
+                    &[Field::id(), Field::created_at()],
+                    &[]
+                )]
+            }
+            .to_string(),
+            "
+
+generator client {
+  provider        = \"prisma-client-js\"
+  output          = \"path/to/client\"
+  binaryTargets   = [\"linux-musl-openssl-3.0.x\"]
+  previewFeatures = [\"extendedWhereUnique\", \"fullTextIndex\", \
+             \"fullTextSearch\"]
+  engineType      = \"binary\"
+}
+
+datasource db {
+  provider          = \"postgresql\"
+  url               = \
+             \"postgresql://user:password@localhost:5432/database?\
+             schema=public\"
+  shadowDatabaseUrl = \"postgresql://user:password@localhost:5432/database\"
+  directUrl         = \"postgresql://user:password@localhost:5432/database\"
+  relationMode      = \"foreignKeys\"
+  extensions        = []
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model User {
+  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+}
+
+"
+            .trim()
+        );
+    }
+}

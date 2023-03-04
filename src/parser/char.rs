@@ -23,7 +23,7 @@ use super::{
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(brace_open("{"), Ok(('{', "".to_owned())));
+/// assert_eq!(brace_open("{"), Ok(('{', String::new())));
 ///
 /// assert_eq!(
 ///     brace_open("}"),
@@ -57,7 +57,7 @@ pub fn brace_open(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(brace_close("}"), Ok(('}', "".to_owned())));
+/// assert_eq!(brace_close("}"), Ok(('}', String::new())));
 ///
 /// assert_eq!(
 ///     brace_close("{"),
@@ -91,7 +91,7 @@ pub fn brace_close(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(hyphen("-"), Ok(('-', "".to_owned())));
+/// assert_eq!(hyphen("-"), Ok(('-', String::new())));
 ///
 /// assert_eq!(
 ///     hyphen("a"),
@@ -125,7 +125,7 @@ pub fn hyphen(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(forward_slash("/"), Ok(('/', "".to_owned())));
+/// assert_eq!(forward_slash("/"), Ok(('/', String::new())));
 ///
 /// assert_eq!(
 ///     forward_slash("a"),
@@ -158,7 +158,7 @@ pub fn forward_slash(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(colon(":"), Ok((':', "".to_owned())));
+/// assert_eq!(colon(":"), Ok((':', String::new())));
 ///
 /// assert_eq!(
 ///     colon("a"),
@@ -192,7 +192,7 @@ pub fn colon(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(paren_open("("), Ok(('(', "".to_owned())));
+/// assert_eq!(paren_open("("), Ok(('(', String::new())));
 ///
 /// assert_eq!(
 ///     paren_open(")"),
@@ -226,7 +226,7 @@ pub fn paren_open(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(paren_close(")"), Ok((')', "".to_owned())));
+/// assert_eq!(paren_close(")"), Ok((')', String::new())));
 ///
 /// assert_eq!(
 ///     paren_close("("),
@@ -260,7 +260,7 @@ pub fn paren_close(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(dollar("$"), Ok(('$', "".to_owned())));
+/// assert_eq!(dollar("$"), Ok(('$', String::new())));
 ///
 /// assert_eq!(
 ///     dollar("a"),
@@ -294,7 +294,7 @@ pub fn dollar(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(underscore("_"), Ok(('_', "".to_owned())));
+/// assert_eq!(underscore("_"), Ok(('_', String::new())));
 ///
 /// assert_eq!(
 ///     underscore("a"),
@@ -327,7 +327,7 @@ pub fn underscore(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(comma(","), Ok((',', "".to_owned())));
+/// assert_eq!(comma(","), Ok((',', String::new())));
 ///
 /// assert_eq!(
 ///     comma("a"),
@@ -361,7 +361,7 @@ pub fn comma(input: &str) -> ParseResult<char> {
 ///     ParseError,
 /// };
 ///
-/// assert_eq!(at("@"), Ok(('@', "".to_owned())));
+/// assert_eq!(at("@"), Ok(('@', String::new())));
 /// assert_eq!(
 ///     at("a"),
 ///     Err(ParseError::UnexpectedChar {

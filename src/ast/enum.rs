@@ -1,15 +1,11 @@
-use {
-    crate::parser::{
-        brace_close,
-        brace_open,
-        literal,
-        many1,
-        pascal_case,
-        spaces,
-        ParseError,
-        ParseResult,
-    },
-    std::collections::HashSet,
+use crate::parser::{
+    brace_close,
+    brace_open,
+    literal,
+    many1,
+    pascal_case,
+    spaces,
+    ParseResult,
 };
 
 /// An enumerated type.
@@ -32,7 +28,7 @@ impl Enum {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::ast::r#enum::Enum;
+    /// use dragonfly::ast::Enum;
     ///
     /// let r#enum = Enum::new("Foo", &["Bar", "Baz"]);
     ///
@@ -83,12 +79,12 @@ impl Enum {
     ///     variants: vec!["Bar".to_owned(), "Baz".to_owned()],
     /// };
     ///
-    /// assert_eq!(Enum::parse(input), Ok((expected, "".to_owned())));
+    /// assert_eq!(Enum::parse(input), Ok((expected, String::new())));
     /// ```
     ///
     /// ```rust
     /// use dragonfly::{
-    ///     ast::r#enum::Enum,
+    ///     ast::Enum,
     ///     parser::ParseError,
     /// };
     ///
@@ -111,30 +107,6 @@ impl Enum {
     ///     })
     /// );
     /// ```
-    ///
-    /// ```rust
-    /// use dragonfly::{
-    ///     ast::r#enum::Enum,
-    ///     parser::ParseError,
-    /// };
-    ///
-    /// let input = "
-    ///
-    /// enum Foo {
-    ///     Bar
-    ///     Bar
-    /// }
-    ///
-    /// "
-    /// .trim();
-    ///
-    /// assert_eq!(
-    ///     Enum::parse(input),
-    ///     Err(ParseError::Custom {
-    ///         message: "Duplicate enum variant with name `Bar`.".to_owned(),
-    ///     })
-    /// );
-    /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "enum")?;
         let (_, input) = spaces(&input)?;
@@ -148,18 +120,6 @@ impl Enum {
 
             Ok((variant, input))
         })?;
-
-        let mut unique = HashSet::new();
-
-        for variant in &variants {
-            if !unique.insert(variant) {
-                return Err(ParseError::Custom {
-                    message: format!(
-                        "Duplicate enum variant with name `{variant}`."
-                    ),
-                });
-            }
-        }
 
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;

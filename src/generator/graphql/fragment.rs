@@ -26,17 +26,6 @@ impl Spread {
     ///
     /// * `name` - The name of the fragment.
     /// * `directives` - The directives of the fragment.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Spread;
-    ///
-    /// let spread = Spread::new("foo", &[]);
-    ///
-    /// assert_eq!(spread.name, "foo".to_owned());
-    /// assert!(spread.directives.is_empty());
-    /// ```
     #[must_use]
     pub fn new(
         name: &str,
@@ -75,6 +64,28 @@ pub struct Inline {
     pub selections: Vec<Selection>,
 }
 
+impl Inline {
+    /// Create a new inline fragment.
+    ///
+    /// # Arguments
+    ///
+    /// * `type_condition` - The type condition of the fragment.
+    /// * `directives` - The directives of the fragment.
+    /// * `selections` - The selection set of the fragment.
+    #[must_use]
+    pub fn new(
+        type_condition: &str,
+        directives: &[Directive],
+        selections: &[Selection],
+    ) -> Self {
+        Self {
+            type_condition: type_condition.to_owned(),
+            directives: directives.iter().map(ToOwned::to_owned).collect(),
+            selections: selections.iter().map(ToOwned::to_owned).collect(),
+        }
+    }
+}
+
 impl Print for Inline {
     fn print(
         &self,
@@ -107,7 +118,7 @@ mod tests {
     };
 
     #[test]
-    fn test_print_spread() {
+    fn test_spread() {
         let spread = Spread::new("foo", &[]);
 
         assert_eq!(spread.print(0), "...foo");
@@ -121,14 +132,11 @@ mod tests {
     }
 
     #[test]
-    fn test_print_inline() {
-        let inline = Inline {
-            type_condition: "Foo".to_owned(),
-            directives: vec![Directive::new(
-                "bar",
-                &[Argument::string("baz", "bax")],
-            )],
-            selections: vec![Selection::Field(Field {
+    fn test_inline() {
+        let inline = Inline::new(
+            "Foo",
+            &[Directive::new("bar", &[Argument::string("baz", "bax")])],
+            &[Selection::Field(Field {
                 name: "bar".to_owned(),
                 arguments: vec![],
                 directives: vec![Directive::new(
@@ -140,7 +148,7 @@ mod tests {
                     Selection::Field(Field::new("bax")),
                 ],
             })],
-        };
+        );
 
         assert_eq!(
             inline.print(1),
@@ -149,7 +157,10 @@ mod tests {
       baz
       bax
     }
-  }"
+  }
+  
+"
+            .trim_end()
         );
     }
 }

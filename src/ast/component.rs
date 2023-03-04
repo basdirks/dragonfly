@@ -1,12 +1,13 @@
 use {
     crate::parser::{
+        alphabetics,
         brace_close,
         brace_open,
         colon,
         forward_slash,
-        kebab_case,
         literal,
         many,
+        option,
         pascal_case,
         spaces,
         ParseResult,
@@ -24,6 +25,23 @@ pub struct Component {
 }
 
 impl Component {
+    /// Create a new component.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the component.
+    /// * `path` - The path to the file that exports the component.
+    #[must_use]
+    pub fn new(
+        name: &str,
+        path: &str,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            path: PathBuf::from(path),
+        }
+    }
+
     /// Parse a component from the given input.
     ///
     /// # Arguments
@@ -42,7 +60,7 @@ impl Component {
     /// let input = "
     ///
     /// component Foo {
-    ///    path: foo/bar/Foo
+    ///    path: /foo/bar/Foo
     /// }
     ///
     /// "
@@ -50,14 +68,14 @@ impl Component {
     ///
     /// let expected = Component {
     ///     name: "Foo".to_owned(),
-    ///     path: "foo/bar/Foo".to_owned(),
+    ///     path: "foo/bar/Foo".to_owned().into(),
     /// };
     ///
-    /// assert_eq!(Component::parse(input), Ok((expected, "".to_owned())));
+    /// assert_eq!(Component::parse(input), Ok((expected, String::new())));
     /// ```
     ///
     /// ```rust
-    /// use dragonfly::ast::component::Component;
+    /// use dragonfly::ast::Component;
     ///
     /// let input = "
     ///
@@ -70,10 +88,10 @@ impl Component {
     ///
     /// let expected = Component {
     ///     name: "Foo".to_owned(),
-    ///     path: "Foo".to_owned(),
+    ///     path: "Foo".to_owned().into(),
     /// };
     ///
-    /// assert_eq!(Component::parse(input), Ok((expected, "".to_owned())));
+    /// assert_eq!(Component::parse(input), Ok((expected, String::new())));
     /// ```
     pub fn parse(input: &str) -> ParseResult<Self> {
         let (_, input) = literal(input, "component")?;
@@ -87,26 +105,74 @@ impl Component {
         let (_, input) = spaces(&input)?;
 
         let (segments, input) = many(&input, |input| {
-            let (segment, input) = kebab_case(input)?;
-            let (_, input) = forward_slash(&input)?;
+            let (_, input) = option(input, forward_slash)?;
+            let (segment, input) = alphabetics(&input)?;
 
             Ok((segment, input))
         })?;
 
-        let (file_name, input) = pascal_case(&input)?;
-
         let component = Self {
             name,
-            path: if segments.is_empty() {
-                file_name.into()
-            } else {
-                format!("{}/{file_name}", segments.join("/")).into()
-            },
+            path: segments.join("/").into(),
         };
 
         let (_, input) = spaces(&input)?;
         let (_, input) = brace_close(&input)?;
 
         Ok((component, input))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        assert_eq!(
+            Component::new("Foo", "foo/bar/Foo"),
+            Component {
+                name: "Foo".to_owned(),
+                path: "foo/bar/Foo".to_owned().into(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse() {
+        let input = "
+        
+        component Foo {
+           path: foo/bar/Foo
+        }
+        
+        "
+        .trim();
+
+        let expected = Component {
+            name: "Foo".to_owned(),
+            path: "foo/bar/Foo".to_owned().into(),
+        };
+
+        assert_eq!(Component::parse(input), Ok((expected, String::new())));
+    }
+
+    #[test]
+    fn test_parse_no_segments() {
+        let input = "
+        
+        component Foo {
+           path: Foo
+        }
+        
+        "
+        .trim();
+
+        let expected = Component {
+            name: "Foo".to_owned(),
+            path: "Foo".to_owned().into(),
+        };
+
+        assert_eq!(Component::parse(input), Ok((expected, String::new())));
     }
 }

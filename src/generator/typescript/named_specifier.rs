@@ -29,8 +29,13 @@ impl NamedSpecifier {
     ///
     /// let specifier = NamedSpecifier::aliased_name("foo", "bar");
     ///
-    /// assert_eq!(specifier.alias, "foo".to_owned());
-    /// assert_eq!(specifier.identifier, "bar".to_owned());
+    /// assert_eq!(
+    ///     specifier,
+    ///     NamedSpecifier::AliasedName {
+    ///         alias: "foo".to_owned(),
+    ///         identifier: "bar".to_owned(),
+    ///     }
+    /// );
     /// ```
     #[must_use]
     pub fn aliased_name(
@@ -56,7 +61,7 @@ impl NamedSpecifier {
     ///
     /// let specifier = NamedSpecifier::name("foo");
     ///
-    /// assert_eq!(specifier.identifier, "foo".to_owned());
+    /// assert_eq!(specifier, NamedSpecifier::Name("foo".to_owned()));
     /// ```
     #[must_use]
     pub fn name(identifier: &str) -> Self {

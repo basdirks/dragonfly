@@ -20,6 +20,34 @@ pub enum ReturnType {
 }
 
 impl ReturnType {
+    /// Create a new model return type.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the model.
+    #[must_use]
+    pub fn model(name: &str) -> Self {
+        Self::Model(name.to_owned())
+    }
+
+    /// Create a new array return type.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the model.
+    #[must_use]
+    pub fn array(name: &str) -> Self {
+        Self::Array(name.to_owned())
+    }
+
+    /// Return the name of the model.
+    #[must_use]
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Array(name) | Self::Model(name) => name,
+        }
+    }
+
     /// Parse a return type from the given input.
     ///
     /// # Arguments
@@ -41,12 +69,12 @@ impl ReturnType {
     ///
     /// assert_eq!(
     ///     QueryReturnType::parse("Foo"),
-    ///     Ok((QueryReturnType::Model("Foo".to_owned()), "".to_owned()))
+    ///     Ok((QueryReturnType::model("Foo"), String::new()))
     /// );
     ///
     /// assert_eq!(
     ///     QueryReturnType::parse("[Foo]"),
-    ///     Ok((QueryReturnType::Array("Foo".to_owned()), "".to_owned()))
+    ///     Ok((QueryReturnType::array("Foo"), String::new()))
     /// );
     ///
     /// assert_eq!(
@@ -74,21 +102,25 @@ impl ReturnType {
             }
         }
     }
+}
 
-    /// Return the name of the model that the return type references.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::ast::QueryReturnType;
-    ///
-    /// assert_eq!(QueryReturnType::Model("Foo".to_owned()).model(), "Foo");
-    /// assert_eq!(QueryReturnType::Array("Foo".to_owned()).model(), "Foo");
-    /// ```
-    #[must_use]
-    pub fn model(&self) -> &str {
-        match self {
-            Self::Model(name) | Self::Array(name) => name,
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_model() {
+        assert_eq!(
+            ReturnType::model("Foo"),
+            ReturnType::Model("Foo".to_owned())
+        );
+    }
+
+    #[test]
+    fn test_array() {
+        assert_eq!(
+            ReturnType::array("Foo"),
+            ReturnType::Array("Foo".to_owned())
+        );
     }
 }

@@ -16,9 +16,9 @@ use {
 pub struct Variant {
     /// The name of the variant. Must be unique within the enum. Usually
     /// pascal case.
-    name: String,
+    pub name: String,
     /// The value of the variant. May differ from the name.
-    value: String,
+    pub value: String,
 }
 
 impl Variant {
@@ -32,7 +32,7 @@ impl Variant {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::generator::typescript::Variant;
+    /// use dragonfly::generator::typescript::string_enum::Variant;
     ///
     /// let variant = Variant::new("France", "France");
     ///
@@ -87,7 +87,7 @@ pub struct StringEnum {
     ///     Germany = "Germany",
     /// }
     /// ```
-    identifier: String,
+    pub identifier: String,
     /// Enum variants, usually called `members` in TypeScript ASTs.
     ///
     /// # Examples
@@ -100,7 +100,7 @@ pub struct StringEnum {
     ///     Germany = "Germany",
     /// }
     /// ```
-    variants: Vec<Variant>,
+    pub variants: Vec<Variant>,
 }
 
 impl StringEnum {
@@ -114,7 +114,7 @@ impl StringEnum {
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::generator::typescript::StringEnum;
+    /// use dragonfly::generator::typescript::string_enum::StringEnum;
     ///
     /// let r#enum = StringEnum::new("CountryName", &["France", "Germany"]);
     ///
@@ -188,9 +188,9 @@ mod tests {
         assert_eq!(
             StringEnum::from(IrEnum::new(
                 "CountryName",
-                &["France", "Germany", "Italy",]
+                &["France", "Germany", "Italy"]
             )),
-            StringEnum::new("CountryName", &["France", "Germany", "Italy",])
+            StringEnum::new("CountryName", &["France", "Germany", "Italy"])
         );
     }
 

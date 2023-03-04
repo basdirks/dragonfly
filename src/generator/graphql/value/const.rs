@@ -31,14 +31,6 @@ impl Const {
     /// # Arguments
     ///
     /// * `name` - The enum name.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Const;
-    ///
-    /// assert_eq!(Const::r#enum("Foo.BAR"), Const::Enum("Foo.BAR".to_owned()));
-    /// ```
     #[must_use]
     pub fn r#enum(name: &str) -> Self {
         Self::Enum(name.to_owned())
@@ -49,14 +41,6 @@ impl Const {
     /// # Arguments
     ///
     /// * `value` - The float value.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Const;
-    ///
-    /// assert_eq!(Const::float("1.0"), Const::Float("1.0".to_owned()));
-    /// ```
     #[must_use]
     pub fn float(value: &str) -> Self {
         Self::Float(value.to_owned())
@@ -67,14 +51,6 @@ impl Const {
     /// # Arguments
     ///
     /// * `value` - The int value.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Const;
-    ///
-    /// assert_eq!(Const::int("1"), Const::Int("1".to_owned()));
-    /// ```
     #[must_use]
     pub fn int(value: &str) -> Self {
         Self::Int(value.to_owned())
@@ -87,17 +63,6 @@ impl Const {
     /// # Arguments
     ///
     /// * `values` - The list of values.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Const;
-    ///
-    /// assert_eq!(
-    ///     Const::list(&[Value::int("1"), Value::int("2")]),
-    ///     Const::List(vec![Value::int("1"), Value::int("2")])
-    /// );
-    /// ```
     #[must_use]
     pub fn list(values: &[Self]) -> Self {
         Self::List(values.to_owned())
@@ -108,20 +73,6 @@ impl Const {
     /// # Arguments
     ///
     /// * `fields` - The list of fields.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::{
-    ///     Const,
-    ///     ConstObjectField,
-    /// };
-    ///
-    /// assert_eq!(
-    ///     Const::object(&[ConstObjectField::new("foo", Value::int("1"))]),
-    ///     Const::Object(&[ConstObjectField::new("foo", Value::int("1"))])
-    /// );
-    /// ```
     #[must_use]
     pub fn object(fields: &[ConstObjectField]) -> Self {
         Self::Object(fields.to_owned())
@@ -132,14 +83,6 @@ impl Const {
     /// # Arguments
     ///
     /// * `value` - The string value.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use dragonfly::generator::graphql::Const;
-    ///
-    /// assert_eq!(Const::string("foo"), Const::String("foo".to_owned()));
-    /// ```
     #[must_use]
     pub fn string(value: &str) -> Self {
         Self::String(value.to_owned())
@@ -165,5 +108,57 @@ impl Display for Const {
             }
             Self::String(value) => write!(f, "\"{value}\""),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_boolean() {
+        assert_eq!(Const::Boolean(true).to_string(), "true");
+    }
+
+    #[test]
+    fn test_display_enum() {
+        assert_eq!(Const::r#enum("Foo.BAR").to_string(), "Foo.BAR");
+    }
+
+    #[test]
+    fn test_display_float() {
+        assert_eq!(Const::float("1.0").to_string(), "1.0");
+    }
+
+    #[test]
+    fn test_display_int() {
+        assert_eq!(Const::int("1").to_string(), "1");
+    }
+
+    #[test]
+    fn test_display_list() {
+        assert_eq!(
+            Const::list(&[Const::int("1"), Const::int("2")]).to_string(),
+            "[1, 2]"
+        );
+    }
+
+    #[test]
+    fn test_display_null() {
+        assert_eq!(Const::Null.to_string(), "null");
+    }
+
+    #[test]
+    fn test_display_object() {
+        assert_eq!(
+            Const::object(&[ConstObjectField::new("foo", Const::int("1"))])
+                .to_string(),
+            "{foo: 1}"
+        );
+    }
+
+    #[test]
+    fn test_display_string() {
+        assert_eq!(Const::string("foo").to_string(), "\"foo\"");
     }
 }
