@@ -150,8 +150,8 @@ impl Field {
     /// Create a field with an array of integers.
     ///
     /// # Arguments
-    /// );
-    /// ```
+    ///
+    /// * `name` - The name of the field.
     #[must_use]
     pub fn ints(name: &str) -> Self {
         Self {
