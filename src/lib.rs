@@ -34,7 +34,7 @@ pub mod ast;
 pub mod cli;
 /// Source code generators.
 pub mod generator;
-/// Intermediary representation.
+/// Intermediate representation.
 pub mod ir;
 /// Parser combinators.
 pub mod parser;
