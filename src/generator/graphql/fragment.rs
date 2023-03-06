@@ -7,7 +7,10 @@ use {
         indent,
         Print,
     },
-    std::fmt::Write,
+    std::{
+        self,
+        io,
+    },
 };
 
 /// A fragment spread.
@@ -42,14 +45,15 @@ impl Print for Spread {
     fn print(
         &self,
         level: usize,
-    ) -> String {
-        let mut output = format!("{}...{}", indent::graphql(level), self.name);
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        write!(f, "{}...{}", indent::graphql(level), self.name)?;
 
         for directive in &self.directives {
-            let _ = write!(output, " {directive}");
+            write!(f, " {directive}")?;
         }
 
-        output
+        writeln!(f)
     }
 }
 
@@ -90,20 +94,20 @@ impl Print for Inline {
     fn print(
         &self,
         level: usize,
-    ) -> String {
-        let mut output = format!(
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        write!(
+            f,
             "{}... on {}",
             indent::graphql(level),
-            self.type_condition,
-        );
+            self.type_condition
+        )?;
 
         for directive in &self.directives {
-            let _ = write!(output, " {directive}");
+            write!(f, " {directive}")?;
         }
 
-        output.push_str(&Selection::print_multiple(&self.selections, level));
-
-        output
+        Selection::print_multiple(&self.selections, level, f)
     }
 }
 
@@ -120,15 +124,25 @@ mod tests {
     #[test]
     fn test_spread() {
         let spread = Spread::new("foo", &[]);
+        let mut f = Vec::new();
 
-        assert_eq!(spread.print(0), "...foo");
+        spread.print(0, &mut f).unwrap();
+
+        assert_eq!(String::from_utf8(f).unwrap(), "...foo\n");
 
         let spread = Spread::new(
             "daboi",
             &[Directive::new("is", &[Argument::string("a", "good boy.")])],
         );
 
-        assert_eq!(spread.print(0), "...daboi @is(a: \"good boy.\")");
+        let mut f = Vec::new();
+
+        spread.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "...daboi @is(a: \"good boy.\")\n"
+        );
     }
 
     #[test]
@@ -150,17 +164,19 @@ mod tests {
             })],
         );
 
+        let mut f = Vec::new();
+
+        inline.print(1, &mut f).unwrap();
+
         assert_eq!(
-            inline.print(1),
+            String::from_utf8(f).unwrap(),
             "  ... on Foo @bar(baz: \"bax\") {
     bar @foo(bar: \"baz\") {
       baz
       bax
     }
   }
-  
 "
-            .trim_end()
         );
     }
 }

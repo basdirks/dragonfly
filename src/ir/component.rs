@@ -35,7 +35,7 @@ impl Component {
     ) -> Self {
         Self {
             name: name.to_owned(),
-            path: PathBuf::from(path),
+            path: path.into(),
         }
     }
 }
@@ -58,7 +58,7 @@ mod tests {
             Component::new("foo", "foo/bar/baz"),
             Component {
                 name: "foo".to_owned(),
-                path: PathBuf::from("foo/bar/baz"),
+                path: "foo/bar/baz".into()
             }
         );
     }

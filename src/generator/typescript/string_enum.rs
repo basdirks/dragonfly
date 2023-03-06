@@ -2,12 +2,14 @@ use {
     crate::{
         generator::printer::{
             indent,
-            newline_separated,
             Print,
         },
         ir::Enum as IrEnum,
     },
-    std::fmt::Display,
+    std::{
+        fmt::Display,
+        io,
+    },
 };
 
 /// A TypeScript enum variant, usually called `member` in TypeScript ASTs. A
@@ -55,11 +57,12 @@ impl Print for Variant {
     fn print(
         &self,
         level: usize,
-    ) -> String {
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let Self { name, value } = self;
         let indent = indent::typescript(level);
 
-        format!("{indent}{name} = \"{value}\",")
+        writeln!(f, "{indent}{name} = \"{value}\",")
     }
 }
 
@@ -140,7 +143,8 @@ impl Print for StringEnum {
     fn print(
         &self,
         level: usize,
-    ) -> String {
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let Self {
             identifier: name,
             variants,
@@ -148,14 +152,13 @@ impl Print for StringEnum {
 
         let indent = indent::typescript(level);
 
-        let variants = newline_separated(
-            &variants
-                .iter()
-                .map(|variant| variant.print(level + 1))
-                .collect::<Vec<_>>(),
-        );
+        writeln!(f, "{indent}enum {name} {{")?;
 
-        format!("{indent}enum {name} {{\n{variants}\n{indent}}}")
+        for variant in variants {
+            variant.print(level + 1, f)?;
+        }
+
+        writeln!(f, "{indent}}}")
     }
 }
 
@@ -199,19 +202,24 @@ mod tests {
 
     #[test]
     fn test_print_enum() {
+        let r#enum = StringEnum::new(
+            "CountryName",
+            &[
+                "France",
+                "Germany",
+                "Italy",
+                "Spain",
+                "UnitedKingdom",
+                "UnitedStates",
+            ],
+        );
+
+        let mut f = Vec::new();
+
+        r#enum.print(1, &mut f).unwrap();
+
         assert_eq!(
-            StringEnum::new(
-                "CountryName",
-                &[
-                    "France",
-                    "Germany",
-                    "Italy",
-                    "Spain",
-                    "UnitedKingdom",
-                    "UnitedStates"
-                ]
-            )
-            .print(1),
+            String::from_utf8(f).unwrap(),
             "    enum CountryName {
         France = \"France\",
         Germany = \"Germany\",
@@ -219,7 +227,8 @@ mod tests {
         Spain = \"Spain\",
         UnitedKingdom = \"UnitedKingdom\",
         UnitedStates = \"UnitedStates\",
-    }"
+    }
+"
         );
     }
 

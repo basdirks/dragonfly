@@ -9,7 +9,10 @@ use {
         indent,
         Print,
     },
-    std::fmt::Write,
+    std::{
+        self,
+        io,
+    },
 };
 
 /// A selection field.
@@ -46,24 +49,23 @@ impl Print for Field {
     fn print(
         &self,
         level: usize,
-    ) -> String {
-        let mut output =
-            format!("{}{}", indent::graphql(level), self.name.clone());
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        write!(f, "{}{}", indent::graphql(level), self.name)?;
 
         if !self.arguments.is_empty() {
-            let _ = write!(output, "({})", comma_separated(&self.arguments));
+            write!(f, "({})", comma_separated(&self.arguments))?;
         }
 
         for directive in &self.directives {
-            let _ = write!(output, " {directive}");
+            write!(f, " {directive}")?;
         }
 
-        if !self.selections.is_empty() {
-            output
-                .push_str(&Selection::print_multiple(&self.selections, level));
+        if self.selections.is_empty() {
+            writeln!(f)
+        } else {
+            Selection::print_multiple(&self.selections, level, f)
         }
-
-        output
     }
 }
 
@@ -105,21 +107,20 @@ mod tests {
             })],
         };
 
-        assert_eq!(
-            field.print(0),
-            "
+        let mut f = Vec::new();
 
-images(after: $endCursor) {
+        field.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "images(after: $endCursor) {
   edges {
     node {
       id @id
     }
   }
 }
-
 "
-            .trim()
-            .to_owned()
         );
     }
 }

@@ -8,6 +8,7 @@ use {
         indent,
         Print,
     },
+    std::io,
 };
 
 /// A selection node.
@@ -28,6 +29,10 @@ impl Selection {
     ///
     /// * `selections` - The selections to print.
     /// * `level` - The indentation level.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if writing to the output stream fails.
     ///
     /// # Examples
     ///
@@ -62,8 +67,12 @@ impl Selection {
     ///     }),
     /// ];
     ///
+    /// let mut f = Vec::new();
+    ///
+    /// Selection::print_multiple(&selections, 0, &mut f).unwrap();
+    ///
     /// assert_eq!(
-    ///     Selection::print_multiple(&selections, 0),
+    ///     String::from_utf8(f).unwrap(),
     ///     " {
     ///   images(after: $endCursor) {
     ///     id
@@ -72,23 +81,22 @@ impl Selection {
     ///   ... on Image {
     ///     id
     ///   }
-    /// }"
+    /// }
+    /// "
     /// );
     /// ```
-    #[must_use]
     pub fn print_multiple(
         selections: &[Self],
         level: usize,
-    ) -> String {
-        format!(
-            " {{\n{}\n{}}}",
-            selections
-                .iter()
-                .map(|selection| selection.print(level + 1))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            indent::graphql(level)
-        )
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        writeln!(f, " {{")?;
+
+        for selection in selections {
+            selection.print(level, f)?;
+        }
+
+        writeln!(f, "{}}}", indent::graphql(level))
     }
 }
 
@@ -96,11 +104,14 @@ impl Print for Selection {
     fn print(
         &self,
         level: usize,
-    ) -> String {
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        let level = level + 1;
+
         match self {
-            Self::Field(field) => field.print(level),
-            Self::FragmentSpread(spread) => spread.print(level),
-            Self::InlineFragment(inline) => inline.print(level),
+            Self::Field(field) => field.print(level, f),
+            Self::FragmentSpread(spread) => spread.print(level, f),
+            Self::InlineFragment(inline) => inline.print(level, f),
         }
     }
 }
@@ -124,14 +135,24 @@ mod tests {
             selections: vec![],
         });
 
-        assert_eq!(field.print(0), "images(after: $endCursor)");
+        let mut f = Vec::new();
+
+        field.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "  images(after: $endCursor)\n"
+        );
     }
 
     #[test]
     fn test_print_fragment_spread() {
         let spread = FragmentSpread::new("name", &[]);
+        let mut f = Vec::new();
 
-        assert_eq!(spread.print(0), "...name");
+        spread.print(0, &mut f).unwrap();
+
+        assert_eq!(String::from_utf8(f).unwrap(), "...name\n");
     }
 
     #[test]
@@ -142,16 +163,10 @@ mod tests {
             selections: vec![],
         };
 
-        assert_eq!(
-            inline.print(0),
-            "
+        let mut f = Vec::new();
 
-... on Type {
+        inline.print(0, &mut f).unwrap();
 
-}
-
-"
-            .trim()
-        );
+        assert_eq!(String::from_utf8(f).unwrap(), "... on Type {\n}\n");
     }
 }

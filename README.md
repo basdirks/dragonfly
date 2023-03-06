@@ -7,6 +7,7 @@ For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 See also:
 
 - [CLI](src/bin/README.md)
+- [IR](src/ir/README.md)
 - [AST](src/ast/README.md)
 - [Generators](src/generator/README.md)
 
@@ -14,14 +15,12 @@ See also:
 
 # Roadmap
 
-- [ ] Make AST more stupid, throw `TypeError` in AST -> IR conversion.
-- [ ] Finalize AST public API.
 - [ ] Generate foreign keys in PSL.
 - [ ] Generate GraphQL types.
 - [ ] Generate full GraphQL queries.
   - [ ] CLI: generate GQL.
 - [ ] Support aggregate queries :)
-- [ ] Create `Path` values as soon as possible.
+- [ ] Base `Print` on a `Write`-like trait.
 
 # Example application
 

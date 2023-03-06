@@ -62,6 +62,23 @@ impl Path {
         self.0.pop_back()
     }
 
+    /// Remove the last segment from the path without returning it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use dragonfly::ast::QueryPath;
+    ///
+    /// let mut path = QueryPath::new(&["foo", "bar"]);
+    ///
+    /// path.drop_back();
+    ///
+    /// assert_eq!(path.to_string(), "foo");
+    /// ```
+    pub fn drop_back(&mut self) {
+        let _: Option<String> = self.pop_back();
+    }
+
     /// Push a segment onto the path.
     ///
     /// # Arguments

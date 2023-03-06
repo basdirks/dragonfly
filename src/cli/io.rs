@@ -10,9 +10,10 @@ use {
     },
     std::{
         fs::{
-            create_dir,
+            create_dir_all,
             read_to_string,
             write,
+            File,
         },
         path::Path,
     },
@@ -39,9 +40,10 @@ const TYPESCRIPT_FILE_EXTENSION: &str = "ts";
 /// # Errors
 ///
 /// Returns an error if the input file does not exist or contains errors.
-pub fn check_file(input: &str) -> Result<(), String> {
-    let input = determine_input(input)?;
-
+pub fn check_file<P>(input: P) -> Result<(), String>
+where
+    P: AsRef<Path>,
+{
     let input = read_to_string(input)
         .map_err(|error| format!("Could not read input file. {error}"))?;
 
@@ -67,14 +69,17 @@ pub fn check_file(input: &str) -> Result<(), String> {
 /// * Returns an error if the output directory does not exist and could not be
 ///   created.
 /// * Returns an error if a file could not be written.
-pub fn generate_prisma(
+pub fn generate_prisma<P>(
     ir: &Ir,
-    output: &Path,
-) -> Result<(), String> {
-    let path = output.join(PRISMA_OUTPUT_DIR);
+    output: P
+) -> Result<(), String>
+where
+    P: AsRef<Path>,
+{
+    let path = output.as_ref().join(PRISMA_OUTPUT_DIR);
 
     if !path.is_dir() {
-        create_dir(&path).map_err(|error| {
+        create_dir_all(&path).map_err(|error| {
             format!("Could not create prisma output directory. {error}")
         })?;
     }
@@ -99,33 +104,51 @@ pub fn generate_prisma(
 /// * Returns an error if the output directory does not exist and could not be
 ///   created.
 /// * Returns an error if a file could not be written.
-pub fn generate_typescript(
+pub fn generate_typescript<P>(
     ast: &Ir,
-    output: &Path,
-) -> Result<(), String> {
-    let path = output.join(TYPESCRIPT_OUTPUT_DIR);
+    output: P,
+) -> Result<(), String>
+where
+    P: AsRef<Path>,
+{
+    let path = output.as_ref().join(TYPESCRIPT_OUTPUT_DIR);
 
     if !path.is_dir() {
-        create_dir(&path).map_err(|error| {
+        create_dir_all(&path).map_err(|error| {
             format!("Could not create typescript output directory. {error}")
         })?;
     }
 
-    let mut source = Vec::new();
+    let mut file =
+        File::create(path.join(format!("index{TYPESCRIPT_FILE_EXTENSION}")))
+            .map_err(|error| {
+                format!("Could not create typescript index file. {error}")
+            })?;
 
     for model in ast.models.values() {
-        source.push(typescript::Interface::from(model).print(0));
+        typescript::Interface::from(model)
+            .print(0, &mut file)
+            .map_err(|error| {
+                format!(
+                    "Could not write typescript interface for model `{}`. \
+                     {error}",
+                    model.name()
+                )
+            })?;
     }
 
     for r#enum in ast.enums.values() {
-        source.push(typescript::Enum::from(r#enum).print(0));
+        typescript::Enum::from(r#enum).print(0, &mut file).map_err(
+            |error| {
+                format!(
+                    "Could not write typescript enum for enum `{}`. {error}",
+                    r#enum.name
+                )
+            },
+        )?;
     }
 
-    write(
-        path.join(format!("application.{TYPESCRIPT_FILE_EXTENSION}")),
-        source.join("\n\n"),
-    )
-    .map_err(|error| format!("Could not write typescript file. {error}"))
+    Ok(())
 }
 
 /// Generate code from a source file.
@@ -140,10 +163,13 @@ pub fn generate_typescript(
 /// * Returns an error if the input file does not exist or contains errors.
 /// * Returns an error if TypeScript files could not be generated.
 /// * Returns an error if Prisma files could not be generated.
-pub fn generate_all(
-    input: &Path,
-    output: &Path,
-) -> Result<(), String> {
+pub fn compile<P>(
+    input: P,
+    output: P,
+) -> Result<(), String>
+where
+    P: AsRef<Path>,
+{
     let input = read_to_string(input)
         .map_err(|error| format!("Could not read input file. {error}"))?;
 
@@ -154,72 +180,8 @@ pub fn generate_all(
         format!("Could not generate intermediate representation. {error}")
     })?;
 
-    generate_typescript(&ir, output)?;
-    generate_prisma(&ir, output)?;
+    generate_typescript(&ir, &output)?;
+    generate_prisma(&ir, &output)?;
 
     Ok(())
-}
-
-/// Compile an input file.
-///
-/// # Arguments
-///
-/// * `input` - The input file.
-/// * `output` - The output directory.
-///
-/// # Errors
-///
-/// * Returns an error if the input file does not exist or contains errors.
-/// * Returns an error if the output directory does not exist and could not be
-///   created.
-pub fn compile(
-    input: &str,
-    output: Option<&str>,
-) -> Result<(), String> {
-    let input = determine_input(input)?;
-    let output = determine_output(output)?;
-
-    generate_all(input, output)?;
-
-    Ok(())
-}
-
-/// Determine the input file.
-///
-/// # Arguments
-///
-/// * `input` - The input file.
-///
-/// # Errors
-///
-/// Returns an error if the input file does not exist.
-pub fn determine_input(input: &str) -> Result<&Path, String> {
-    let path = Path::new(input);
-
-    if path.is_file() {
-        Ok(path)
-    } else {
-        Err(format!("input file `{input}` does not exist."))
-    }
-}
-
-/// Determine the output directory, creating it if necessary.
-///
-/// # Arguments
-///
-/// * `output` - The output directory.
-///
-/// # Errors
-///
-/// Returns an error if the output directory does not exist and could not be
-/// created.
-fn determine_output(output: Option<&str>) -> Result<&Path, String> {
-    let output = output.map_or_else(|| "out", |output| output);
-    let path = Path::new(output);
-
-    if path.is_dir() || create_dir(path).is_ok() {
-        Ok(path)
-    } else {
-        Err(format!("failed to create output directory `{output}`."))
-    }
 }

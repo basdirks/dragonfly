@@ -6,9 +6,12 @@ use {
             compile,
         },
     },
-    std::io::{
-        Error,
-        Write,
+    std::{
+        io::{
+            Error,
+            Write,
+        },
+        path::PathBuf,
     },
 };
 
@@ -90,145 +93,6 @@ pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
 /// # Arguments
 ///
 /// * `args` - The command line arguments.
-///
-/// # Examples
-///
-/// If no arguments are given, show help message:
-///
-/// ```rust
-/// use dragonfly::cli::{
-///     command::Command,
-///     parse_args,
-/// };
-///
-/// assert_eq!(parse_args(&["dragonfly".to_owned()]), Command::Help);
-/// ```
-///
-/// Show help message:
-///
-/// ```rust
-/// use dragonfly::cli::{
-///     command::Command,
-///     parse_args,
-/// };
-///
-/// assert_eq!(
-///     parse_args(&["dragonfly".to_owned(), "help".to_owned()]),
-///     Command::Help
-/// );
-///
-/// assert_eq!(
-///     parse_args(&[
-///         "dragonfly".to_owned(),
-///         "help".to_owned(),
-///         "check".to_owned()
-///     ]),
-///     Command::HelpCommand {
-///         command: "check".to_owned(),
-///     }
-/// );
-///
-/// assert_eq!(
-///     parse_args(&[
-///         "dragonfly".to_owned(),
-///         "help".to_owned(),
-///         "build".to_owned()
-///     ]),
-///     Command::HelpCommand {
-///         command: "build".to_owned(),
-///     }
-/// );
-/// ```
-///
-/// Show version number:
-///
-/// ```rust
-/// use dragonfly::cli::{
-///     command::Command,
-///     parse_args,
-/// };
-///
-/// assert_eq!(
-///     parse_args(&["dragonfly".to_owned(), "version".to_owned()]),
-///     Command::Version
-/// );
-/// ```
-///
-/// Check a source file for errors:
-///
-/// ```rust
-/// use dragonfly::cli::{
-///     command::Command,
-///     parse_args,
-/// };
-///
-/// assert_eq!(
-///     parse_args(&[
-///         "dragonfly".to_owned(),
-///         "check".to_owned(),
-///         "file.dfly".to_owned()
-///     ]),
-///     Command::Check {
-///         input: "file.dfly".to_owned(),
-///     }
-/// );
-/// ```
-///
-/// Build from a source file:
-///
-/// ```rust
-/// use dragonfly::cli::{
-///     command::Command,
-///     parse_args,
-/// };
-///
-/// assert_eq!(
-///     parse_args(&[
-///         "dragonfly".to_owned(),
-///         "build".to_owned(),
-///         "file.dfly".to_owned()
-///     ]),
-///     Command::Build {
-///         input: "file.dfly".to_owned(),
-///         output: None,
-///     }
-/// );
-///
-/// assert_eq!(
-///     parse_args(&[
-///         "dragonfly".to_owned(),
-///         "build".to_owned(),
-///         "-o".to_owned(),
-///         "output".to_owned(),
-///         "file.dfly".to_owned(),
-///     ]),
-///     Command::Build {
-///         input: "file.dfly".to_owned(),
-///         output: Some("output".to_owned()),
-///     }
-/// );
-///
-/// assert_eq!(
-///     parse_args(&[
-///         "dragonfly".to_owned(),
-///         "build".to_owned(),
-///         "--output".to_owned(),
-///         "output".to_owned(),
-///         "file.dfly".to_owned(),
-///     ]),
-///     Command::Build {
-///         input: "file.dfly".to_owned(),
-///         output: Some("output".to_owned()),
-///     }
-/// );
-///
-/// assert_eq!(
-///     parse_args(&["dragonfly".to_owned(), "build".to_owned(),]),
-///     Command::HelpCommand {
-///         command: "build".to_owned(),
-///     }
-/// );
-/// ```
 #[must_use]
 pub fn parse_args(args: &[String]) -> Command {
     let mut args = args.iter().skip(1);
@@ -245,7 +109,7 @@ pub fn parse_args(args: &[String]) -> Command {
                 },
                 |input| {
                     Command::Check {
-                        input: input.to_string(),
+                        input: PathBuf::from(input),
                     }
                 },
             )
@@ -256,8 +120,8 @@ pub fn parse_args(args: &[String]) -> Command {
                     match (args.next(), args.next()) {
                         (Some(output), Some(input)) => {
                             Command::Build {
-                                input: input.to_string(),
-                                output: Some(output.to_string()),
+                                input: PathBuf::from(input),
+                                output: PathBuf::from(output),
                             }
                         }
                         _ => {
@@ -269,8 +133,8 @@ pub fn parse_args(args: &[String]) -> Command {
                 }
                 Some(input) => {
                     Command::Build {
-                        input: input.to_owned(),
-                        output: None,
+                        input: PathBuf::from(input),
+                        output: PathBuf::from("./out"),
                     }
                 }
                 None => {
@@ -315,7 +179,7 @@ pub fn execute(
             writeln!(f, "{}", version())
         }
         Command::Build { input, output } => {
-            if let Err(error) = compile(&input, output.as_deref()) {
+            if let Err(error) = compile(input, output) {
                 writeln!(f, "An error occurred during compilation. {error}")?;
             }
 
@@ -323,9 +187,13 @@ pub fn execute(
         }
         Command::Check { input } => {
             if let Err(error) = check_file(&input) {
-                writeln!(f, "Error while checking `{input}`.\n{error}")
+                writeln!(
+                    f,
+                    "Error while checking `{}`.\n{error}",
+                    input.display()
+                )
             } else {
-                writeln!(f, "No errors found in `{input}`.")
+                writeln!(f, "No errors found in `{}`.", input.display())
             }
         }
     }
@@ -380,6 +248,101 @@ mod tests {
         assert_eq!(
             String::from_utf8(buffer).unwrap(),
             format!("{HELP_CHECK_MESSAGE}\n")
+        );
+    }
+
+    #[test]
+    fn test_parse_no_args() {
+        assert_eq!(parse_args(&["dragonfly".to_owned()]), Command::Help);
+    }
+
+    #[test]
+    fn test_parse_help() {
+        assert_eq!(
+            parse_args(&["dragonfly".to_owned(), "help".to_owned()]),
+            Command::Help
+        );
+    }
+
+    #[test]
+    fn test_parse_help_check() {
+        assert_eq!(
+            parse_args(&[
+                "dragonfly".to_owned(),
+                "help".to_owned(),
+                "check".to_owned()
+            ]),
+            Command::HelpCommand {
+                command: "check".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_help_build() {
+        assert_eq!(
+            parse_args(&[
+                "dragonfly".to_owned(),
+                "help".to_owned(),
+                "build".to_owned()
+            ]),
+            Command::HelpCommand {
+                command: "build".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_version() {
+        assert_eq!(
+            parse_args(&["dragonfly".to_owned(), "version".to_owned()]),
+            Command::Version
+        );
+    }
+
+    #[test]
+    fn test_parse_build() {
+        assert_eq!(
+            parse_args(&[
+                "dragonfly".to_owned(),
+                "build".to_owned(),
+                "test.dfly".to_owned()
+            ]),
+            Command::Build {
+                input: PathBuf::from("test.dfly"),
+                output: PathBuf::from("./out"),
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_build_output() {
+        assert_eq!(
+            parse_args(&[
+                "dragonfly".to_owned(),
+                "build".to_owned(),
+                "-o".to_owned(),
+                "test".to_owned(),
+                "test.dfly".to_owned()
+            ]),
+            Command::Build {
+                input: PathBuf::from("test.dfly"),
+                output: PathBuf::from("test"),
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_check() {
+        assert_eq!(
+            parse_args(&[
+                "dragonfly".to_owned(),
+                "check".to_owned(),
+                "test.dfly".to_owned()
+            ]),
+            Command::Check {
+                input: PathBuf::from("test.dfly"),
+            }
         );
     }
 }

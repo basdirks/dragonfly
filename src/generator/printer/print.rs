@@ -1,3 +1,5 @@
+use std::io;
+
 /// Types that can be pretty-printed.
 pub trait Print {
     /// Pretty-print the type with the given indentation.
@@ -6,14 +8,22 @@ pub trait Print {
     ///
     /// * `level` - The indentation level.
     ///
+    /// # Errors
+    ///
+    /// Returns an error if writing to the output stream fails.
+    ///
     /// # Examples
     ///
     /// ```rust
-    /// use dragonfly::generator::printer::{
-    ///     indent,
-    ///     print::Print,
+    /// use {
+    ///     dragonfly::generator::printer::{
+    ///         indent,
+    ///         print::Print,
+    ///     },
+    ///     std::io,
     /// };
     ///
+    /// #[derive(Clone, Debug, Eq, Hash, PartialEq)]
     /// enum Foo {
     ///     Bar(String, Box<Foo>),
     ///     Baz(String),
@@ -23,19 +33,22 @@ pub trait Print {
     ///     fn print(
     ///         &self,
     ///         level: usize,
-    ///     ) -> String {
+    ///         f: &mut dyn io::Write,
+    ///     ) -> io::Result<()> {
     ///         let indent = "   ".repeat(level);
     ///
     ///         match self {
     ///             Foo::Bar(a, b) => {
-    ///                 let b = b.print(level + 1);
-    ///
-    ///                 format!("{indent}{a} {{\n{b}\n{indent}}}")
+    ///                 writeln!(f, "{indent}{a} {{")?;
+    ///                 b.print(level + 1, f)?;
+    ///                 writeln!(f, "{indent}}}")
     ///             }
-    ///             Foo::Baz(a) => format!("{indent}{a}"),
+    ///             Foo::Baz(a) => writeln!(f, "{indent}{a}"),
     ///         }
     ///     }
     /// }
+    ///
+    /// let mut f = Vec::new();
     ///
     /// let foo = Foo::Bar(
     ///     "Foo".to_owned(),
@@ -45,17 +58,21 @@ pub trait Print {
     ///     )),
     /// );
     ///
+    /// foo.print(2, &mut f).unwrap();
+    ///
     /// assert_eq!(
-    ///     foo.print(2),
+    ///     String::from_utf8(f).unwrap(),
     ///     "      Foo {
     ///          Bar {
     ///             Baz
     ///          }
-    ///       }"
+    ///       }
+    /// "
     /// );
     /// ```
     fn print(
         &self,
         level: usize,
-    ) -> String;
+        f: &mut dyn io::Write,
+    ) -> io::Result<()>;
 }

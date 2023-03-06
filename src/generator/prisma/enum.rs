@@ -4,7 +4,10 @@ use {
         generator::printer::Print,
         ir::Enum as IrEnum,
     },
-    std::fmt::Display,
+    std::{
+        fmt::Display,
+        io,
+    },
 };
 
 /// A Prisma enum.
@@ -89,8 +92,9 @@ impl Print for Enum {
     fn print(
         &self,
         _: usize,
-    ) -> String {
-        self.to_string()
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        write!(f, "{self}")
     }
 }
 
@@ -181,20 +185,19 @@ enum Color {
             )],
         );
 
-        assert_eq!(
-            r#enum.print(0),
-            "
+        let mut f = Vec::new();
 
-enum Color {
+        r#enum.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "enum Color {
   Red
   Green
   Blue
 
   @@map(\"colors\")
-}
-
-"
-            .trim()
+}"
         );
     }
 

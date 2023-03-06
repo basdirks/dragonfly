@@ -13,6 +13,7 @@ use {
         },
         ir,
     },
+    std::io,
 };
 
 /// Interface properties.
@@ -55,7 +56,8 @@ impl Print for Interface {
     fn print(
         &self,
         level: usize,
-    ) -> String {
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let Self {
             identifier: name,
             extends,
@@ -65,28 +67,23 @@ impl Print for Interface {
 
         let indent = indent::typescript(level);
 
-        let extends = if extends.is_empty() {
-            String::new()
-        } else {
-            format!(" extends {}", comma_separated(extends))
+        write!(f, "{indent}interface {name}")?;
+
+        if !parameters.is_empty() {
+            write!(f, "<{}>", comma_separated(parameters))?;
         };
 
-        let parameters = if parameters.is_empty() {
-            String::new()
-        } else {
-            format!("<{}>", comma_separated(parameters))
+        if !extends.is_empty() {
+            write!(f, " extends {}", comma_separated(extends))?;
         };
 
-        let properties = properties
-            .iter()
-            .map(|property| property.print(level + 1))
-            .collect::<Vec<_>>()
-            .join("\n");
+        writeln!(f, " {{")?;
 
-        format!(
-            "{indent}interface {name}{parameters}{extends} \
-             {{\n{properties}\n{indent}}}",
-        )
+        for property in properties {
+            property.print(level + 1, f)?;
+        }
+
+        writeln!(f, "}}")
     }
 }
 
@@ -130,41 +127,44 @@ impl From<&ir::Model> for Interface {
 mod tests {
     use {
         super::*,
-        crate::generator::typescript::r#type::{
-            Keyword,
-            Type,
+        crate::{
+            ast::TypeError,
+            generator::typescript::r#type::{
+                Keyword,
+                Type,
+            },
         },
     };
 
     #[test]
-    fn test_from_ir_mode() {
+    fn test_from_ir_mode() -> Result<(), TypeError> {
         let mut model = ir::Model::new("Image");
 
-        let _ = model.insert_enum_relation("countryName", "CountryName");
-        let _ = model.insert_enums_relation("tags", "Tag");
-        let _ = model.insert_field(ir::Field::boolean("isPublic"));
-        let _ = model.insert_field(ir::Field::date_time("createdAt"));
-        let _ = model.insert_field(ir::Field::float("latitude"));
-        let _ = model.insert_field(ir::Field::int("height"));
-        let _ = model.insert_field(ir::Field::string("title"));
-        let _ =
-            model.insert_field(ir::Field::booleans("anArrayOfBooleansIsDumb"));
-        let _ = model.insert_field(ir::Field::date_times("events"));
-        let _ = model.insert_field(ir::Field::floats("latitudes"));
-        let _ = model.insert_field(ir::Field::ints("heights"));
-        let _ = model.insert_field(ir::Field::strings("names"));
-        let _ = model.insert_model_relation("owner", "User");
-        let _ = model.insert_models_relation("images", "Image");
-        let _ = model.insert_owned_model_relation("resource", "Resource");
-        let _ = model.insert_owned_models_relation("resources", "Resource");
+        model.insert_enum_relation("countryName", "CountryName")?;
+        model.insert_enums_relation("tags", "Tag")?;
+        model.insert_field(ir::Field::boolean("isPublic"))?;
+        model.insert_field(ir::Field::date_time("createdAt"))?;
+        model.insert_field(ir::Field::float("latitude"))?;
+        model.insert_field(ir::Field::int("height"))?;
+        model.insert_field(ir::Field::string("title"))?;
+        model.insert_field(ir::Field::booleans("anArrayOfBooleansIsDumb"))?;
+        model.insert_field(ir::Field::date_times("events"))?;
+        model.insert_field(ir::Field::floats("latitudes"))?;
+        model.insert_field(ir::Field::ints("heights"))?;
+        model.insert_field(ir::Field::strings("names"))?;
+        model.insert_model_relation("owner", "User")?;
+        model.insert_models_relation("images", "Image")?;
+        model.insert_owned_model_relation("resource", "Resource")?;
+        model.insert_owned_models_relation("resources", "Resource")?;
 
         let interface = Interface::from(&model);
+        let mut f = Vec::new();
+
+        interface.print(0, &mut f).unwrap();
 
         assert_eq!(
-            interface.print(0),
-            "
-
-interface Image {
+            String::from_utf8(f).unwrap(),
+            "interface Image {
     anArrayOfBooleansIsDumb: Array<boolean>;
     createdAt: Date;
     events: Array<Date>;
@@ -182,65 +182,46 @@ interface Image {
     resource?: Resource;
     resources: Array<Resource>;
 }
-
 "
-            .trim()
         );
+
+        Ok(())
     }
 
     #[test]
     fn test_print_interface() {
-        let expected = "
+        let interface = Interface {
+            extends: vec![ExpressionWithTypeArguments::new(
+                "Resource",
+                &[Type::type_reference("T", &[])],
+            )],
+            identifier: "Image".to_owned(),
+            type_parameters: vec![TypeParameter::new("T", &[])],
+            properties: vec![
+                Property::required("title", Type::Keyword(Keyword::String)),
+                Property::optional(
+                    "countryName",
+                    Type::type_reference("CountryName", &[]),
+                ),
+                Property::required(
+                    "tags",
+                    Type::array(Type::type_reference("Tag", &[])),
+                ),
+            ],
+        };
 
-interface Image<T> extends Resource<T> {
+        let mut f = Vec::new();
+
+        interface.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "interface Image<T> extends Resource<T> {
     title: string;
     countryName?: CountryName;
     tags: Array<Tag>;
 }
-
 "
-        .trim();
-
-        assert_eq!(
-            Interface {
-                extends: vec![ExpressionWithTypeArguments {
-                    identifier: "Resource".to_owned(),
-                    type_arguments: vec![Type::TypeReference {
-                        identifier: "T".to_owned(),
-                        type_arguments: vec![],
-                    }],
-                }],
-                identifier: "Image".to_owned(),
-                type_parameters: vec![TypeParameter {
-                    identifier: "T".to_owned(),
-                    type_references: vec![],
-                }],
-                properties: vec![
-                    Property {
-                        identifier: "title".to_owned(),
-                        r#type: Type::Keyword(Keyword::String),
-                        optional: false,
-                    },
-                    Property {
-                        identifier: "countryName".to_owned(),
-                        r#type: Type::TypeReference {
-                            identifier: "CountryName".to_owned(),
-                            type_arguments: vec![],
-                        },
-                        optional: true,
-                    },
-                    Property {
-                        identifier: "tags".to_owned(),
-                        r#type: Type::Array(Box::new(Type::TypeReference {
-                            identifier: "Tag".to_owned(),
-                            type_arguments: vec![],
-                        })),
-                        optional: false,
-                    },
-                ],
-            }
-            .print(0),
-            expected
         );
     }
 }

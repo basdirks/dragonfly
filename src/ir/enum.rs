@@ -42,14 +42,12 @@ impl TryFrom<ast::Enum> for Enum {
         let mut values = Vec::new();
 
         for value in ast_enum.variants {
-            if unique_values.contains(&value) {
+            if !unique_values.insert(value.clone()) {
                 return Err(TypeError::duplicate_enum_variant(
                     &ast_enum.name,
                     &value,
                 ));
             }
-
-            let _ = unique_values.insert(value.clone());
 
             values.push(value);
         }

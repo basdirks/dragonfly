@@ -1,9 +1,12 @@
-use crate::generator::{
-    printer::{
-        indent,
-        Print,
+use {
+    crate::generator::{
+        printer::{
+            indent,
+            Print,
+        },
+        typescript::r#type::Type,
     },
-    typescript::r#type::Type,
+    std::io,
 };
 
 /// An interface property.
@@ -71,17 +74,23 @@ impl Print for Property {
     fn print(
         &self,
         level: usize,
-    ) -> String {
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let Self {
             identifier,
             r#type: type_reference,
             optional,
         } = self;
 
-        let optional = if *optional { "?" } else { "" };
         let indent = indent::typescript(level);
 
-        format!("{indent}{identifier}{optional}: {type_reference};")
+        write!(f, "{indent}{identifier}")?;
+
+        if *optional {
+            write!(f, "?")?;
+        }
+
+        writeln!(f, ": {type_reference};")
     }
 }
 
@@ -133,24 +142,28 @@ mod tests {
 
     #[test]
     fn test_print() {
-        assert_eq!(
-            Property {
-                identifier: "foo".to_owned(),
-                r#type: Type::Keyword(Keyword::String),
-                optional: false,
-            }
-            .print(0),
-            "foo: string;"
-        );
+        let property = Property {
+            identifier: "foo".to_owned(),
+            r#type: Type::Keyword(Keyword::String),
+            optional: false,
+        };
 
-        assert_eq!(
-            Property {
-                identifier: "foo".to_owned(),
-                r#type: Type::Keyword(Keyword::String),
-                optional: true,
-            }
-            .print(0),
-            "foo?: string;"
-        );
+        let mut f = Vec::new();
+
+        property.print(0, &mut f).unwrap();
+
+        assert_eq!(String::from_utf8(f).unwrap(), "foo: string;\n");
+
+        let property = Property {
+            identifier: "foo".to_owned(),
+            r#type: Type::Keyword(Keyword::String),
+            optional: true,
+        };
+
+        let mut f = Vec::new();
+
+        property.print(0, &mut f).unwrap();
+
+        assert_eq!(String::from_utf8(f).unwrap(), "foo?: string;\n");
     }
 }

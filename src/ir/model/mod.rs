@@ -88,7 +88,7 @@ impl Model {
     ) -> Result<(), TypeError> {
         self.insert_key(&field.name)?;
 
-        let _ = self.fields.insert(field.name.clone(), field);
+        let _: Option<Field> = self.fields.insert(field.name.clone(), field);
 
         Ok(())
     }
@@ -110,7 +110,7 @@ impl Model {
     ) -> Result<(), TypeError> {
         self.insert_key(field_name)?;
 
-        let _ = self
+        let _: Option<EnumRelation> = self
             .enums
             .insert(field_name.to_owned(), EnumRelation::one(enum_name));
 
@@ -134,7 +134,7 @@ impl Model {
     ) -> Result<(), TypeError> {
         self.insert_key(field_name)?;
 
-        let _ = self
+        let _: Option<Relation> = self
             .models
             .insert(field_name.to_owned(), Relation::one(model_name));
 
@@ -158,7 +158,7 @@ impl Model {
     ) -> Result<(), TypeError> {
         self.insert_key(field_name)?;
 
-        let _ = self
+        let _: Option<Relation> = self
             .owned_models
             .insert(field_name.to_owned(), Relation::one(model_name));
 
@@ -182,7 +182,7 @@ impl Model {
     ) -> Result<(), TypeError> {
         self.insert_key(field_name)?;
 
-        let _ = self
+        let _: Option<EnumRelation> = self
             .enums
             .insert(field_name.to_owned(), EnumRelation::many(enum_name));
 
@@ -206,7 +206,7 @@ impl Model {
     ) -> Result<(), TypeError> {
         self.insert_key(field_name)?;
 
-        let _ = self
+        let _: Option<Relation> = self
             .models
             .insert(field_name.to_owned(), Relation::many(model_name));
 
@@ -230,7 +230,7 @@ impl Model {
     ) -> Result<(), TypeError> {
         self.insert_key(field_name)?;
 
-        let _ = self
+        let _: Option<Relation> = self
             .owned_models
             .insert(field_name.to_owned(), Relation::many(model_name));
 

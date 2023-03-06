@@ -6,7 +6,10 @@ use {
         },
         ir::Enum as IrEnum,
     },
-    std::fmt::Display,
+    std::{
+        fmt::Display,
+        io,
+    },
 };
 
 /// A GraphQL enum.
@@ -59,8 +62,9 @@ impl Print for Enum {
     fn print(
         &self,
         _: usize,
-    ) -> String {
-        self.to_string()
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        write!(f, "{self}")
     }
 }
 
@@ -98,18 +102,17 @@ enum Test {
     #[test]
     fn test_print() {
         let r#enum = Enum::new("Test", &["A", "B"]);
+        let mut f = Vec::new();
+
+        r#enum.print(0, &mut f).unwrap();
 
         assert_eq!(
-            r#enum.print(0),
-            "
-        
+            String::from_utf8(f).unwrap(),
+            "\
 enum Test {
   A
   B
-}
-
-"
-            .trim()
+}"
         );
     }
 

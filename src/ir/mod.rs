@@ -642,20 +642,20 @@ mod tests {
     }
 
     #[test]
-    fn test_resolve_model_field() {
+    fn test_resolve_model_field() -> Result<(), TypeError> {
         let mut ir = Ir::new();
         let mut user_model = Model::new("User");
         let mut address_model = Model::new("Address");
         let mut postbox_model = Model::new("Postbox");
 
-        let _ = user_model.insert_field(Field::string("name"));
-        let _ = address_model.insert_field(Field::string("street"));
-        let _ = postbox_model.insert_field(Field::int("number"));
-        let _ = address_model.insert_owned_model_relation("postbox", "Postbox");
-        let _ = user_model.insert_model_relation("address", "Address");
-        let _ = ir.insert_model(&user_model);
-        let _ = ir.insert_model(&address_model);
-        let _ = ir.insert_model(&postbox_model);
+        user_model.insert_field(Field::string("name"))?;
+        address_model.insert_field(Field::string("street"))?;
+        postbox_model.insert_field(Field::int("number"))?;
+        address_model.insert_owned_model_relation("postbox", "Postbox")?;
+        user_model.insert_model_relation("address", "Address")?;
+        ir.insert_model(&user_model)?;
+        ir.insert_model(&address_model)?;
+        ir.insert_model(&postbox_model)?;
 
         assert_eq!(
             ir.field_type(
@@ -697,10 +697,12 @@ mod tests {
             ),
             None,
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_resolve_model_enum() {
+    fn test_resolve_model_enum() -> Result<(), TypeError> {
         let mut ir = Ir::new();
         let mut user_model = Model::new("User");
         let mut address_model = Model::new("Address");
@@ -713,14 +715,13 @@ mod tests {
                 .collect::<Vec<_>>(),
         );
 
-        let _ = user_model.insert_field(Field::string("name"));
-        let _ = user_model.insert_model_relation("address", "Address");
-        let _ = user_model.insert_owned_model_relation("socials", "Socials");
-        let _ = address_model.insert_enum_relation("type", "AddressType");
-
-        let _ = ir.insert_model(&user_model);
-        let _ = ir.insert_model(&address_model);
-        let _ = ir.insert_enum(&address_type);
+        user_model.insert_field(Field::string("name"))?;
+        user_model.insert_model_relation("address", "Address")?;
+        user_model.insert_owned_model_relation("socials", "Socials")?;
+        address_model.insert_enum_relation("type", "AddressType")?;
+        ir.insert_model(&user_model)?;
+        ir.insert_model(&address_model)?;
+        ir.insert_enum(&address_type)?;
 
         assert_eq!(
             ir.enum_type(
@@ -762,10 +763,12 @@ mod tests {
             ),
             None,
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_check_argument_type() {
+    fn test_check_argument_type() -> Result<(), TypeError> {
         let mut ir = Ir::new();
         let mut user_model = Model::new("User");
         let mut address_model = Model::new("Address");
@@ -778,14 +781,13 @@ mod tests {
                 .collect::<Vec<_>>(),
         );
 
-        let _ = user_model.insert_field(Field::string("name"));
-        let _ = user_model.insert_model_relation("address", "Address");
-        let _ = user_model.insert_owned_model_relation("socials", "Socials");
-        let _ = address_model.insert_enum_relation("type", "AddressType");
-
-        let _ = ir.insert_model(&user_model);
-        let _ = ir.insert_model(&address_model);
-        let _ = ir.insert_enum(&address_type);
+        user_model.insert_field(Field::string("name"))?;
+        user_model.insert_model_relation("address", "Address")?;
+        user_model.insert_owned_model_relation("socials", "Socials")?;
+        address_model.insert_enum_relation("type", "AddressType")?;
+        ir.insert_model(&user_model)?;
+        ir.insert_model(&address_model)?;
+        ir.insert_enum(&address_type)?;
 
         assert!(ir.check_argument_type(
             "User",
@@ -819,11 +821,13 @@ mod tests {
                 .collect(),
             &QueryArgumentType::Type(Type::String)
         ));
+
+        Ok(())
     }
 
     #[allow(clippy::too_many_lines)]
     #[test]
-    fn test_from_ast_full() {
+    fn test_from_ast_full() -> Result<(), TypeError> {
         let source = "
 
 model User {
@@ -942,32 +946,30 @@ query users($addressType: AddressType): [User] {
                     ("User".to_owned(), {
                         let mut model = Model::new("User");
 
-                        let _ = model.insert_field(Field::string("name"));
-                        let _ = model.insert_field(Field::int("age"));
-                        let _ = model.insert_field(Field::boolean("daBoi"));
-                        let _ = model
-                            .insert_models_relation("addresses", "Address");
-                        let _ = model
-                            .insert_owned_model_relation("profile", "Profile");
+                        model.insert_field(Field::string("name"))?;
+                        model.insert_field(Field::int("age"))?;
+                        model.insert_field(Field::boolean("daBoi"))?;
+                        model.insert_models_relation("addresses", "Address")?;
+                        model.insert_owned_model_relation(
+                            "profile", "Profile",
+                        )?;
 
                         model
                     }),
                     ("Profile".to_owned(), {
                         let mut model = Model::new("Profile");
 
-                        let _ = model.insert_field(Field::string("bio"));
-                        let _ =
-                            model.insert_field(Field::date_time("createdAt"));
+                        model.insert_field(Field::string("bio"))?;
+                        model.insert_field(Field::date_time("createdAt"))?;
 
                         model
                     },),
                     ("Address".to_owned(), {
                         let mut model = Model::new("Address");
 
-                        let _ = model.insert_field(Field::string("street"));
-                        let _ = model.insert_field(Field::int("number"));
-                        let _ =
-                            model.insert_enum_relation("type", "AddressType");
+                        model.insert_field(Field::string("street"))?;
+                        model.insert_field(Field::int("number"))?;
+                        model.insert_enum_relation("type", "AddressType")?;
 
                         model
                     })
@@ -986,6 +988,8 @@ query users($addressType: AddressType): [User] {
                 .into(),
             })
         );
+
+        Ok(())
     }
 
     #[test]

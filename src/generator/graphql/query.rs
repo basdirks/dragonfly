@@ -11,9 +11,9 @@ use {
         space_separated,
         Print,
     },
-    std::fmt::{
-        Display,
-        Write,
+    std::{
+        fmt::Display,
+        io,
     },
 };
 
@@ -66,22 +66,23 @@ impl Print for Query {
     fn print(
         &self,
         level: usize,
-    ) -> String {
-        let mut query = format!("query {}", self.name);
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        write!(f, "query {}", self.name)?;
 
         if !self.variables.is_empty() {
-            let _ = write!(query, "({})", comma_separated(&self.variables));
+            write!(f, "({})", comma_separated(&self.variables))?;
         }
 
         if !self.directives.is_empty() {
-            let _ = write!(query, " {}", space_separated(&self.directives));
+            write!(f, " {}", space_separated(&self.directives))?;
         }
 
         if !self.selections.is_empty() {
-            query.push_str(&Selection::print_multiple(&self.selections, level));
+            Selection::print_multiple(&self.selections, level, f)?;
         }
 
-        query
+        Ok(())
     }
 }
 
@@ -138,64 +139,66 @@ mod tests {
 
     #[test]
     fn test_print_query() {
-        assert_eq!(
-            Query {
-                name: "imagesByCountryName".to_owned(),
-                directives: vec![
-                    Directive::new("bar", &[]),
-                    Directive::new("baz", &[]),
-                ],
-                selections: vec![Selection::Field(Field {
-                    name: "images".to_owned(),
-                    arguments: vec![Argument::variable("country", "country")],
-                    directives: vec![],
-                    selections: vec![
-                        Selection::Field(Field {
-                            name: "url".to_owned(),
-                            arguments: vec![],
-                            directives: vec![Directive::new(
-                                "deprecated",
-                                &[Argument::string(
-                                    "reason",
-                                    "Use `link` instead."
-                                )],
+        let query = Query {
+            name: "imagesByCountryName".to_owned(),
+            directives: vec![
+                Directive::new("bar", &[]),
+                Directive::new("baz", &[]),
+            ],
+            selections: vec![Selection::Field(Field {
+                name: "images".to_owned(),
+                arguments: vec![Argument::variable("country", "country")],
+                directives: vec![],
+                selections: vec![
+                    Selection::Field(Field {
+                        name: "url".to_owned(),
+                        arguments: vec![],
+                        directives: vec![Directive::new(
+                            "deprecated",
+                            &[Argument::string(
+                                "reason",
+                                "Use `link` instead.",
                             )],
-                            selections: vec![],
-                        }),
-                        Selection::Field(Field::new("link")),
-                        Selection::Field(Field::new("title")),
-                    ],
-                })],
-                variables: vec![
-                    Variable {
-                        name: "country".to_owned(),
-                        r#type: Type::NonNull(Box::new(Type::Name(
-                            "String".to_owned()
-                        ))),
-                        default_value: None,
-                        directives: vec![],
-                    },
-                    Variable {
-                        name: "limit".to_owned(),
-                        r#type: Type::name("Int"),
-                        default_value: Some(Const::int("10")),
-                        directives: vec![],
-                    },
+                        )],
+                        selections: vec![],
+                    }),
+                    Selection::Field(Field::new("link")),
+                    Selection::Field(Field::new("title")),
                 ],
-            }
-            .print(0),
-            "
+            })],
+            variables: vec![
+                Variable {
+                    name: "country".to_owned(),
+                    r#type: Type::NonNull(Box::new(Type::Name(
+                        "String".to_owned(),
+                    ))),
+                    default_value: None,
+                    directives: vec![],
+                },
+                Variable {
+                    name: "limit".to_owned(),
+                    r#type: Type::name("Int"),
+                    default_value: Some(Const::int("10")),
+                    directives: vec![],
+                },
+            ],
+        };
 
-query imagesByCountryName($country: String!, $limit: Int = 10) @bar @baz {
+        let mut f = Vec::new();
+
+        query.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "query imagesByCountryName($country: String!, $limit: Int = 10) \
+             @bar @baz {
   images(country: $country) {
     url @deprecated(reason: \"Use `link` instead.\")
     link
     title
   }
 }
-
 "
-            .trim()
         );
     }
 }

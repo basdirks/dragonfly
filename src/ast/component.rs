@@ -38,7 +38,7 @@ impl Component {
     ) -> Self {
         Self {
             name: name.to_owned(),
-            path: PathBuf::from(path),
+            path: path.into(),
         }
     }
 

@@ -140,7 +140,6 @@ impl Where {
         let mut conditions: Vec<Condition> = vec![];
 
         loop {
-            // Parse `segment {`.
             if let Ok((segment, new_input)) = (|input: &str| {
                 let (segment, input) = camel_case(input)?;
                 let (_, input) = spaces(&input)?;
@@ -157,7 +156,6 @@ impl Where {
                 continue;
             }
 
-            // Parse `condition_type: $argument`.
             if let Ok((operator, argument, new_input)) = (|input: &str| {
                 let (operator, input) = Operator::parse(input)?;
                 let (_, input) = spaces(&input)?;
@@ -190,7 +188,6 @@ impl Where {
                 continue;
             }
 
-            // Parse `}`.
             if !path.is_empty() {
                 if let Ok((_, new_input)) = (|input: &str| {
                     let (_, input) = brace_close(input)?;
@@ -201,7 +198,7 @@ impl Where {
                 {
                     input = new_input;
 
-                    let _ = path.pop_back();
+                    path.drop_back();
 
                     continue;
                 }

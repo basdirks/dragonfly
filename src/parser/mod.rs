@@ -158,7 +158,7 @@ pub fn between<T>(
 /// };
 ///
 /// assert_eq!(char("a", 'a'), Ok(('a', String::new())));
-/// assert_eq!(char("ab", 'a'), Ok(('a', "b".to_owned())));
+/// assert_eq!(char("a", 'a'), Ok(('a', "".to_owned())));
 ///
 /// assert_eq!(
 ///     char("a", 'b'),

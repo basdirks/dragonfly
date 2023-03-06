@@ -6,9 +6,12 @@ use {
         space_separated,
         Print,
     },
-    std::fmt::{
-        Display,
-        Write,
+    std::{
+        fmt::{
+            Display,
+            Write,
+        },
+        io,
     },
 };
 pub use {
@@ -117,11 +120,12 @@ impl Display for Model {
                 let r#type = field.print_type();
 
                 if attributes.is_empty() {
-                    let _ = write!(string, "{type}");
+                    let _: Result<(), std::fmt::Error> =
+                        write!(string, "{type}");
                 } else {
                     let attributes = space_separated(attributes);
 
-                    let _ = write!(
+                    let _: Result<(), std::fmt::Error> = write!(
                         string,
                         "{type:<max_field_type_length$}{attributes}"
                     );
@@ -149,8 +153,9 @@ impl Print for Model {
     fn print(
         &self,
         _: usize,
-    ) -> String {
-        self.to_string()
+        f: &mut dyn io::Write,
+    ) -> io::Result<()> {
+        write!(f, "{self}")
     }
 }
 
@@ -192,39 +197,37 @@ mod tests {
             )],
         );
 
-        let expected = "
+        let mut f = Vec::new();
 
-model User {
+        model.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "model User {
   firstName String
   id        Int     @id @default(autoincrement())
   isAdmin   Boolean @default(false)
   lastName  String
 
   @@unique([firstName, lastName])
-}
-
-"
-        .trim();
-
-        assert_eq!(model.to_string(), expected);
-        assert_eq!(model.print(0), expected);
+}"
+        );
     }
 
     #[test]
     fn test_standard() {
         let model = Model::standard("User", &[], &[]);
 
-        let expected = "
+        let mut f = Vec::new();
 
-model User {
+        model.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "model User {
   createdAt DateTime @default(now())
   id        Int      @id @default(autoincrement())
-}
-
-"
-        .trim();
-
-        assert_eq!(model.to_string(), expected);
-        assert_eq!(model.print(0), expected);
+}"
+        );
     }
 }
