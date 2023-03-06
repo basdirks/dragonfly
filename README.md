@@ -7,7 +7,6 @@ For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 See also:
 
 - [CLI](src/bin/README.md)
-- [IR](src/ir/README.md)
 - [AST](src/ast/README.md)
 - [Generators](src/generator/README.md)
 
