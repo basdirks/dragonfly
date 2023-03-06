@@ -11,7 +11,7 @@ See also:
 - [AST](src/ast/README.md)
 - [Generators](src/generator/README.md)
 
-![CLI](https://user-images.githubusercontent.com/578048/221036308-091fd3c5-684b-4445-bce2-81f8da1d5b6a.png)
+![CLI (2)](https://user-images.githubusercontent.com/578048/223210376-f54e5722-5147-434e-91d2-e3a3ba6457f7.png)
 
 # Roadmap
 
@@ -20,7 +20,6 @@ See also:
 - [ ] Generate full GraphQL queries.
   - [ ] CLI: generate GQL.
 - [ ] Support aggregate queries :)
-- [ ] Base `Print` on a `Write`-like trait.
 
 # Example application
 
