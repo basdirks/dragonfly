@@ -80,7 +80,8 @@ pub fn generate_prisma(
     }
 
     let file = path.join(format!("application.{PRISMA_FILE_EXTENSION}"));
-    let source = prisma::Schema::from(ir).to_string();
+    let schema = prisma::Schema::from(ir);
+    let source = schema.to_string();
 
     write(file, source)
         .map_err(|error| format!("Could not write prisma file. {error}"))

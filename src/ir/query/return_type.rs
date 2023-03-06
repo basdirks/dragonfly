@@ -76,6 +76,28 @@ mod tests {
     }
 
     #[test]
+    fn test_one_from_ast() {
+        assert_eq!(
+            ReturnType::from(&ast::QueryReturnType::Model("User".to_owned())),
+            ReturnType {
+                model_name: "User".to_owned(),
+                cardinality: Cardinality::One,
+            },
+        );
+    }
+
+    #[test]
+    fn test_many_from_ast() {
+        assert_eq!(
+            ReturnType::from(&ast::QueryReturnType::Array("User".to_owned())),
+            ReturnType {
+                model_name: "User".to_owned(),
+                cardinality: Cardinality::Many,
+            },
+        );
+    }
+
+    #[test]
     fn test_one() {
         assert_eq!(
             ReturnType::one("User"),

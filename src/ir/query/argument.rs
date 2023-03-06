@@ -278,7 +278,10 @@ impl Argument {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use {
+        super::*,
+        std::iter::once,
+    };
 
     #[test]
     fn test_new() {
@@ -437,6 +440,203 @@ mod tests {
                 r#type: ArgumentType::Type(Type::String),
                 cardinality: Cardinality::Many,
             }
+        );
+    }
+
+    #[test]
+    fn test_from_boolean() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "is_admin",
+                    ast::r#type::Type::Scalar(ast::r#type::Scalar::Boolean),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::boolean("is_admin"))
+        );
+    }
+
+    #[test]
+    fn test_from_date_time() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "created_at",
+                    ast::r#type::Type::Scalar(ast::r#type::Scalar::DateTime),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::date_time("created_at"))
+        );
+    }
+
+    #[test]
+    fn test_from_float() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "price",
+                    ast::r#type::Type::Scalar(ast::r#type::Scalar::Float),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::float("price"))
+        );
+    }
+
+    #[test]
+    fn test_from_int() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "age",
+                    ast::r#type::Type::Scalar(ast::r#type::Scalar::Int),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::int("age"))
+        );
+    }
+
+    #[test]
+    fn test_from_string() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "name",
+                    ast::r#type::Type::Scalar(ast::r#type::Scalar::String),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::string("name"))
+        );
+    }
+
+    #[test]
+    fn test_from_enum() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new("role", ast::Type::reference("Role"),),
+                &once("Role").map(ToOwned::to_owned).collect()
+            ),
+            Some(Argument::r#enum("role", "Role"))
+        );
+    }
+
+    #[test]
+    fn test_from_booleans() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "is_admin",
+                    ast::r#type::Type::Array(ast::r#type::Scalar::Boolean),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::booleans("is_admin"))
+        );
+    }
+
+    #[test]
+    fn test_from_date_times() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "created_at",
+                    ast::r#type::Type::Array(ast::r#type::Scalar::DateTime),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::date_times("created_at"))
+        );
+    }
+
+    #[test]
+    fn test_from_floats() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "price",
+                    ast::r#type::Type::Array(ast::r#type::Scalar::Float),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::floats("price"))
+        );
+    }
+
+    #[test]
+    fn test_from_ints() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "age",
+                    ast::r#type::Type::Array(ast::r#type::Scalar::Int),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::ints("age"))
+        );
+    }
+
+    #[test]
+    fn test_from_strings() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "name",
+                    ast::r#type::Type::Array(ast::r#type::Scalar::String),
+                ),
+                &BTreeSet::new()
+            ),
+            Some(Argument::strings("name"))
+        );
+    }
+
+    #[test]
+    fn test_from_enums() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "roles",
+                    ast::r#type::Type::Array(ast::r#type::Scalar::reference(
+                        "Role"
+                    )),
+                ),
+                &once("Role").map(ToOwned::to_owned).collect()
+            ),
+            Some(Argument::enums("roles", "Role"))
+        );
+    }
+
+    #[test]
+    fn test_from_owned_reference() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "foo",
+                    ast::Type::owned_reference("Foo")
+                ),
+                &BTreeSet::new()
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn test_from_owned_references() {
+        assert_eq!(
+            Argument::from_ast_type(
+                &ast::QueryArgument::new(
+                    "foos",
+                    ast::r#type::Type::Array(
+                        ast::r#type::Scalar::owned_reference("Foo")
+                    ),
+                ),
+                &BTreeSet::new()
+            ),
+            None
         );
     }
 }

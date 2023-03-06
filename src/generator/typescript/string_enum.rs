@@ -189,6 +189,9 @@ mod tests {
             StringEnum::from(IrEnum::new(
                 "CountryName",
                 &["France", "Germany", "Italy"]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
             )),
             StringEnum::new("CountryName", &["France", "Germany", "Italy"])
         );
@@ -239,7 +242,10 @@ mod tests {
                 "Spain",
                 "UnitedKingdom",
                 "UnitedStates",
-            ],
+            ]
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>(),
         );
 
         let expected = StringEnum::new(

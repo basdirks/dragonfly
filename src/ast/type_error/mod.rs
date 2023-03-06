@@ -194,6 +194,23 @@ impl TypeError {
         }
     }
 
+    /// Create a duplicate query argument error.
+    ///
+    /// # Arguments
+    ///
+    /// * `query_name` - The name of the query.
+    /// * `argument_name` - The name of the argument.
+    #[must_use]
+    pub fn duplicate_query_argument(
+        query_name: &str,
+        argument_name: &str,
+    ) -> Self {
+        Self::QueryError {
+            query_name: query_name.to_owned(),
+            error: QueryError::DuplicateArgument(argument_name.to_owned()),
+        }
+    }
+
     /// Create an empty query schema error.
     ///
     /// # Arguments
@@ -372,19 +389,19 @@ impl Display for TypeError {
                 component_name,
                 error,
             } => {
-                write!(f, "Component error in \"{component_name}\": {error}.")
+                write!(f, "Error in component `{component_name}`: {error}.")
             }
             Self::EnumError { enum_name, error } => {
-                write!(f, "Enum error in \"{enum_name}\": {error}.")
+                write!(f, "Error in enum `{enum_name}`: {error}.")
             }
             Self::ModelError { model_name, error } => {
-                write!(f, "Model error in \"{model_name}\": {error}.")
+                write!(f, "Error in model `{model_name}`: {error}.")
             }
             Self::QueryError { query_name, error } => {
-                write!(f, "Query error in \"{query_name}\": {error}.")
+                write!(f, "Error in query `{query_name}`: {error}.")
             }
             Self::RouteError { route_name, error } => {
-                write!(f, "Route error in \"{route_name}\": {error}.")
+                write!(f, "Error in route `{route_name}`: {error}.")
             }
         }
     }
@@ -404,7 +421,7 @@ mod tests {
     fn test_duplicate_component() {
         assert_eq!(
             TypeError::duplicate_component("foo").to_string(),
-            "Component error in \"foo\": duplicate component."
+            "Error in component `foo`: duplicate component."
         );
     }
 
@@ -412,7 +429,7 @@ mod tests {
     fn test_duplicate_enum() {
         assert_eq!(
             TypeError::duplicate_enum("foo").to_string(),
-            "Enum error in \"foo\": duplicate enum."
+            "Error in enum `foo`: duplicate enum."
         );
     }
 
@@ -420,7 +437,7 @@ mod tests {
     fn test_duplicate_enum_variant() {
         assert_eq!(
             TypeError::duplicate_enum_variant("foo", "bar").to_string(),
-            "Enum error in \"foo\": duplicate variant \"bar\"."
+            "Error in enum `foo`: duplicate variant `bar`."
         );
     }
 
@@ -428,7 +445,7 @@ mod tests {
     fn test_empty_enum() {
         assert_eq!(
             TypeError::empty_enum("foo").to_string(),
-            "Enum error in \"foo\": empty enum."
+            "Error in enum `foo`: empty enum."
         );
     }
 
@@ -436,7 +453,7 @@ mod tests {
     fn test_duplicate_model() {
         assert_eq!(
             TypeError::duplicate_model("foo").to_string(),
-            "Model error in \"foo\": duplicate model."
+            "Error in model `foo`: duplicate model."
         );
     }
 
@@ -444,7 +461,7 @@ mod tests {
     fn test_duplicate_model_field() {
         assert_eq!(
             TypeError::duplicate_model_field("foo", "bar").to_string(),
-            "Model error in \"foo\": duplicate field \"bar\"."
+            "Error in model `foo`: duplicate field `bar`."
         );
     }
 
@@ -452,7 +469,7 @@ mod tests {
     fn test_empty_model() {
         assert_eq!(
             TypeError::empty_model("foo").to_string(),
-            "Model error in \"foo\": empty model."
+            "Error in model `foo`: empty model."
         );
     }
 
@@ -461,8 +478,7 @@ mod tests {
         assert_eq!(
             TypeError::unknown_model_field_type("foo", &Field::booleans("bar"))
                 .to_string(),
-            "Model error in \"foo\": field \"bar\" has unknown type \
-             \"[Boolean]\"."
+            "Error in model `foo`: field `bar` has unknown type `[Boolean]`."
         );
     }
 
@@ -470,7 +486,15 @@ mod tests {
     fn test_duplicate_query() {
         assert_eq!(
             TypeError::duplicate_query("foo").to_string(),
-            "Query error in \"foo\": duplicate query."
+            "Error in query `foo`: duplicate query."
+        );
+    }
+
+    #[test]
+    fn test_duplicate_query_argument() {
+        assert_eq!(
+            TypeError::duplicate_query_argument("foo", "bar").to_string(),
+            "Error in query `foo`: duplicate argument `$bar`."
         );
     }
 
@@ -478,7 +502,7 @@ mod tests {
     fn test_empty_query_schema() {
         assert_eq!(
             TypeError::empty_query_schema("foo").to_string(),
-            "Query error in \"foo\": empty schema."
+            "Error in query `foo`: empty schema."
         );
     }
 
@@ -490,8 +514,7 @@ mod tests {
                 &QueryArgument::float("bar"),
             )
             .to_string(),
-            "Query error in \"foo\": argument \"bar\" has invalid type \
-             \"Float\"."
+            "Error in query `foo`: argument `$bar` has invalid type `Float`."
         );
     }
 
@@ -507,9 +530,8 @@ mod tests {
                 }
             )
             .to_string(),
-            "Query error in \"foo\": operator \"equals\" is not compatible \
-             with the types of field \"foo { bar { baz } }\" and argument \
-             \"$baz\"."
+            "Error in query `foo`: operator `equals` is not compatible with \
+             the types of field `foo.bar.baz` and argument `$baz`."
         );
     }
 
@@ -517,8 +539,8 @@ mod tests {
     fn test_invalid_query_where() {
         assert_eq!(
             TypeError::invalid_query_where("user", "post", "posts").to_string(),
-            "Query error in \"user\": name of where root \"posts\" does not \
-             match name of schema root \"post\"."
+            "Error in query `user`: name of where root `posts` does not match \
+             name of schema root `post`."
         );
     }
 
@@ -526,7 +548,7 @@ mod tests {
     fn test_undefined_query_argument() {
         assert_eq!(
             TypeError::undefined_query_argument("foo", "bar").to_string(),
-            "Query error in \"foo\": argument \"$bar\" is undefined."
+            "Error in query `foo`: argument `$bar` is undefined."
         );
     }
 
@@ -534,7 +556,7 @@ mod tests {
     fn test_undefined_query_field() {
         assert_eq!(
             TypeError::undefined_query_field("foo", "bar").to_string(),
-            "Query error in \"foo\": schema field \"bar\" is undefined."
+            "Error in query `foo`: schema field `bar` is undefined."
         );
     }
 
@@ -546,8 +568,8 @@ mod tests {
                 &QueryReturnType::model("bar")
             )
             .to_string(),
-            "Query error in \"foo\": return type refers to undefined model \
-             \"bar\"."
+            "Error in query `foo`: return type refers to undefined model \
+             `bar`."
         );
 
         assert_eq!(
@@ -556,8 +578,8 @@ mod tests {
                 &QueryReturnType::array("bar")
             )
             .to_string(),
-            "Query error in \"foo\": return type refers to undefined model \
-             \"bar\"."
+            "Error in query `foo`: return type refers to undefined model \
+             `bar`."
         );
     }
 
@@ -565,7 +587,7 @@ mod tests {
     fn test_unused_query_argument() {
         assert_eq!(
             TypeError::unused_query_argument("foo", "bar").to_string(),
-            "Query error in \"foo\": argument \"bar\" is unused."
+            "Error in query `foo`: argument `$bar` is unused."
         );
     }
 
@@ -573,7 +595,7 @@ mod tests {
     fn test_duplicate_route() {
         assert_eq!(
             TypeError::duplicate_route("foo").to_string(),
-            "Route error in \"foo\": duplicate route."
+            "Error in route `foo`: duplicate route."
         );
     }
 
@@ -581,7 +603,7 @@ mod tests {
     fn test_undefined_route_component() {
         assert_eq!(
             TypeError::undefined_route_component("foo", "bar").to_string(),
-            "Route error in \"foo\": component \"bar\" is undefined."
+            "Error in route `foo`: component `bar` is undefined."
         );
     }
 }

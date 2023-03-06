@@ -40,14 +40,6 @@ impl ReturnType {
         Self::Array(name.to_owned())
     }
 
-    /// Return the name of the model.
-    #[must_use]
-    pub fn name(&self) -> &str {
-        match self {
-            Self::Array(name) | Self::Model(name) => name,
-        }
-    }
-
     /// Parse a return type from the given input.
     ///
     /// # Arguments

@@ -152,7 +152,7 @@ pub fn pascal(input: &str) -> ParseResult<String> {
                         },
                     )
                 }
-                _ => unreachable!(),
+                _ => e,
             }
         })
 }

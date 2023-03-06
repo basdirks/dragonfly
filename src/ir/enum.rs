@@ -1,4 +1,10 @@
-use crate::ast;
+use {
+    crate::ast::{
+        self,
+        TypeError,
+    },
+    std::collections::HashSet,
+};
 
 /// An enum type.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -19,21 +25,36 @@ impl Enum {
     #[must_use]
     pub fn new(
         name: &str,
-        values: &[&str],
+        values: &[String],
     ) -> Self {
         Self {
             name: name.to_owned(),
-            values: values.iter().map(ToString::to_string).collect(),
+            values: values.to_vec(),
         }
     }
 }
 
-impl From<ast::Enum> for Enum {
-    fn from(ast_enum: ast::Enum) -> Self {
-        Self {
-            name: ast_enum.name,
-            values: ast_enum.variants,
+impl TryFrom<ast::Enum> for Enum {
+    type Error = TypeError;
+
+    fn try_from(ast_enum: ast::Enum) -> Result<Self, Self::Error> {
+        let mut unique_values = HashSet::new();
+        let mut values = Vec::new();
+
+        for value in ast_enum.variants {
+            if unique_values.contains(&value) {
+                return Err(TypeError::duplicate_enum_variant(
+                    &ast_enum.name,
+                    &value,
+                ));
+            }
+
+            let _ = unique_values.insert(value.clone());
+
+            values.push(value);
         }
+
+        Ok(Self::new(&ast_enum.name, &values))
     }
 }
 
@@ -44,7 +65,13 @@ mod tests {
     #[test]
     fn test_new() {
         assert_eq!(
-            Enum::new("Role", &["Admin", "User"]),
+            Enum::new(
+                "Role",
+                &["Admin", "User"]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+            ),
             Enum {
                 name: "Role".to_owned(),
                 values: vec!["Admin".to_owned(), "User".to_owned()],
@@ -53,10 +80,16 @@ mod tests {
     }
 
     #[test]
-    fn test_from_ast_enum() {
+    fn test_try_from_ast_enum() {
         assert_eq!(
-            Enum::from(ast::Enum::new("Role", &["Admin", "User"])),
-            Enum::new("Role", &["Admin", "User"]),
+            Enum::try_from(ast::Enum::new("Role", &["Admin", "User"])),
+            Ok(Enum::new(
+                "Role",
+                &["Admin", "User"]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+            ))
         );
     }
 }

@@ -94,25 +94,22 @@ impl Ir {
 
         while let Some(segment) = path.pop_front() {
             if path.is_empty() {
-                return current_model
-                    .fields
-                    .get(&segment)
-                    .map(|field| field.r#type);
+                return current_model.field(&segment).map(|field| field.r#type);
             }
 
             if let Some(ModelRelation { name, .. }) =
-                current_model.owned_models.get(&segment)
+                current_model.model_relation(&segment)
             {
-                if let Some(model) = self.models.get(name) {
+                if let Some(model) = self.models.get(&name) {
                     current_model = model;
                     continue;
                 }
             }
 
             if let Some(ModelRelation { name, .. }) =
-                current_model.models.get(&segment)
+                current_model.owned_model_relation(&segment)
             {
-                if let Some(model) = self.models.get(name) {
+                if let Some(model) = self.models.get(&name) {
                     current_model = model;
                     continue;
                 }
@@ -141,25 +138,22 @@ impl Ir {
 
         while let Some(segment) = path.pop_front() {
             if path.is_empty() {
-                return current_model
-                    .enums
-                    .get(&segment)
-                    .map(|r| r.name.clone());
+                return current_model.enum_relation(&segment).map(|r| r.name);
             }
 
             if let Some(ModelRelation { name, .. }) =
-                current_model.owned_models.get(&segment)
+                current_model.owned_model_relation(&segment)
             {
-                if let Some(model) = self.models.get(name) {
+                if let Some(model) = self.models.get(&name) {
                     current_model = model;
                     continue;
                 }
             }
 
             if let Some(ModelRelation { name, .. }) =
-                current_model.models.get(&segment)
+                current_model.model_relation(&segment)
             {
-                if let Some(model) = self.models.get(name) {
+                if let Some(model) = self.models.get(&name) {
                     current_model = model;
                     continue;
                 }
@@ -184,12 +178,8 @@ impl Ir {
         &mut self,
         model: &Model,
     ) -> Result<(), TypeError> {
-        if self
-            .models
-            .insert(model.name.clone(), model.clone())
-            .is_some()
-        {
-            return Err(TypeError::duplicate_model(&model.name));
+        if self.models.insert(model.name(), model.clone()).is_some() {
+            return Err(TypeError::duplicate_model(&model.name()));
         }
 
         Ok(())
@@ -328,10 +318,13 @@ impl Ir {
 
                 path.push_back(name.clone());
 
-                if self.field_type(model.name.as_str(), &path).is_some() {
+                if self.field_type(&model.name(), &path).is_some() {
                     Ok(QuerySchemaNode::field(name))
                 } else {
-                    Err(TypeError::undefined_query_field(query_name, name))
+                    Err(TypeError::undefined_query_field(
+                        query_name,
+                        &path.into_iter().collect::<Vec<String>>().join("."),
+                    ))
                 }
             }
             ast::QuerySchemaNode::Relation(ast_name, ast_schema) => {
@@ -342,13 +335,17 @@ impl Ir {
 
                     path.push_back(ast_name.clone());
 
-                    if let Some(model) = self.models.get(&model.name) {
+                    if let Some(model) = self.models.get(&model.name()) {
                         nodes.push(self.query_schema_node(
                             query_name, ast_node, model, &path,
                         )?);
                     } else {
                         return Err(TypeError::undefined_query_field(
-                            query_name, ast_name,
+                            query_name,
+                            &path
+                                .into_iter()
+                                .collect::<Vec<String>>()
+                                .join("."),
                         ));
                     }
                 }
@@ -394,7 +391,7 @@ impl Ir {
     ///
     /// # Errors
     ///
-    /// _
+    /// Returns a `TypeError` if the AST is invalid.
     #[allow(clippy::too_many_lines)]
     pub fn from(value: &ast::Ast) -> Result<Self, TypeError> {
         let ast::Ast {
@@ -420,105 +417,101 @@ impl Ir {
         for model in ast_models {
             let ast::Model { fields, .. } = model;
             let mut model = Model::new(&model.name);
-            let mut field_names = BTreeSet::new();
 
             for field in fields {
-                if !field_names.insert(field.name.clone()) {
-                    return Err(TypeError::duplicate_model_field(
-                        &model.name,
-                        &field.name,
-                    ));
-                }
-
                 let ast::Field { r#type, .. } = field.clone();
 
                 match r#type {
                     ast::Type::Scalar(ast::Scalar::Boolean) => {
-                        model.insert_field(Field::boolean(&field.name));
+                        model.insert_field(Field::boolean(&field.name))
                     }
                     ast::Type::Scalar(ast::Scalar::DateTime) => {
-                        model.insert_field(Field::date_time(&field.name));
+                        model.insert_field(Field::date_time(&field.name))
                     }
                     ast::Type::Scalar(ast::Scalar::Float) => {
-                        model.insert_field(Field::float(&field.name));
+                        model.insert_field(Field::float(&field.name))
                     }
                     ast::Type::Scalar(ast::Scalar::Int) => {
-                        model.insert_field(Field::int(&field.name));
+                        model.insert_field(Field::int(&field.name))
                     }
                     ast::Type::Scalar(ast::Scalar::String) => {
-                        model.insert_field(Field::string(&field.name));
+                        model.insert_field(Field::string(&field.name))
                     }
                     ast::Type::Scalar(ast::Scalar::Reference(name)) => {
                         if enum_names.contains(&name) {
-                            model.insert_enum(&field.name, &name);
+                            model.insert_enum_relation(&field.name, &name)
                         } else if model_names.contains(&name) {
-                            model.insert_model(&field.name, &name);
+                            model.insert_model_relation(&field.name, &name)
                         } else {
-                            return Err(TypeError::unknown_model_field_type(
-                                &model.name,
+                            Err(TypeError::unknown_model_field_type(
+                                &model.name(),
                                 field,
-                            ));
+                            ))
                         }
                     }
                     ast::Type::Scalar(ast::Scalar::Owned(name)) => {
                         if model_names.contains(&name) {
-                            model.insert_owned_model(&field.name, &name);
+                            model
+                                .insert_owned_model_relation(&field.name, &name)
                         } else {
-                            return Err(TypeError::unknown_model_field_type(
-                                &model.name,
+                            Err(TypeError::unknown_model_field_type(
+                                &model.name(),
                                 field,
-                            ));
+                            ))
                         }
                     }
                     ast::Type::Array(ast::Scalar::Boolean) => {
-                        model.insert_field(Field::booleans(&field.name));
+                        model.insert_field(Field::booleans(&field.name))
                     }
                     ast::Type::Array(ast::Scalar::DateTime) => {
-                        model.insert_field(Field::date_times(&field.name));
+                        model.insert_field(Field::date_times(&field.name))
                     }
                     ast::Type::Array(ast::Scalar::Float) => {
-                        model.insert_field(Field::floats(&field.name));
+                        model.insert_field(Field::floats(&field.name))
                     }
                     ast::Type::Array(ast::Scalar::Int) => {
-                        model.insert_field(Field::ints(&field.name));
+                        model.insert_field(Field::ints(&field.name))
                     }
                     ast::Type::Array(ast::Scalar::String) => {
-                        model.insert_field(Field::strings(&field.name));
+                        model.insert_field(Field::strings(&field.name))
                     }
                     ast::Type::Array(ast::Scalar::Reference(name)) => {
                         if enum_names.contains(&name) {
-                            model.insert_enums(&field.name, &name);
+                            model.insert_enums_relation(&field.name, &name)
                         } else if model_names.contains(&name) {
-                            model.insert_models(&field.name, &name);
+                            model.insert_models_relation(&field.name, &name)
                         } else {
-                            return Err(TypeError::unknown_model_field_type(
-                                &model.name,
+                            Err(TypeError::unknown_model_field_type(
+                                &model.name(),
                                 field,
-                            ));
+                            ))
                         }
                     }
                     ast::Type::Array(ast::Scalar::Owned(name)) => {
                         if model_names.contains(&name) {
-                            model.insert_owned_models(&field.name, &name);
+                            model.insert_owned_models_relation(
+                                &field.name,
+                                &name,
+                            )
                         } else {
-                            return Err(TypeError::unknown_model_field_type(
-                                &model.name,
+                            Err(TypeError::unknown_model_field_type(
+                                &model.name(),
                                 field,
-                            ));
+                            ))
                         }
                     }
-                }
+                }?;
             }
 
-            let _ = ir.insert_model(&model);
+            ir.insert_model(&model)?;
         }
 
         for ast_enum in ast_enums {
-            let _ = ir.insert_enum(&ast_enum.clone().into());
+            ir.insert_enum(&ast_enum.clone().try_into()?)?;
         }
 
         for ast_component in ast_components {
-            let _ = ir.insert_component(&ast_component.clone().into());
+            ir.insert_component(&ast_component.clone().into())?;
         }
 
         for ast::Route { path, root, title } in ast_routes {
@@ -562,8 +555,17 @@ impl Ir {
             let mut query =
                 Query::new(ast_name, return_type.clone(), &ast_schema.name);
 
+            let mut unique_argument_names = BTreeSet::new();
+
             // TODO: check uniqueness of argument names
             for ast_argument in ast_arguments {
+                if !unique_argument_names.insert(ast_argument.name.clone()) {
+                    return Err(TypeError::duplicate_query_argument(
+                        ast_name,
+                        &ast_argument.name,
+                    ));
+                }
+
                 if let Some(argument) =
                     QueryArgument::from_ast_type(ast_argument, &enum_names)
                 {
@@ -646,45 +648,19 @@ mod tests {
         let mut address_model = Model::new("Address");
         let mut postbox_model = Model::new("Postbox");
 
-        let _ = user_model
-            .fields
-            .insert("name".to_owned(), Field::string("name"));
-
-        let _ = address_model
-            .fields
-            .insert("street".to_owned(), Field::string("street"));
-
-        let _ = postbox_model
-            .fields
-            .insert("number".to_owned(), Field::int("number"));
-
-        let _ = address_model
-            .owned_models
-            .insert("postbox".to_owned(), ModelRelation::one("Postbox"));
-
-        let _ = user_model
-            .models
-            .insert("address".to_owned(), ModelRelation::one("Address"));
-
-        let _ = ir.models.insert("User".to_owned(), user_model);
-        let _ = ir.models.insert("Address".to_owned(), address_model);
-        let _ = ir.models.insert("Postbox".to_owned(), postbox_model);
+        let _ = user_model.insert_field(Field::string("name"));
+        let _ = address_model.insert_field(Field::string("street"));
+        let _ = postbox_model.insert_field(Field::int("number"));
+        let _ = address_model.insert_owned_model_relation("postbox", "Postbox");
+        let _ = user_model.insert_model_relation("address", "Address");
+        let _ = ir.insert_model(&user_model);
+        let _ = ir.insert_model(&address_model);
+        let _ = ir.insert_model(&postbox_model);
 
         assert_eq!(
             ir.field_type(
                 "User",
                 &once("name").map(ToString::to_string).collect()
-            ),
-            Some(Type::String),
-        );
-
-        assert_eq!(
-            ir.field_type(
-                "User",
-                &["address", "street"]
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect(),
             ),
             Some(Type::String),
         );
@@ -698,6 +674,17 @@ mod tests {
                     .collect(),
             ),
             Some(Type::Int),
+        );
+
+        assert_eq!(
+            ir.field_type(
+                "User",
+                &["address", "street"]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect(),
+            ),
+            Some(Type::String),
         );
 
         assert_eq!(
@@ -717,23 +704,23 @@ mod tests {
         let mut ir = Ir::new();
         let mut user_model = Model::new("User");
         let mut address_model = Model::new("Address");
-        let address_type = Enum::new("AddressType", &["Home", "Work", "Other"]);
 
-        let _ = user_model
-            .fields
-            .insert("name".to_owned(), Field::string("name"));
+        let address_type = Enum::new(
+            "AddressType",
+            &["Home", "Work", "Other"]
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>(),
+        );
 
-        let _ = user_model
-            .models
-            .insert("address".to_owned(), ModelRelation::one("Address"));
+        let _ = user_model.insert_field(Field::string("name"));
+        let _ = user_model.insert_model_relation("address", "Address");
+        let _ = user_model.insert_owned_model_relation("socials", "Socials");
+        let _ = address_model.insert_enum_relation("type", "AddressType");
 
-        let _ = address_model
-            .enums
-            .insert("type".to_owned(), EnumRelation::one("AddressType"));
-
-        let _ = ir.models.insert("User".to_owned(), user_model);
-        let _ = ir.models.insert("Address".to_owned(), address_model);
-        let _ = ir.enums.insert("AddressType".to_owned(), address_type);
+        let _ = ir.insert_model(&user_model);
+        let _ = ir.insert_model(&address_model);
+        let _ = ir.insert_enum(&address_type);
 
         assert_eq!(
             ir.enum_type(
@@ -753,6 +740,85 @@ mod tests {
             ),
             Some("AddressType".to_owned()),
         );
+
+        assert_eq!(
+            ir.enum_type(
+                "User",
+                &["address", "street"]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect()
+            ),
+            None,
+        );
+
+        assert_eq!(
+            ir.enum_type(
+                "User",
+                &["socials", "facebook"]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect()
+            ),
+            None,
+        );
+    }
+
+    #[test]
+    fn test_check_argument_type() {
+        let mut ir = Ir::new();
+        let mut user_model = Model::new("User");
+        let mut address_model = Model::new("Address");
+
+        let address_type = Enum::new(
+            "AddressType",
+            &["Home", "Work", "Other"]
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>(),
+        );
+
+        let _ = user_model.insert_field(Field::string("name"));
+        let _ = user_model.insert_model_relation("address", "Address");
+        let _ = user_model.insert_owned_model_relation("socials", "Socials");
+        let _ = address_model.insert_enum_relation("type", "AddressType");
+
+        let _ = ir.insert_model(&user_model);
+        let _ = ir.insert_model(&address_model);
+        let _ = ir.insert_enum(&address_type);
+
+        assert!(ir.check_argument_type(
+            "User",
+            &once("name").map(ToString::to_string).collect(),
+            &QueryArgumentType::Type(Type::String)
+        ));
+
+        assert!(ir.check_argument_type(
+            "User",
+            &["address", "type"]
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
+            &QueryArgumentType::Enum("AddressType".to_owned())
+        ));
+
+        assert!(!ir.check_argument_type(
+            "User",
+            &["address", "street"]
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
+            &QueryArgumentType::Type(Type::String)
+        ));
+
+        assert!(!ir.check_argument_type(
+            "User",
+            &["socials", "facebook"]
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
+            &QueryArgumentType::Type(Type::String)
+        ));
     }
 
     #[allow(clippy::too_many_lines)]
@@ -770,6 +836,7 @@ model User {
 
 model Profile {
   bio: String
+  createdAt: DateTime
 }
 
 model Address {
@@ -872,66 +939,355 @@ query users($addressType: AddressType): [User] {
                 )]
                 .into(),
                 models: [
-                    (
-                        "User".to_owned(),
-                        Model {
-                            name: "User".to_owned(),
-                            fields: [
-                                ("name".to_owned(), Field::string("name")),
-                                ("age".to_owned(), Field::int("age")),
-                                ("daBoi".to_owned(), Field::boolean("daBoi")),
-                            ]
-                            .into(),
-                            models: [(
-                                "addresses".to_owned(),
-                                ModelRelation::many("Address"),
-                            )]
-                            .into(),
-                            enums: BTreeMap::new(),
-                            owned_models: [(
-                                "profile".to_owned(),
-                                ModelRelation::one("Profile"),
-                            )]
-                            .into()
-                        }
-                    ),
-                    (
-                        "Profile".to_owned(),
-                        Model {
-                            name: "Profile".to_owned(),
-                            fields: [("bio".to_owned(), Field::string("bio"))]
-                                .into(),
-                            models: BTreeMap::new(),
-                            enums: BTreeMap::new(),
-                            owned_models: BTreeMap::new(),
-                        },
-                    ),
-                    (
-                        "Address".to_owned(),
-                        Model {
-                            name: "Address".to_owned(),
-                            fields: [
-                                ("street".to_owned(), Field::string("street")),
-                                ("number".to_owned(), Field::int("number")),
-                            ]
-                            .into(),
-                            models: BTreeMap::new(),
-                            enums: [(
-                                "type".to_owned(),
-                                EnumRelation::one("AddressType"),
-                            )]
-                            .into(),
-                            owned_models: BTreeMap::new(),
-                        },
-                    )
+                    ("User".to_owned(), {
+                        let mut model = Model::new("User");
+
+                        let _ = model.insert_field(Field::string("name"));
+                        let _ = model.insert_field(Field::int("age"));
+                        let _ = model.insert_field(Field::boolean("daBoi"));
+                        let _ = model
+                            .insert_models_relation("addresses", "Address");
+                        let _ = model
+                            .insert_owned_model_relation("profile", "Profile");
+
+                        model
+                    }),
+                    ("Profile".to_owned(), {
+                        let mut model = Model::new("Profile");
+
+                        let _ = model.insert_field(Field::string("bio"));
+                        let _ =
+                            model.insert_field(Field::date_time("createdAt"));
+
+                        model
+                    },),
+                    ("Address".to_owned(), {
+                        let mut model = Model::new("Address");
+
+                        let _ = model.insert_field(Field::string("street"));
+                        let _ = model.insert_field(Field::int("number"));
+                        let _ =
+                            model.insert_enum_relation("type", "AddressType");
+
+                        model
+                    })
                 ]
                 .into(),
                 enums: [(
                     "AddressType".to_owned(),
-                    Enum::new("AddressType", &["Home", "Work", "Other"]),
+                    Enum::new(
+                        "AddressType",
+                        &["Home", "Work", "Other"]
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                    )
                 )]
                 .into(),
             })
+        );
+    }
+
+    #[test]
+    fn test_duplicate_model() {
+        let source = "
+
+model User {
+  name: String
+}
+
+model User {
+  userName: String
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(ir, Err(TypeError::duplicate_model("User")));
+    }
+
+    #[test]
+    fn test_duplicate_enum() {
+        let source = "
+
+enum AddressType {
+  Home
+}
+
+enum AddressType {
+  Work
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(ir, Err(TypeError::duplicate_enum("AddressType")));
+    }
+
+    #[test]
+    fn test_duplicate_field() {
+        let source = "
+
+model User {
+  name: String
+  name: String
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(ir, Err(TypeError::duplicate_model_field("User", "name")));
+    }
+
+    #[test]
+    fn test_duplicate_enum_value() {
+        let source = "
+
+enum AddressType {
+  Home
+  Home
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(
+            ir,
+            Err(TypeError::duplicate_enum_variant("AddressType", "Home"))
+        );
+    }
+
+    #[test]
+    fn test_duplicate_route() {
+        let source = "
+
+component UserList {
+  path: /UserList
+}
+
+route /users {
+  root: UserList
+  title: Users
+}
+
+route /users {
+  root: UserList
+  title: Users
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(ir, Err(TypeError::duplicate_route("/users")));
+    }
+
+    #[test]
+    fn test_duplicate_component() {
+        let source = "
+
+component UserList {
+  path: /UserList
+}
+
+component UserList {
+  path: /UserList
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(ir, Err(TypeError::duplicate_component("UserList")));
+    }
+
+    #[test]
+    fn test_duplicate_query() {
+        let source = "
+
+model User {
+  name: String
+  age: Int
+}
+
+query users: [User] {
+  user {
+    name
+    age
+  }
+}
+
+query users: [User] {
+  user {
+    name
+    age
+  }
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(ir, Err(TypeError::duplicate_query("users")));
+    }
+
+    #[test]
+    fn test_duplicate_query_argument() {
+        let source = "
+
+model User {
+  name: String
+  age: Int
+}
+
+query users($name: String, $name: String): [User] {
+  user {
+    name
+    age
+  }
+  where {
+    user {
+      name {
+        equals: $name
+      }
+    }
+  }
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(
+            ir,
+            Err(TypeError::duplicate_query_argument("users", "name"))
+        );
+    }
+
+    #[test]
+    fn test_undefined_query_field() {
+        let source = "
+
+model User {
+    name: String
+    age: Int
+}
+
+query users: [User] {
+    user {
+        name
+        age
+        address
+    }
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(
+            ir,
+            Err(TypeError::undefined_query_field("users", "address"))
+        );
+    }
+
+    #[test]
+    fn test_undefined_query_field_relation() {
+        let source = "
+
+model User {
+    name: String
+    age: Int
+}
+
+query users: [User] {
+    user {
+        name
+        age
+        address {
+            street
+        }
+    }
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(
+            ir,
+            Err(TypeError::undefined_query_field("users", "address.street"))
+        );
+    }
+
+    #[test]
+    fn test_undefined_query_return_type() {
+        let source = "
+
+query users: [User] {
+    user {
+        name
+        age
+    }
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(
+            ir,
+            Err(TypeError::undefined_query_return_type(
+                "users",
+                &ast::QueryReturnType::array("User")
+            ))
+        );
+    }
+
+    #[test]
+    fn test_undefined_route_component() {
+        let source = "
+
+route /users {
+  root: UserList
+  title: Users
+}
+
+"
+        .trim();
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = Ir::from(&ast);
+
+        assert_eq!(
+            ir,
+            Err(TypeError::undefined_route_component("/users", "UserList"))
         );
     }
 }

@@ -19,6 +19,9 @@ pub enum QueryError {
     /// The name of a query must be unique within the application. This query
     /// has the same name as another query.
     Duplicate,
+    /// The name of a query argument must be unique within the query. This
+    /// query contains an argument with the same name as another argument.
+    DuplicateArgument(String),
     /// A schema should contain at least one field, but the schema of this
     /// query is empty. An empty schema is not allowed because no data would
     /// be returned.
@@ -63,9 +66,12 @@ impl Display for QueryError {
     ) -> fmt::Result {
         match self {
             Self::Duplicate => write!(f, "duplicate query"),
+            Self::DuplicateArgument(name) => {
+                write!(f, "duplicate argument `${name}`")
+            }
             Self::EmptySchema => write!(f, "empty schema"),
             Self::InvalidArgumentType(QueryArgument { name, r#type }) => {
-                write!(f, "argument \"{name}\" has invalid type \"{type}\"")
+                write!(f, "argument `${name}` has invalid type `{type}`")
             }
             Self::InvalidCondition(QueryCondition {
                 argument_name,
@@ -74,8 +80,8 @@ impl Display for QueryError {
             }) => {
                 write!(
                     f,
-                    "operator \"{operator}\" is not compatible with the types \
-                     of field \"{path}\" and argument \"${argument_name}\""
+                    "operator `{operator}` is not compatible with the types \
+                     of field `{path}` and argument `${argument_name}`"
                 )
             }
             Self::InvalidWhereName {
@@ -84,23 +90,23 @@ impl Display for QueryError {
             } => {
                 write!(
                     f,
-                    "name of where root \"{where_name}\" does not match name \
-                     of schema root \"{schema_name}\""
+                    "name of where root `{where_name}` does not match name of \
+                     schema root `{schema_name}`"
                 )
             }
             Self::UndefinedArgument(name) => {
-                write!(f, "argument \"${name}\" is undefined")
+                write!(f, "argument `${name}` is undefined")
             }
             Self::UndefinedField(name) => {
-                write!(f, "schema field \"{name}\" is undefined")
+                write!(f, "schema field `{name}` is undefined")
             }
             Self::UndefinedReturnType(
                 QueryReturnType::Array(name) | QueryReturnType::Model(name),
             ) => {
-                write!(f, "return type refers to undefined model \"{name}\"")
+                write!(f, "return type refers to undefined model `{name}`")
             }
             Self::UnusedArgument(name) => {
-                write!(f, "argument \"{name}\" is unused")
+                write!(f, "argument `${name}` is unused")
             }
         }
     }

@@ -21,7 +21,7 @@ impl Path {
     ///
     /// let path = QueryPath::new(&["foo", "bar"]);
     ///
-    /// assert_eq!(path.to_string(), "foo { bar }");
+    /// assert_eq!(path.to_string(), "foo.bar");
     /// ```
     #[must_use]
     pub fn new(segments: &[&str]) -> Self {
@@ -77,7 +77,7 @@ impl Path {
     ///
     /// path.push("bar".to_owned());
     ///
-    /// assert_eq!(path.to_string(), "foo { bar }");
+    /// assert_eq!(path.to_string(), "foo.bar");
     /// ```
     pub fn push(
         &mut self,
@@ -107,21 +107,14 @@ impl Display for Path {
         &self,
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
-        let Self(fields) = self;
-        let path_length = fields.len().saturating_sub(1);
-
-        for (index, field) in fields.iter().enumerate() {
-            if index > 0 {
-                write!(f, " {{ {field}")?;
-            } else {
-                write!(f, "{field}")?;
-            }
-        }
-
-        for _ in 0..path_length {
-            write!(f, " }}")?;
-        }
-
-        Ok(())
+        write!(
+            f,
+            "{}",
+            self.clone()
+                .0
+                .into_iter()
+                .collect::<Vec<String>>()
+                .join(".")
+        )
     }
 }

@@ -1,45 +1,33 @@
-use self::command::Command;
+use {
+    self::{
+        command::Command,
+        io::{
+            check_file,
+            compile,
+        },
+    },
+    std::io::{
+        Error,
+        Write,
+    },
+};
 
 /// Commands.
 pub mod command;
 /// I/O.
 pub mod io;
 
-/// Print help message for the `check` command.
-#[must_use]
-pub fn help_check_message() -> String {
-    "
+/// The help message for the `check` command.
+pub const HELP_CHECK_MESSAGE: &str = "USAGE: dragonfly check <FILE>";
 
-USAGE:
-    dragonfly check <FILE>
-
-"
-    .trim()
-    .to_owned()
-}
-
-/// Print help message for the `build` command.
-#[must_use]
-pub fn help_build_message() -> String {
-    "
-
-USAGE:
-    dragonfly build [FLAGS] <FILE>
+/// The help message for the `build` command.
+pub const HELP_BUILD_MESSAGE: &str = "USAGE: dragonfly build [FLAGS] <FILE>
 
 FLAGS:
-    -o, --output <output-directory>   The output directory. (default: `./out`)
+    -o, --output <output-directory>   The output directory. Default: `./out`.";
 
-"
-    .trim()
-    .to_owned()
-}
-
-/// Print help message.
-#[must_use]
-pub fn help_message() -> String {
-    "
-
-USAGE:
+/// The general help message.
+pub const HELP_MESSAGE: &str = "USAGE:
     dragonfly [COMMAND] [ARGS]
 
 COMMANDS:
@@ -47,13 +35,7 @@ COMMANDS:
     help <COMMAND>          Print help message for a command.
     version                 Print the version number.
     check <FILE>            Check a source file for errors.
-    build [FLAGS] <FILE>    Generate code from a source file. (see `help \
-     build`).
-
-"
-    .trim()
-    .to_owned()
-}
+    build [FLAGS] <FILE>    Generate code from a source file. See `help build`.";
 
 /// Print version number.
 #[must_use]
@@ -239,6 +221,13 @@ pub fn parse_help<'a>(args: &mut impl Iterator<Item = &'a String>) -> Command {
 ///         output: Some("output".to_owned()),
 ///     }
 /// );
+///
+/// assert_eq!(
+///     parse_args(&["dragonfly".to_owned(), "build".to_owned(),]),
+///     Command::HelpCommand {
+///         command: "build".to_owned(),
+///     }
+/// );
 /// ```
 #[must_use]
 pub fn parse_args(args: &[String]) -> Command {
@@ -292,5 +281,105 @@ pub fn parse_args(args: &[String]) -> Command {
             }
         }
         _ => Command::Help,
+    }
+}
+
+/// Execute a command.
+///
+/// # Arguments
+///
+/// * `command` - The command to execute.
+///
+/// # Errors
+///
+/// If an error occurs during execution, an error is returned.
+pub fn execute(
+    command: Command,
+    f: &mut dyn Write,
+) -> Result<(), Error> {
+    match command {
+        Command::Help => {
+            writeln!(f, "{HELP_MESSAGE}")
+        }
+        Command::HelpCommand { command } => {
+            if command.as_str() == "build" {
+                writeln!(f, "{HELP_BUILD_MESSAGE}")
+            } else if command.as_str() == "check" {
+                writeln!(f, "{HELP_CHECK_MESSAGE}")
+            } else {
+                writeln!(f, "Unknown command `{command}`.")?;
+                writeln!(f, "{HELP_MESSAGE}")
+            }
+        }
+        Command::Version => {
+            writeln!(f, "{}", version())
+        }
+        Command::Build { input, output } => {
+            if let Err(error) = compile(&input, output.as_deref()) {
+                writeln!(f, "An error occurred during compilation. {error}")?;
+            }
+
+            Ok(())
+        }
+        Command::Check { input } => {
+            if let Err(error) = check_file(&input) {
+                writeln!(f, "Error while checking `{input}`.\n{error}")
+            } else {
+                writeln!(f, "No errors found in `{input}`.")
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_execute_help() {
+        let mut buffer = Vec::new();
+
+        execute(Command::Help, &mut buffer).unwrap();
+
+        assert_eq!(
+            String::from_utf8(buffer).unwrap(),
+            format!("{HELP_MESSAGE}\n")
+        );
+    }
+
+    #[test]
+    fn test_execute_help_build() {
+        let mut buffer = Vec::new();
+
+        execute(
+            Command::HelpCommand {
+                command: "build".to_owned(),
+            },
+            &mut buffer,
+        )
+        .unwrap();
+
+        assert_eq!(
+            String::from_utf8(buffer).unwrap(),
+            format!("{HELP_BUILD_MESSAGE}\n")
+        );
+    }
+
+    #[test]
+    fn test_execute_help_check() {
+        let mut buffer = Vec::new();
+
+        execute(
+            Command::HelpCommand {
+                command: "check".to_owned(),
+            },
+            &mut buffer,
+        )
+        .unwrap();
+
+        assert_eq!(
+            String::from_utf8(buffer).unwrap(),
+            format!("{HELP_CHECK_MESSAGE}\n")
+        );
     }
 }

@@ -31,11 +31,11 @@ impl Display for ModelError {
         match self {
             Self::Duplicate => write!(f, "duplicate model"),
             Self::DuplicateField(name) => {
-                write!(f, "duplicate field \"{name}\"")
+                write!(f, "duplicate field `{name}`")
             }
             Self::Empty => write!(f, "empty model"),
             Self::UnknownFieldType(Field { name, r#type }) => {
-                write!(f, "field \"{name}\" has unknown type \"{type}\"")
+                write!(f, "field `{name}` has unknown type `{type}`")
             }
         }
     }

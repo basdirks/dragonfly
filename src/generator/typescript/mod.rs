@@ -1,3 +1,5 @@
+/// Expressions with type arguments.
+pub mod expression_with_type_arguments;
 /// JavaScript import declaration.
 pub mod import;
 /// TypeScript interface declaration.
@@ -10,14 +12,14 @@ pub mod named_specifier;
 pub mod string_enum;
 /// TypeScript types.
 pub mod r#type;
-
+/// Type parameters.
+pub mod type_parameter;
 pub use {
+    expression_with_type_arguments::ExpressionWithTypeArguments,
     import::Import,
     interface::{
-        ExpressionWithTypeArguments,
         Interface,
         Property as InterfaceProperty,
-        TypeParameter,
     },
     literal::Literal,
     named_specifier::NamedSpecifier,
@@ -31,4 +33,5 @@ pub use {
         StringEnum as Enum,
         Variant as EnumVariant,
     },
+    type_parameter::TypeParameter,
 };

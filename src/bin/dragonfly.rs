@@ -26,60 +26,33 @@
     unused_results,
     variant_size_differences
 )]
+
 use {
     dragonfly::{
         self,
         cli::{
-            command::Command,
-            help_build_message,
-            help_check_message,
-            help_message,
-            io::{
-                check_file,
-                compile,
-            },
+            execute,
             parse_args,
-            version,
         },
     },
     std::{
         self,
         env,
+        io::stdout,
     },
 };
 
-/// Parse the arguments, execute the command, and print the result.
-pub fn main() {
+/// Run the CLI.
+///
+/// # Errors
+///
+/// * Returns an error if the command line arguments could not be parsed.
+/// * Returns an error if the command could not be executed.
+/// * Returns an error if the output could not be written.
+pub fn main() -> Result<(), std::io::Error> {
     let args = env::args().collect::<Vec<_>>();
+    let command = parse_args(&args);
+    let mut stdout = stdout().lock();
 
-    match parse_args(&args) {
-        Command::Help => {
-            println!("{}", help_message());
-        }
-        Command::HelpCommand { command } => {
-            if command.as_str() == "build" {
-                println!("{}", help_build_message());
-            } else if command.as_str() == "check" {
-                println!("{}", help_check_message());
-            } else {
-                println!("Unknown command `{command}`.");
-                println!("{}", help_message());
-            }
-        }
-        Command::Version => {
-            println!("{}", version());
-        }
-        Command::Build { input, output } => {
-            if let Err(error) = compile(&input, output.as_deref()) {
-                println!("An error occurred during compilation. {error}");
-            }
-        }
-        Command::Check { input } => {
-            if let Err(error) = check_file(&input) {
-                println!("Error while checking `{input}`.\n{error}");
-            } else {
-                println!("No errors found in `{input}`.");
-            }
-        }
-    }
+    execute(command, &mut stdout)
 }

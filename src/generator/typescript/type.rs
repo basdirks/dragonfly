@@ -1,8 +1,11 @@
 use {
     super::literal::Literal,
-    crate::generator::printer::{
-        comma_separated,
-        separated,
+    crate::{
+        generator::printer::{
+            comma_separated,
+            separated,
+        },
+        ir,
     },
     std::fmt::Display,
 };
@@ -381,7 +384,7 @@ pub enum Type {
         /// The name of the type.
         identifier: String,
         /// The type arguments.
-        type_references: Vec<Type>,
+        type_arguments: Vec<Type>,
     },
     /// A union of types.
     Union(Vec<Type>),
@@ -453,6 +456,78 @@ impl Type {
             return_type: Box::new(return_type),
         }
     }
+
+    /// Create a type reference.
+    ///
+    /// # Arguments
+    ///
+    /// * `identifier` - The name of the type.
+    /// * `type_arguments` - The type arguments.
+    #[must_use]
+    pub fn type_reference(
+        identifier: &str,
+        type_arguments: &[Self],
+    ) -> Self {
+        Self::TypeReference {
+            identifier: identifier.to_owned(),
+            type_arguments: type_arguments.to_owned(),
+        }
+    }
+}
+
+impl From<ir::Type> for Type {
+    fn from(r#type: ir::Type) -> Self {
+        Self::TypeReference {
+            identifier: match r#type {
+                ir::Type::Boolean => "boolean".to_owned(),
+                ir::Type::DateTime => "Date".to_owned(),
+                ir::Type::Float | ir::Type::Int => "number".to_owned(),
+                ir::Type::String => "string".to_owned(),
+            },
+            type_arguments: vec![],
+        }
+    }
+}
+
+impl From<ir::EnumRelation> for Type {
+    fn from(ir::EnumRelation { name, cardinality }: ir::EnumRelation) -> Self {
+        match cardinality {
+            ir::Cardinality::One => Self::type_reference(&name, &[]),
+            ir::Cardinality::Many => {
+                Self::array(Self::type_reference(&name, &[]))
+            }
+        }
+    }
+}
+
+impl From<ir::ModelRelation> for Type {
+    fn from(
+        ir::ModelRelation {
+            name, cardinality, ..
+        }: ir::ModelRelation
+    ) -> Self {
+        match cardinality {
+            ir::Cardinality::One => Self::type_reference(&name, &[]),
+            ir::Cardinality::Many => {
+                Self::array(Self::type_reference(&name, &[]))
+            }
+        }
+    }
+}
+
+impl From<ir::Field> for Type {
+    fn from(
+        ir::Field {
+            r#type,
+            cardinality,
+            ..
+        }: ir::Field
+    ) -> Self {
+        match cardinality {
+            ir::Cardinality::One => r#type.into(),
+            ir::Cardinality::Many => Self::array(r#type.into()),
+        }
+    }
 }
 
 impl Display for Type {
@@ -471,7 +546,7 @@ impl Display for Type {
             Self::Keyword(keyword) => write!(f, "{keyword}"),
             Self::TypeReference {
                 identifier,
-                type_references,
+                type_arguments: type_references,
             } => {
                 write!(
                     f,
@@ -515,9 +590,9 @@ mod tests {
         assert_eq!(
             Type::Array(Box::new(Type::TypeReference {
                 identifier: "Partial".to_owned(),
-                type_references: vec![Type::TypeReference {
+                type_arguments: vec![Type::TypeReference {
                     identifier: "Image".to_owned(),
-                    type_references: vec![],
+                    type_arguments: vec![],
                 }]
             }))
             .to_string(),
@@ -544,9 +619,9 @@ mod tests {
                         name: "name".to_owned(),
                         r#type: Type::TypeReference {
                             identifier: "Partial".to_owned(),
-                            type_references: vec![Type::TypeReference {
+                            type_arguments: vec![Type::TypeReference {
                                 identifier: "Image".to_owned(),
-                                type_references: vec![],
+                                type_arguments: vec![],
                             }]
                         }
                     },
@@ -554,7 +629,7 @@ mod tests {
                         name: "countryName".to_owned(),
                         r#type: Type::TypeReference {
                             identifier: "CountryName".to_owned(),
-                            type_references: vec![],
+                            type_arguments: vec![],
                         }
                     }
                 ]
@@ -562,7 +637,7 @@ mod tests {
                 .collect(),
                 return_type: Box::new(Type::TypeReference {
                     identifier: "String".to_owned(),
-                    type_references: vec![]
+                    type_arguments: vec![]
                 }),
             }
             .to_string(),
@@ -619,16 +694,16 @@ mod tests {
             Type::Intersection(vec![
                 Type::TypeReference {
                     identifier: "Partial".to_owned(),
-                    type_references: vec![Type::TypeReference {
+                    type_arguments: vec![Type::TypeReference {
                         identifier: "T".to_owned(),
-                        type_references: vec![],
+                        type_arguments: vec![],
                     }]
                 },
                 Type::TypeReference {
                     identifier: "Partial".to_owned(),
-                    type_references: vec![Type::TypeReference {
+                    type_arguments: vec![Type::TypeReference {
                         identifier: "U".to_owned(),
-                        type_references: vec![],
+                        type_arguments: vec![],
                     }]
                 },
             ])
@@ -670,7 +745,7 @@ mod tests {
                                     name: "name".to_owned(),
                                     r#type: Type::TypeReference {
                                         identifier: "CountryName".to_owned(),
-                                        type_references: vec![],
+                                        type_arguments: vec![],
                                     }
                                 },
                                 ObjectLiteralProperty {
@@ -688,7 +763,7 @@ mod tests {
                         name: "tags".to_owned(),
                         r#type: Type::Array(Box::new(Type::TypeReference {
                             identifier: "Tag".to_owned(),
-                            type_references: vec![],
+                            type_arguments: vec![],
                         }))
                     }
                 ]
@@ -717,7 +792,7 @@ mod tests {
             Type::Tuple(vec![
                 Type::TypeReference {
                     identifier: "CountryName".to_owned(),
-                    type_references: vec![],
+                    type_arguments: vec![],
                 },
                 Type::Keyword(Keyword::String),
                 Type::Tuple(vec![
@@ -735,9 +810,9 @@ mod tests {
         assert_eq!(
             Type::TypeReference {
                 identifier: "Partial".to_owned(),
-                type_references: vec![Type::TypeReference {
+                type_arguments: vec![Type::TypeReference {
                     identifier: "Image".to_owned(),
-                    type_references: vec![],
+                    type_arguments: vec![],
                 }]
             }
             .to_string(),
@@ -756,7 +831,7 @@ mod tests {
             Type::Union(vec![
                 Type::TypeReference {
                     identifier: "CountryName".to_owned(),
-                    type_references: vec![],
+                    type_arguments: vec![],
                 },
                 Type::Keyword(Keyword::String),
                 Type::Tuple(vec![

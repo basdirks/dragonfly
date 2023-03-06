@@ -533,6 +533,11 @@ pub fn count<T>(
 /// );
 ///
 /// assert_eq!(
+///     many_once("abc", &[char!('c'), char!('b'), char!('a')]),
+///     Ok((vec!['c', 'b', 'a'], String::new()))
+/// );
+///
+/// assert_eq!(
 ///     many_once("abc", &[char!('a'), char!('b'), char!('d')]),
 ///     Err(ParseError::UnexpectedChar {
 ///         message: "Expected character 'd', found 'c'.".to_owned(),

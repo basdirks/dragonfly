@@ -116,7 +116,13 @@ enum Test {
     #[test]
     fn test_from() {
         assert_eq!(
-            Enum::from(&IrEnum::new("Test", &["A", "B"])),
+            Enum::from(&IrEnum::new(
+                "Test",
+                &["A", "B"]
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+            )),
             Enum::new("Test", &["A", "B"])
         );
     }

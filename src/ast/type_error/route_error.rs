@@ -23,7 +23,7 @@ impl Display for RouteError {
         match self {
             Self::Duplicate => write!(f, "duplicate route"),
             Self::UndefinedComponent(name) => {
-                write!(f, "component \"{name}\" is undefined")
+                write!(f, "component `{name}` is undefined")
             }
         }
     }

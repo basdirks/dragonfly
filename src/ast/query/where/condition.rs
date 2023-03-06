@@ -45,7 +45,7 @@ mod tests {
                 argument_name: "baz".to_owned(),
             }
             .to_string(),
-            "foo { bar } contains $baz"
+            "foo.bar contains $baz"
         );
 
         assert_eq!(
@@ -55,7 +55,7 @@ mod tests {
                 argument_name: "baz".to_owned(),
             }
             .to_string(),
-            "foo { bar { baz } } equals $baz"
+            "foo.bar.baz equals $baz"
         );
     }
 }

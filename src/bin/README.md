@@ -4,27 +4,27 @@ Run `dragonfly help` to see a list of commands and options.
 
 ```console
 $ dragonfly help
-Usage: dragonfly [command] [command-args]
+USAGE: dragonfly [COMMAND] [ARGS]
 
-Commands:
-  help                          Print this help message.
-  help <command>                Print help message for a command.
-  version                       Print the version number.
-  check <source-file>           Check a source file for errors.
-  build <flags> <source-file>   Generate code from a source file. (see `help build`).
+COMMANDS:
+    help                    Print this help message.
+    help <COMMAND>          Print help message for a command.
+    version                 Print the version number.
+    check <FILE>            Check a source file for errors.
+    build [FLAGS] <FILE>    Generate code from a source file. See `help build`.
 ```
 
 Run `dragonfly help <command>` to see help for a specific command.
 
 ```console
 $ dragonfly help check
-Usage: dragonfly check <source-file>
+USAGE: dragonfly check <FILE>
 
 $ dragonfly help build
 Usage: dragonfly build [flags] <source-file>
 
 Flags:
-  -o, --output <output-directory>   The output directory. (default: `./out`)
+  -o, --output <output-directory>   The output directory. Default: `./out`.
 ```
 
 Run `dragonfly version` to see the version number.

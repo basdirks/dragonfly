@@ -25,7 +25,7 @@ impl Display for EnumError {
         match self {
             Self::Duplicate => write!(f, "duplicate enum"),
             Self::DuplicateVariant(name) => {
-                write!(f, "duplicate variant \"{name}\"")
+                write!(f, "duplicate variant `{name}`")
             }
             Self::Empty => write!(f, "empty enum"),
         }

@@ -145,7 +145,13 @@ enum Color {
 
     #[test]
     fn test_from() {
-        let ir_enum = IrEnum::new("Color", &["Red", "Green", "Blue"]);
+        let ir_enum = IrEnum::new(
+            "Color",
+            &["Red", "Green", "Blue"]
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>(),
+        );
         let r#enum = Enum::from(&ir_enum);
 
         assert_eq!(
@@ -194,7 +200,14 @@ enum Color {
 
     #[test]
     fn test_enum_from_ir_enum() {
-        let ir_enum = IrEnum::new("Color", &["Red", "Green", "Blue"]);
+        let ir_enum = IrEnum::new(
+            "Color",
+            &["Red", "Green", "Blue"]
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>(),
+        );
+
         let r#enum = Enum::from(&ir_enum);
 
         assert_eq!(
