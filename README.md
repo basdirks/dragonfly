@@ -4,20 +4,8 @@ Dragonfly is a toy DSL that explores ways to describe the structure of full-stac
 
 For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 
-See also:
-
-- [CLI](src/bin/README.md)
-- [AST](src/ast/README.md)
-- [Generators](src/generator/README.md)
-
-![CLI (2)](https://user-images.githubusercontent.com/578048/223210376-f54e5722-5147-434e-91d2-e3a3ba6457f7.png)
-
 # Roadmap
 
-- [ ] Check argument docs.
-- [ ] Check test-only functions.
-- [ ] Review public API. (Any functions that should be private?)
-- [ ] Replace all unwraps with ?
 - [ ] Give types their own file.
 - [ ] Implement FromInterator and Extend for collections.
 - [ ] Generate foreign keys in PSL.
