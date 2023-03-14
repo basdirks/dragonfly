@@ -7,11 +7,10 @@ For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 See also:
 
 - [CLI](src/bin/README.md)
-- [IR](src/ir/README.md)
 - [AST](src/ast/README.md)
 - [Generators](src/generator/README.md)
 
-![CLI](https://user-images.githubusercontent.com/578048/221036308-091fd3c5-684b-4445-bce2-81f8da1d5b6a.png)
+![CLI (2)](https://user-images.githubusercontent.com/578048/223210376-f54e5722-5147-434e-91d2-e3a3ba6457f7.png)
 
 # Roadmap
 
