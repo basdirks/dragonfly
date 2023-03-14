@@ -1,1 +1,5 @@
 large-error-threshold = 1024
+max-fn-params-bools = 1
+cognitive-complexity-threshold = 10
+too-many-arguments-threshold = 5
+upper-case-acronyms-aggressive = true

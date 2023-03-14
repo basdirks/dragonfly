@@ -1,12 +1,3 @@
-route / {
-  root: Home
-  title: Home
-}
-
-component Home {
-  path: Home
-}
-
 model User {
   birthday: DateTime
   name: String
@@ -24,6 +15,11 @@ model Country {
   drivingSide: DrivingSide
   flag: String
   name: CountryName
+  provinces: [Province]
+}
+
+model Province {
+  name: String
 }
 
 query users: [User] {

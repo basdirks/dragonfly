@@ -1,0 +1,16 @@
+[package]
+authors = ["Bas Dirks"]
+name = "prisma"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ir = { path = "../ir" }
+printer = { path = "../printer" }
+ord-str-map = { path = "../ord-str-map" }
+token-set = { path = "../token-set" }
+
+[dev-dependencies]
+ast = { path = "../ast" }
+
+[lib]

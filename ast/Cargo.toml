@@ -1,0 +1,13 @@
+[package]
+authors = ["Bas Dirks"]
+name = "ast"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+parser = { path = "../parser" }
+token-set = { path = "../token-set" }
+ord-str-map = { path = "../ord-str-map" }
+
+[lib]
+path = "src/lib.rs"

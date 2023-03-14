@@ -1,0 +1,12 @@
+[package]
+authors = ["Bas Dirks"]
+name = "ir"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ast = { path = "../ast" }
+ord-str-map = { path = "../ord-str-map" }
+token-set = { path = "../token-set" }
+
+[lib]

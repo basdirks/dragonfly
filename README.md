@@ -15,25 +15,21 @@ See also:
 
 # Roadmap
 
+- [ ] Check argument docs.
+- [ ] Check test-only functions.
+- [ ] Review public API. (Any functions that should be private?)
+- [ ] Replace all unwraps with ?
+- [ ] Give types their own file.
+- [ ] Implement FromInterator and Extend for collections.
 - [ ] Generate foreign keys in PSL.
 - [ ] Generate GraphQL types.
 - [ ] Generate full GraphQL queries.
   - [ ] CLI: generate GQL.
 - [ ] Support aggregate queries :)
-- [ ] Base `Print` on a `Write`-like trait.
 
 # Example application
 
 ```dfly
-route / {
-  root: Home
-  title: Home
-}
-
-component Home {
-  path: Home
-}
-
 model Image {
   title: String
   country: Country

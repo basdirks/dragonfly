@@ -1,0 +1,18 @@
+[package]
+authors = ["Bas Dirks"]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ast = { path = "../ast" }
+ir = { path = "../ir" }
+printer = { path = "../printer" }
+prisma = { path = "../prisma" }
+typescript = { path = "../typescript" }
+
+[[bin]]
+name = "cli"
+path = "src/bin/dragonfly.rs"
+
+[lib]
