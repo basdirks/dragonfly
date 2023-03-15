@@ -158,16 +158,10 @@ impl<'a> Schema<'a> {
                             }],
                         };
 
-                        if target
-                            .fields
-                            .insert(reverse_relation_name.clone(), field)
-                            .is_some()
-                        {
-                            return Err(SchemaError::duplicate_model_field(
-                                target.name.clone(),
-                                reverse_relation_name,
-                            ));
-                        }
+                        target.insert_field(
+                            reverse_relation_name.clone(),
+                            field,
+                        )?;
 
                         let field = model::Field {
                             name: format!("{}Id", source.name).into(),
@@ -176,18 +170,13 @@ impl<'a> Schema<'a> {
                             attributes: vec![attribute::Field::unique()],
                         };
 
-                        if target
-                            .fields
-                            .insert(format!("{reverse_relation_name}Id"), field)
-                            .is_some()
-                        {
-                            return Err(SchemaError::duplicate_model_field(
-                                target.name.clone(),
-                                reverse_relation_name,
-                            ));
-                        }
+                        target.insert_field(
+                            format!("{reverse_relation_name}Id"),
+                            field,
+                        )?;
                     }
-                    ir::model::model_relation::Type::ManyToMany => {
+                    ir::model::model_relation::Type::ManyToMany
+                    | ir::model::model_relation::Type::ManyToOne => {
                         let field = model::Field {
                             name: reverse_relation_name.clone().into(),
                             r#type: model::field::Type::Name(source.name()),
@@ -208,15 +197,10 @@ impl<'a> Schema<'a> {
                             }],
                         };
 
-                        if target
-                            .fields
-                            .insert(reverse_relation_name.clone(), field)
-                            .is_some()
-                        {
-                            return Err(SchemaError::duplicate_model(
-                                relation_name,
-                            ));
-                        }
+                        target.insert_field(
+                            reverse_relation_name.clone(),
+                            field,
+                        )?;
                     }
                     ir::model::model_relation::Type::OneToOne => {
                         let field = model::Field {
@@ -261,16 +245,10 @@ impl<'a> Schema<'a> {
                             }],
                         };
 
-                        if target
-                            .fields
-                            .insert(reverse_relation_name.clone(), field)
-                            .is_some()
-                        {
-                            return Err(SchemaError::duplicate_model_field(
-                                target.name.clone(),
-                                reverse_relation_name,
-                            ));
-                        }
+                        target.insert_field(
+                            reverse_relation_name.clone(),
+                            field,
+                        )?;
 
                         let field = model::Field {
                             name: format!("{}Id", source.name).into(),
@@ -279,18 +257,11 @@ impl<'a> Schema<'a> {
                             attributes: vec![attribute::Field::unique()],
                         };
 
-                        if target
-                            .fields
-                            .insert(format!("{reverse_relation_name}Id"), field)
-                            .is_some()
-                        {
-                            return Err(SchemaError::duplicate_model_field(
-                                target.name.clone(),
-                                reverse_relation_name,
-                            ));
-                        }
+                        target.insert_field(
+                            format!("{reverse_relation_name}Id"),
+                            field,
+                        )?;
                     }
-                    ir::model::model_relation::Type::ManyToOne => {}
                 }
             } else {
                 return Err(SchemaError::unknown_model(source.name()));
@@ -434,7 +405,8 @@ mod tests {
 
         assert_eq!(
             String::from_utf8(f).unwrap(),
-            "enum Role {
+            "\
+enum Role {
   USER
   ADMIN
 }
@@ -444,9 +416,7 @@ model User {
   createdAt DateTime @default(now())
   role      Role
   roles     Role[]
-}
-
-"
+}\n\n"
         );
     }
 
@@ -527,7 +497,8 @@ model User {
 
         assert_eq!(
             String::from_utf8(f).unwrap(),
-            "generator client {
+            "\
+generator client {
   provider        = \"prisma-client-js\"
   output          = \"path/to/client\"
   binaryTargets   = [\"linux-musl-openssl-3.0.x\"]
@@ -560,27 +531,20 @@ enum Status {
 model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-}
-
-"
+}\n\n"
         );
     }
 
     #[test]
     fn test_one_to_one() {
-        let source = "
-
+        let source = "\
 model A {
-    b: @B
+  b: @B
 }
 
 model B {
-    foo: String
-    bar: Int
-}
-
-"
-        .trim();
+  foo: String
+}";
 
         let (ast, _) = ast::Ast::parse(source).unwrap();
         let ir = ir::Ir::try_from(ast).unwrap();
@@ -591,7 +555,8 @@ model B {
 
         assert_eq!(
             String::from_utf8(f).unwrap(),
-            "model A {
+            "\
+model A {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   b         B?       @relation(name: \"bOnA\")
@@ -601,30 +566,22 @@ model B {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   foo       String
-  bar       Int
   a         A        @relation(name: \"bOnA\", fields: [aId], references: [id])
   aId       Int      @unique
-}
-
-"
+}\n\n"
         );
     }
 
     #[test]
     fn test_one_to_many() {
-        let source = "
-
+        let source = "\
 model A {
-    b: [@B]
+  b: [@B]
 }
 
 model B {
-    foo: String
-    bar: Int
-}
-
-"
-        .trim();
+  foo: String
+}";
 
         let (ast, _) = ast::Ast::parse(source).unwrap();
         let ir = ir::Ir::try_from(ast).unwrap();
@@ -635,7 +592,8 @@ model B {
 
         assert_eq!(
             String::from_utf8(f).unwrap(),
-            "model A {
+            "\
+model A {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   b         B[]      @relation(name: \"bOnA\")
@@ -645,30 +603,59 @@ model B {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   foo       String
-  bar       Int
   a         A?       @relation(name: \"bOnA\", fields: [aId], references: [id])
   aId       Int?     @unique
+}\n\n"
+        );
+    }
+
+    #[test]
+    fn test_many_to_one() {
+        let source = "\
+model A {
+  b: B
 }
 
-"
+model B {
+  foo: String
+}\n\n";
+
+        let (ast, _) = ast::Ast::parse(source).unwrap();
+        let ir = ir::Ir::try_from(ast).unwrap();
+        let schema = Schema::try_from(ir).unwrap();
+        let mut f = Vec::new();
+
+        schema.print(0, &mut f).unwrap();
+
+        assert_eq!(
+            String::from_utf8(f).unwrap(),
+            "\
+model A {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  b         B?       @relation(name: \"bOnA\", fields: [bId], references: [id])
+  bId       Int?     @unique
+}
+
+model B {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  foo       String
+  a         A[]      @relation(name: \"bOnA\")
+}\n\n"
         );
     }
 
     #[test]
     fn test_many_to_many() {
-        let source = "
-
+        let source = "\
 model A {
-    b: [B]
+  b: [B]
 }
 
 model B {
-    foo: String
-    bar: Int
-}
-
-"
-        .trim();
+  foo: String
+}\n\n";
 
         let (ast, _) = ast::Ast::parse(source).unwrap();
         let ir = ir::Ir::try_from(ast).unwrap();
@@ -679,7 +666,8 @@ model B {
 
         assert_eq!(
             String::from_utf8(f).unwrap(),
-            "model A {
+            "\
+model A {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   b         B[]      @relation(name: \"bOnA\")
@@ -689,11 +677,8 @@ model B {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   foo       String
-  bar       Int
   a         A[]      @relation(name: \"bOnA\")
-}
-
-"
+}\n\n"
         );
     }
 }

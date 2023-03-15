@@ -37,6 +37,37 @@ pub struct Model<'a> {
     pub attributes: Vec<attribute::Block<'a>>,
 }
 
+impl<'a> Model<'a> {
+    /// Insert a field into the model.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the field.
+    /// * `field` - The field to insert.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `SchemaError::DuplicateModelField` if the field already
+    /// exists.
+    pub fn insert_field<S>(
+        &mut self,
+        name: S,
+        field: Field<'a>,
+    ) -> Result<(), SchemaError<'a>>
+    where
+        S: Into<Cow<'a, str>> + Clone,
+    {
+        if self.fields.insert(name.clone().into(), field).is_some() {
+            return Err(SchemaError::duplicate_model_field(
+                self.name.clone(),
+                name.into(),
+            ));
+        }
+
+        Ok(())
+    }
+}
+
 impl Print for Model<'_> {
     const TAB_SIZE: usize = crate::TAB_SIZE;
 
@@ -145,18 +176,13 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
                 attributes: Vec::new(),
             };
 
-            if model.fields.insert(relation_name.clone(), field).is_some() {
-                return Err(SchemaError::duplicate_model_field(
-                    model.name,
-                    relation_name,
-                ));
-            }
+            model.insert_field(relation_name, field)?;
         }
 
         for (relation_name, relation) in ir_model.relations {
-            let field = match relation.r#type {
+            match relation.r#type {
                 ir::model::model_relation::Type::OneToOne => {
-                    Field {
+                    let field = Field {
                         name: relation_name.clone().into(),
                         r#type: field::Type::Name(relation.model_name.clone()),
                         modifier: field::Modifier::Optional,
@@ -173,11 +199,13 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
                                 }],
                             }
                         }],
-                    }
+                    };
+
+                    model.insert_field(relation_name, field)?;
                 }
                 ir::model::model_relation::Type::OneToMany
                 | ir::model::model_relation::Type::ManyToMany => {
-                    Field {
+                    let field = Field {
                         name: relation_name.clone().into(),
                         r#type: field::Type::Name(relation.model_name.clone()),
                         modifier: field::Modifier::List,
@@ -194,10 +222,12 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
                                 }],
                             }
                         }],
-                    }
+                    };
+
+                    model.insert_field(relation_name, field)?;
                 }
                 ir::model::model_relation::Type::ManyToOne => {
-                    Field {
+                    let field = Field {
                         name: relation_name.clone().into(),
                         r#type: field::Type::Name(relation.model_name.clone()),
                         modifier: field::Modifier::Optional,
@@ -231,16 +261,22 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
                                 ],
                             }
                         }],
-                    }
+                    };
+
+                    model.insert_field(relation_name.clone(), field)?;
+
+                    let field_name = format!("{relation_name}Id");
+
+                    let field = Field {
+                        name: field_name.clone().into(),
+                        r#type: field::Type::Name("Int".into()),
+                        modifier: field::Modifier::Optional,
+                        attributes: vec![attribute::Field::unique()],
+                    };
+
+                    model.insert_field(field_name, field)?;
                 }
             };
-
-            if model.fields.insert(relation_name.clone(), field).is_some() {
-                return Err(SchemaError::duplicate_model_field(
-                    model.name,
-                    relation_name,
-                ));
-            }
         }
 
         Ok(model)
@@ -288,6 +324,7 @@ mod tests {
   posts     Post[]   @relation(name: \"postsOnUser\")
   country   Country? @relation(name: \"countryOnUser\", fields: [countryId], \
              references: [id])
+  countryId Int?     @unique
   friends   User[]   @relation(name: \"friendsOnUser\")
 }
 "

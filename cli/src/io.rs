@@ -24,8 +24,8 @@ const TYPESCRIPT_OUTPUT_DIR: &str = "typescript";
 /// The file extension for generated Prisma files.
 const PRISMA_FILE_EXTENSION: &str = "prisma";
 
-/// The file extension for generated TypeScript files.
-const TYPESCRIPT_FILE_EXTENSION: &str = "ts";
+/// The file extension for TypeScript declaration files.
+const TYPESCRIPT_DECLARATION_FILE_EXTENSION: &str = "d.ts";
 
 /// Check a source file for errors.
 ///
@@ -127,7 +127,8 @@ where
     }
 
     let mut file_path = path.join("index");
-    let _: bool = file_path.set_extension(TYPESCRIPT_FILE_EXTENSION);
+    let _: bool =
+        file_path.set_extension(TYPESCRIPT_DECLARATION_FILE_EXTENSION);
 
     let mut file = File::create(file_path).map_err(|error| {
         format!("Could not create typescript index file. {error}")
