@@ -5,9 +5,9 @@ Dragonfly is a toy DSL that explores ways to describe the structure of full-stac
 For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 
 # Roadmap
-
-- [ ] Give types their own file.
+- [ ] Output .d.ts instead of .ts.
 - [ ] Implement FromInterator and Extend for collections.
+- [ ] Fix ManyToOne foreign key field.
 - [ ] Generate foreign keys in PSL.
 - [ ] Generate GraphQL types.
 - [ ] Generate full GraphQL queries.

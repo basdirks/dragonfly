@@ -1,3 +1,11 @@
+//! # Ordered String Map
+//!
+//! An insertion-ordered map with unique `String` keys.
+//!
+//! This crate provides the [`OrdStrMap`] type, which is a map with unique
+//! `String` keys that preserves insertion order. Implemented as a combination
+//! of [`BTreeMap`] and [`VecDeque`], it does double bookkeeping to ensure that
+//! keys are unique and that insertion order is preserved.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![deny(
     clippy::all,
@@ -27,30 +35,6 @@
     variant_size_differences
 )]
 
-//! An insertion-ordered map with unique `String` keys.
-//!
-//! # Examples
-//!
-//! ```rust
-//! use ord_str_map::OrdStrMap;
-//!
-//! let mut map = OrdStrMap::new();
-//!
-//! assert!(map.insert("foo", 1).is_none());
-//! assert!(map.insert("bar", 2).is_none());
-//! assert!(map.insert("baz", 3).is_none());
-//!
-//! assert_eq!(map.get("foo"), Some(&1));
-//! assert_eq!(map.get("qux"), None);
-//!
-//! let mut iter = map.iter();
-//!
-//! assert_eq!(iter.next(), Some(("foo", 1)));
-//! assert_eq!(iter.next(), Some(("bar", 2)));
-//! assert_eq!(iter.next(), Some(("baz", 3)));
-//! assert_eq!(iter.next(), None);
-//! ```
-
 use std::{
     collections::{
         vec_deque,
@@ -60,7 +44,29 @@ use std::{
     fmt::Debug,
 };
 
-/// An insertion-ordered map.
+/// An insertion-ordered map with unique `String` keys.
+///
+/// # Examples
+///
+/// ```rust
+/// use ord_str_map::OrdStrMap;
+///
+/// let mut map = OrdStrMap::new();
+///
+/// assert!(map.insert("foo", 1).is_none());
+/// assert!(map.insert("bar", 2).is_none());
+/// assert!(map.insert("baz", 3).is_none());
+///
+/// assert_eq!(map.get("foo"), Some(&1));
+/// assert_eq!(map.get("qux"), None);
+///
+/// let mut iter = map.iter();
+///
+/// assert_eq!(iter.next(), Some(("foo", 1)));
+/// assert_eq!(iter.next(), Some(("bar", 2)));
+/// assert_eq!(iter.next(), Some(("baz", 3)));
+/// assert_eq!(iter.next(), None);
+/// ```
 #[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OrdStrMap<V> {
     /// The underlying map.

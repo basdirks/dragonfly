@@ -329,7 +329,9 @@ impl<'a> Ir<'a> {
             ast::QuerySchemaNode::Field { name } => {
                 path.push_back(name.clone());
 
-                if self.field_type(model.name(), path.clone()).is_some() {
+                if self.field_type(model.name(), path.clone()).is_some()
+                    || self.enum_type(model.name(), path.clone()).is_some()
+                {
                     Ok(QuerySchemaNode::Field { name })
                 } else {
                     Err(TypeError::undefined_query_field(
@@ -891,51 +893,85 @@ mod tests {
 
     #[allow(clippy::too_many_lines)]
     #[test]
-    fn test_from_ast_full() -> Result<(), TypeError<'static>> {
+    fn test_try_from_ast_full() -> Result<(), TypeError<'static>> {
         let source = "
 
-model User {
-  name: String
-  age: Int
-  daBoi: Boolean
-  addresses: [Address]
-  profile: @Profile
+model Alpha {
+    myBoolean: Boolean
+    myDateTime: DateTime
+    myFloat: Float
+    myInt: Int
+    myString: String
+    myBooleans: [Boolean]
+    myDateTimes: [DateTime]
+    myFloats: [Float]
+    myInts: [Int]
+    myStrings: [String]
+    myZeta: Zeta
+    myZetas: [Zeta]
+    myBeta: @Beta
+    myGammas: [@Gamma]
+    myDelta: Delta
+    myEpsilons: [Epsilon]
 }
 
-model Profile {
-  bio: String
-  createdAt: DateTime
+model Beta {
+    foo: String
+    myGamma: Gamma
 }
 
-model Address {
-  street: String
-  number: Int
-  type: AddressType
+model Gamma {
+    foo: String
 }
 
-enum AddressType {
-  Home
-  Work
-  Other
+model Delta {
+    foo: String
 }
 
-query users($addressType: AddressType): [User] {
-  user {
-    name
-    age
-    daBoi
-    addresses {
-      street
-      number
+model Epsilon {
+    foo: String
+}
+
+enum Zeta {
+    Theta
+    Iota
+}
+
+query myQuery($booleanArgument: Boolean): [Alpha] {
+  alpha {
+    myBoolean
+    myDateTime
+    myFloat
+    myInt
+    myString
+    myBooleans
+    myDateTimes
+    myFloats
+    myInts
+    myStrings
+    myZeta
+    myZetas
+    myBeta {
+      foo
+      myGamma {
+        foo
+      }
+    }
+    myGammas {
+      foo
+    }
+    myDelta {
+      foo
+    }
+    myEpsilons {
+      foo
     }
   }
   where {
-    user {
-      addresses {
-        type {
-          equals: $addressType
+    alpha {
+        myBoolean {
+            equals: $booleanArgument
         }
-      }
     }
   }
 }
@@ -950,128 +986,231 @@ query users($addressType: AddressType): [User] {
             ir,
             Ir {
                 queries: OrdStrMap::from_iter([(
-                    "users",
+                    "myQuery",
                     Query {
-                        name: "users".into(),
+                        name: "myQuery".into(),
                         arguments: OrdStrMap::from_iter([(
-                            "addressType",
+                            "booleanArgument",
                             QueryArgument {
-                                name: "addressType".into(),
-                                r#type: QueryArgumentType::Enum(
-                                    "AddressType".into()
-                                ),
+                                name: "booleanArgument".into(),
+                                r#type: QueryArgumentType::Type(Type::Boolean),
                                 cardinality: Cardinality::One,
                             }
                         )]),
                         r#type: QueryReturnType {
-                            model_name: "User".into(),
+                            model_name: "Alpha".into(),
                             cardinality: Cardinality::Many,
                         },
                         schema: QuerySchema {
-                            alias: "user".into(),
+                            alias: "alpha".into(),
                             nodes: vec![
                                 QuerySchemaNode::Field {
-                                    name: "name".into()
+                                    name: "myBoolean".into()
                                 },
-                                QuerySchemaNode::Field { name: "age".into() },
                                 QuerySchemaNode::Field {
-                                    name: "daBoi".into()
+                                    name: "myDateTime".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myFloat".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myInt".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myString".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myBooleans".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myDateTimes".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myFloats".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myInts".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myStrings".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myZeta".into()
+                                },
+                                QuerySchemaNode::Field {
+                                    name: "myZetas".into()
                                 },
                                 QuerySchemaNode::Relation {
-                                    name: "addresses".into(),
+                                    name: "myBeta".into(),
                                     nodes: vec![
                                         QuerySchemaNode::Field {
-                                            name: "street".into()
+                                            name: "foo".into()
                                         },
-                                        QuerySchemaNode::Field {
-                                            name: "number".into()
+                                        QuerySchemaNode::Relation {
+                                            name: "myGamma".into(),
+                                            nodes: vec![
+                                                QuerySchemaNode::Field {
+                                                    name: "foo".into()
+                                                }
+                                            ]
                                         },
                                     ],
+                                },
+                                QuerySchemaNode::Relation {
+                                    name: "myGammas".into(),
+                                    nodes: vec![QuerySchemaNode::Field {
+                                        name: "foo".into()
+                                    }],
+                                },
+                                QuerySchemaNode::Relation {
+                                    name: "myDelta".into(),
+                                    nodes: vec![QuerySchemaNode::Field {
+                                        name: "foo".into()
+                                    }],
+                                },
+                                QuerySchemaNode::Relation {
+                                    name: "myEpsilons".into(),
+                                    nodes: vec![QuerySchemaNode::Field {
+                                        name: "foo".into()
+                                    }],
                                 },
                             ]
                         },
                         r#where: Some(QueryWhere {
-                            alias: "user".into(),
+                            alias: "alpha".into(),
                             conditions: vec![QueryCondition {
-                                lhs: ["addresses", "type"]
-                                    .into_iter()
-                                    .map(Into::into)
-                                    .collect(),
+                                lhs: once("myBoolean".into()).collect(),
                                 operator: QueryOperator::Equals,
-                                rhs: "addressType".into(),
+                                rhs: "booleanArgument".into(),
                             }]
                         }),
                     }
                 )]),
                 models: OrdStrMap::from_iter([
-                    ("User", {
-                        let mut model = Model::new("User");
+                    ("Alpha", {
+                        let mut model = Model::new("Alpha");
 
                         model.insert_field(Field {
-                            name: "name".into(),
-                            r#type: Type::String,
-                            cardinality: Cardinality::One,
-                        })?;
-
-                        model.insert_field(Field {
-                            name: "age".into(),
-                            r#type: Type::Int,
-                            cardinality: Cardinality::One,
-                        })?;
-
-                        model.insert_field(Field {
-                            name: "daBoi".into(),
+                            name: "myBoolean".into(),
                             r#type: Type::Boolean,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model.insert_many_to_many("addresses", "Address")?;
-                        model.insert_one_to_one("profile", "Profile")?;
-
-                        model
-                    }),
-                    ("Profile", {
-                        let mut model = Model::new("Profile");
-
                         model.insert_field(Field {
-                            name: "bio".into(),
-                            r#type: Type::String,
-                            cardinality: Cardinality::One,
-                        })?;
-
-                        model.insert_field(Field {
-                            name: "createdAt".into(),
+                            name: "myDateTime".into(),
                             r#type: Type::DateTime,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model
-                    }),
-                    ("Address", {
-                        let mut model = Model::new("Address");
+                        model.insert_field(Field {
+                            name: "myFloat".into(),
+                            r#type: Type::Float,
+                            cardinality: Cardinality::One,
+                        })?;
 
                         model.insert_field(Field {
-                            name: "street".into(),
+                            name: "myInt".into(),
+                            r#type: Type::Int,
+                            cardinality: Cardinality::One,
+                        })?;
+
+                        model.insert_field(Field {
+                            name: "myString".into(),
                             r#type: Type::String,
                             cardinality: Cardinality::One,
                         })?;
 
                         model.insert_field(Field {
-                            name: "number".into(),
+                            name: "myBooleans".into(),
+                            r#type: Type::Boolean,
+                            cardinality: Cardinality::Many,
+                        })?;
+
+                        model.insert_field(Field {
+                            name: "myDateTimes".into(),
+                            r#type: Type::DateTime,
+                            cardinality: Cardinality::Many,
+                        })?;
+
+                        model.insert_field(Field {
+                            name: "myFloats".into(),
+                            r#type: Type::Float,
+                            cardinality: Cardinality::Many,
+                        })?;
+
+                        model.insert_field(Field {
+                            name: "myInts".into(),
                             r#type: Type::Int,
+                            cardinality: Cardinality::Many,
+                        })?;
+
+                        model.insert_field(Field {
+                            name: "myStrings".into(),
+                            r#type: Type::String,
+                            cardinality: Cardinality::Many,
+                        })?;
+
+                        model.insert_enum_relation("myZeta", "Zeta")?;
+                        model.insert_enums_relation("myZetas", "Zeta")?;
+                        model.insert_one_to_one("myBeta", "Beta")?;
+                        model.insert_one_to_many("myGammas", "Gamma")?;
+                        model.insert_many_to_one("myDelta", "Delta")?;
+                        model.insert_many_to_many("myEpsilons", "Epsilon")?;
+
+                        model
+                    }),
+                    ("Beta", {
+                        let mut model = Model::new("Beta");
+
+                        model.insert_field(Field {
+                            name: "foo".into(),
+                            r#type: Type::String,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model.insert_enum_relation("type", "AddressType")?;
+                        model.insert_many_to_one("myGamma", "Gamma")?;
 
                         model
-                    })
+                    }),
+                    ("Gamma", {
+                        let mut model = Model::new("Gamma");
+
+                        model.insert_field(Field {
+                            name: "foo".into(),
+                            r#type: Type::String,
+                            cardinality: Cardinality::One,
+                        })?;
+
+                        model
+                    }),
+                    ("Delta", {
+                        let mut model = Model::new("Delta");
+
+                        model.insert_field(Field {
+                            name: "foo".into(),
+                            r#type: Type::String,
+                            cardinality: Cardinality::One,
+                        })?;
+
+                        model
+                    }),
+                    ("Epsilon", {
+                        let mut model = Model::new("Epsilon");
+
+                        model.insert_field(Field {
+                            name: "foo".into(),
+                            r#type: Type::String,
+                            cardinality: Cardinality::One,
+                        })?;
+
+                        model
+                    }),
                 ]),
                 enums: OrdStrMap::from_iter([(
-                    "AddressType",
+                    "Zeta",
                     Enum {
-                        name: "AddressType".into(),
-                        values: TokenSet::from_iter(["Home", "Work", "Other"])
+                        name: "Zeta".into(),
+                        values: TokenSet::from_iter(["Theta", "Iota"])
                     }
                 )])
             }
@@ -1142,16 +1281,16 @@ query users($addressType: AddressType): [User] {
         let source = "
 
 model User {
-    name: String
-    age: Int
+  name: String
+  age: Int
 }
 
 query users: [User] {
-    user {
-        name
-        age
-        address
-    }
+  user {
+    name
+    age
+    address
+  }
 }
 
 "
@@ -1171,18 +1310,18 @@ query users: [User] {
         let source = "
 
 model User {
-    name: String
-    age: Int
+  name: String
+  age: Int
 }
 
 query users: [User] {
-    user {
-        name
-        age
-        address {
-            street
-        }
+  user {
+    name
+    age
+    address {
+      street
     }
+  }
 }
 
 "
@@ -1202,10 +1341,10 @@ query users: [User] {
         let source = "
 
 query users: [User] {
-    user {
-        name
-        age
-    }
+  user {
+    name
+    age
+  }
 }
 
 "
@@ -1218,5 +1357,28 @@ query users: [User] {
             ir,
             Err(TypeError::undefined_query_return_type("users", "User"))
         );
+    }
+
+    #[test]
+    fn test_enum_type_none() {
+        let mut ir = Ir::default();
+
+        let _: Option<Model<'static>> =
+            ir.models.insert("Foo", Model::new("Foo"));
+
+        assert_eq!(
+            ir.enum_type("Foo", VecDeque::from_iter(["bar".into()])),
+            None
+        );
+    }
+
+    #[test]
+    fn test_enum_type_empty() {
+        let mut ir = Ir::default();
+
+        let _: Option<Model<'static>> =
+            ir.models.insert("Foo", Model::new("Foo"));
+
+        assert_eq!(ir.enum_type("Foo", VecDeque::from_iter([])), None);
     }
 }

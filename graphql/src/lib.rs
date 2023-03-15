@@ -60,7 +60,7 @@ pub const TAB_SIZE: usize = 2;
 pub use {
     argument::Argument,
     const_argument::ConstArgument,
-    const_directive::Directive as ConstDirective,
+    const_directive::ConstDirective,
     directive::Directive,
     field::Field,
     fragment_spread::FragmentSpread,

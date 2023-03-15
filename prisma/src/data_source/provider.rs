@@ -25,7 +25,6 @@ pub enum Provider<'a> {
         /// The schema name.
         schema: Cow<'a, str>,
         /// Which PostgreSQL extensions to enable.
-        /// TODO: find out how this is supposed to fit in the AST.
         extensions: Vec<Cow<'a, str>>,
     },
     /// A CockroachDB database.

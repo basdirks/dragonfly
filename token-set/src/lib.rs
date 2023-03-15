@@ -1,3 +1,6 @@
+//! # Token Set
+//!
+//! A set of `String` values that preserves insertion order.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![feature(const_btree_len)]
 #![deny(
@@ -28,9 +31,7 @@
     variant_size_differences
 )]
 
-//! An insertion-ordered set.
-//!
-//! A set ordered by insertion order. Elements must be unique.
+//! An insertion-ordered set of `String`s.
 //!
 //! # Examples
 //!
@@ -62,7 +63,28 @@ use std::{
     fmt::Debug,
 };
 
-/// An insertion-ordered set of `String`s.
+/// An insertion-ordered set of `String` values.
+///
+/// # Examples
+///
+/// ```rust
+/// use token_set::TokenSet;
+///
+/// let mut set = TokenSet::new();
+///
+/// assert!(set.insert("foo"));
+/// assert!(set.insert("bar"));
+/// assert!(set.insert("baz"));
+///
+/// let mut iter = set.iter();
+///
+/// assert_eq!(iter.next(), Some("foo"));
+/// assert_eq!(iter.next(), Some("bar"));
+/// assert_eq!(iter.next(), Some("baz"));
+/// assert_eq!(iter.next(), None);
+///
+/// assert!(!set.insert("foo"));
+/// ```
 #[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TokenSet {
     /// The underlying set.
@@ -106,7 +128,58 @@ impl TokenSet {
         }
     }
 
+    /// Check whether the set contains a token.
+    ///
+    /// # Arguments
+    ///
+    /// * `token` - The token to check for.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the set contains the token, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use token_set::TokenSet;
+    ///
+    /// let mut set = TokenSet::new();
+    ///
+    /// assert!(set.insert("foo"));
+    /// assert!(set.insert("bar"));
+    /// assert!(set.insert("baz"));
+    ///
+    /// assert!(set.contains("foo"));
+    /// assert!(set.contains("bar"));
+    /// assert!(set.contains("baz"));
+    /// assert!(!set.contains("qux"));
+    /// ```
+    #[must_use]
+    pub fn contains<S>(
+        &self,
+        token: S,
+    ) -> bool
+    where
+        S: AsRef<str>,
+    {
+        self.set.contains(token.as_ref())
+    }
+
     /// An iterator visiting all elements in insertion order.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use token_set::TokenSet;
+    ///
+    /// let set = TokenSet::from_iter(["foo", "bar", "baz"]);
+    /// let mut iter = set.iter();
+    ///
+    /// assert_eq!(iter.next(), Some("foo"));
+    /// assert_eq!(iter.next(), Some("bar"));
+    /// assert_eq!(iter.next(), Some("baz"));
+    /// assert_eq!(iter.next(), None);
+    /// ```
     #[must_use]
     pub fn iter(&self) -> Iter<'_> {
         Iter {
@@ -115,6 +188,24 @@ impl TokenSet {
     }
 
     /// Check whether the set is empty.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the set is empty, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use token_set::TokenSet;
+    ///
+    /// let mut set = TokenSet::new();
+    ///
+    /// assert!(set.is_empty());
+    ///
+    /// set.insert("foo");
+    ///
+    /// assert!(!set.is_empty());
+    /// ```
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.set.is_empty()
@@ -150,6 +241,9 @@ where
 }
 
 /// An iterator over the elements of a `TokenSet`.
+///
+/// This `struct` is created by the [`iter`] method on [`TokenSet`]. See its
+/// documentation for more.
 #[derive(Debug, Clone)]
 pub struct Iter<'a> {
     /// The underlying iterator.

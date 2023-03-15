@@ -9,14 +9,14 @@ use {
 
 /// A constant directive.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Directive<'a> {
+pub struct ConstDirective<'a> {
     /// The name of the directive.
     pub name: Cow<'a, str>,
     /// The arguments of the directive.
     pub arguments: Vec<ConstArgument<'a>>,
 }
 
-impl PrintInline for Directive<'_> {
+impl PrintInline for ConstDirective<'_> {
     fn print(
         &self,
         f: &mut dyn io::Write,
@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn test_print_no_arguments() {
-        let directive = Directive {
+        let directive = ConstDirective {
             name: "foo".into(),
             arguments: Vec::new(),
         };
@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn test_print_one_argument() {
-        let directive = Directive {
+        let directive = ConstDirective {
             name: "foo".into(),
             arguments: vec![ConstArgument {
                 name: "bar".into(),
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn test_print_multiple_arguments() {
-        let directive = Directive {
+        let directive = ConstDirective {
             name: "foo".into(),
             arguments: vec![
                 ConstArgument {

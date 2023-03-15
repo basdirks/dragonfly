@@ -10,8 +10,6 @@ use {
 
 /// A TypeScript enum variant, usually called `member` in TypeScript ASTs. A
 /// variant's value may differ from its name.
-///
-/// TODO: replace with `OrdStrMap<String>`
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Variant<'a> {
     /// The name of the variant. Must be unique within the enum. Usually
