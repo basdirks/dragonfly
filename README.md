@@ -9,8 +9,8 @@ For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 ### Dragonfly
 
 * **ast** — The initial Abstract Syntax Tree that Dragonfly is parsed into.
-* **ir** — An intermediate representation that is more suitable for code generation.
-* **cli** — A command-line interface to generate files from the DSL.
+* **ir** — An Intermediate Representation that is more suitable for code generation.
+* **cli** — A command-line interface to generate code from Dragonfly files.
 
 ### Data structures
 
