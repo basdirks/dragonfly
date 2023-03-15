@@ -28,20 +28,7 @@ For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 * **parser** — Parsing combinators used to parse the DSL.
 * **print** — A trait for printing ASTs.
 
-# Roadmap
-
-- [ ] Automate test coverage collection.
-- [ ] Show test coverage in README.
-- [ ] Output .d.ts instead of .ts.
-- [ ] Implement FromInterator and Extend for collections.
-- [ ] Fix ManyToOne foreign key field.
-- [ ] Generate foreign keys in PSL.
-- [ ] Generate GraphQL types.
-- [ ] Generate full GraphQL queries.
-  - [ ] CLI: generate GQL.
-- [ ] Support aggregate queries :)
-
-# Example application
+## Example application
 
 ```dfly
 model Image {
@@ -112,3 +99,16 @@ enum Category {
   UtilityPole
 }
 ```
+
+## Roadmap
+
+- [ ] Automate test coverage collection.
+- [ ] Show test coverage in README.
+- [ ] Output .d.ts instead of .ts.
+- [ ] Implement FromInterator and Extend for collections.
+- [ ] Fix ManyToOne foreign key field.
+- [ ] Generate foreign keys in PSL.
+- [ ] Generate GraphQL types.
+- [ ] Generate full GraphQL queries.
+  - [ ] CLI: generate GQL.
+- [ ] Support aggregate queries :)
