@@ -1,5 +1,5 @@
 use {
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

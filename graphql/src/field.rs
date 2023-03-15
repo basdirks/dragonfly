@@ -4,7 +4,7 @@ use {
         Directive,
         Selection,
     },
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

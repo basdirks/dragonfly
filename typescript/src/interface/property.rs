@@ -1,6 +1,6 @@
 use {
     crate::r#type::Type,
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

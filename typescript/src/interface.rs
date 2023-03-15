@@ -6,7 +6,7 @@ use {
     },
     crate::Type,
     ir,
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

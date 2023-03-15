@@ -6,7 +6,7 @@ pub use {
 };
 use {
     ir,
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

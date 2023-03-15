@@ -1,6 +1,6 @@
 use {
     super::Directive,
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

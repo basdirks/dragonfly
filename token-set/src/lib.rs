@@ -273,6 +273,22 @@ mod tests {
     }
 
     #[test]
+    fn test_contains() {
+        let mut set = TokenSet::new();
+
+        assert!(!set.contains("foo"));
+        assert!(!set.contains("bar"));
+        assert!(!set.contains("baz"));
+
+        assert!(set.insert("foo"));
+        assert!(set.insert("bar"));
+
+        assert!(set.contains("foo"));
+        assert!(set.contains("bar"));
+        assert!(!set.contains("baz"));
+    }
+
+    #[test]
     fn test_iter() {
         let set = TokenSet::from(["foo", "bar", "baz"]);
         let mut iter = set.iter();

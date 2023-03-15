@@ -1,6 +1,6 @@
 use {
     ir::Enum as IrEnum,
-    printer::Print,
+    print::Print,
     std::{
         borrow::Cow,
         io,

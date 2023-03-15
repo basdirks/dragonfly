@@ -1,7 +1,7 @@
 use {
     ast::Ast,
     ir::Ir,
-    printer::Print,
+    print::Print,
     prisma,
     std::{
         fs::{

@@ -7,7 +7,7 @@ use {
         Selection,
         Type,
     },
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

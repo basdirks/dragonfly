@@ -1,6 +1,6 @@
 use {
     super::Value,
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

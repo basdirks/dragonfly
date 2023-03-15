@@ -1,6 +1,6 @@
 use {
     crate::value::Function,
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

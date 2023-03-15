@@ -1,6 +1,6 @@
 use {
     super::NamedSpecifier,
-    printer::{
+    print::{
         Print,
         PrintInline,
     },
@@ -36,119 +36,6 @@ pub enum Import<'a> {
     },
 }
 
-impl<'a> Import<'a> {
-    /// Create a new named import.
-    ///
-    /// # Arguments
-    ///
-    /// * `module` - The module to import from.
-    /// * `specifiers` - The import specifiers.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use typescript::Import;
-    ///
-    /// let import = Import::named("foo", []);
-    ///
-    /// assert_eq!(
-    ///     import,
-    ///     Import::Named {
-    ///         module: "foo".into(),
-    ///         specifiers: Vec::new(),
-    ///     }
-    /// );
-    /// ```
-    #[must_use]
-    pub fn named<S, T>(
-        module: S,
-        specifiers: T,
-    ) -> Self
-    where
-        S: Into<Cow<'a, str>>,
-        T: Into<Vec<NamedSpecifier<'a>>>,
-    {
-        Self::Named {
-            module: module.into(),
-            specifiers: specifiers.into(),
-        }
-    }
-
-    /// Create a new star import.
-    ///
-    /// # Arguments
-    ///
-    /// * `module` - The module to import from.
-    /// * `alias` - The local name of the import.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use typescript::Import;
-    ///
-    /// let import = Import::star("foo", "bar");
-    ///
-    /// assert_eq!(
-    ///     import,
-    ///     Import::Star {
-    ///         module: "foo".into(),
-    ///         alias: "bar".into(),
-    ///     }
-    /// );
-    /// ```
-    #[must_use]
-    pub fn star<S, T>(
-        module: S,
-        alias: T,
-    ) -> Self
-    where
-        S: Into<Cow<'a, str>>,
-        T: Into<Cow<'a, str>>,
-    {
-        Self::Star {
-            module: module.into(),
-            alias: alias.into(),
-        }
-    }
-
-    /// Create a new default import.
-    ///
-    /// # Arguments
-    ///
-    /// * `module` - The module to import from.
-    /// * `alias` - The local name of the import.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use typescript::Import;
-    ///
-    /// let import = Import::default("foo", "bar");
-    ///
-    /// assert_eq!(
-    ///     import,
-    ///     Import::Default {
-    ///         module: "foo".into(),
-    ///         alias: "bar".into(),
-    ///     }
-    /// );
-    /// ```
-    #[must_use]
-    pub fn default<S, T>(
-        module: S,
-        alias: T,
-    ) -> Self
-    where
-        S: Into<Cow<'a, str>>,
-        T: Into<Cow<'a, str>>,
-    {
-        Self::Default {
-            module: module.into(),
-            alias: alias.into(),
-        }
-    }
-}
-
 impl Print for Import<'_> {
     const TAB_SIZE: usize = crate::TAB_SIZE;
 
@@ -181,9 +68,9 @@ mod tests {
 
     #[test]
     fn test_print_named() {
-        let import = Import::named(
-            "foo",
-            [
+        let import = Import::Named {
+            module: "foo".into(),
+            specifiers: vec![
                 NamedSpecifier::AliasedName {
                     alias: "foo".into(),
                     identifier: "bar".into(),
@@ -192,7 +79,7 @@ mod tests {
                     identifier: "baz".into(),
                 },
             ],
-        );
+        };
 
         let mut f = Vec::new();
 
@@ -206,7 +93,11 @@ mod tests {
 
     #[test]
     fn test_print_star() {
-        let import = Import::star("foo", "bar");
+        let import = Import::Star {
+            module: "foo".into(),
+            alias: "bar".into(),
+        };
+
         let mut f = Vec::new();
 
         import.print(0, &mut f).unwrap();
@@ -219,7 +110,11 @@ mod tests {
 
     #[test]
     fn test_print_default() {
-        let import = Import::default("foo", "bar");
+        let import = Import::Default {
+            module: "foo".into(),
+            alias: "bar".into(),
+        };
+
         let mut f = Vec::new();
 
         import.print(0, &mut f).unwrap();

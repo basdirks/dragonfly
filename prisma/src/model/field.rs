@@ -5,7 +5,7 @@ use {
         self,
         Cardinality,
     },
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

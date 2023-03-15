@@ -4,7 +4,32 @@ Dragonfly is a toy DSL that explores ways to describe the structure of full-stac
 
 For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 
+## Dragonfly
+
+* **ast** — The initial Abstract Syntax Tree that Dragonfly is parsed into.
+* **ir** — The intermediate representation, more suitable for code generation.
+* **cli** — A command-line interface to generate files from the DSL.
+
+## Data structures
+
+* **token-set** — An insertion-ordered set of values of type String.
+* **ord-str-map** — An insertion-ordered map with keys of type String.
+
+## Generators
+
+* **prisma** — Generates and prints a Prisma schema.
+* **graphql** — Generates and prints a GraphQL schema.
+* **typescript** — Generates and prints TypeScript types.
+
+## Utilities
+
+* **parser** — Parsing combinators used to parse the DSL.
+* **print** — A trait for printing ASTs.
+
 # Roadmap
+
+- [ ] Automate test coverage collection.
+- [ ] Show test coverage in README.
 - [ ] Output .d.ts instead of .ts.
 - [ ] Implement FromInterator and Extend for collections.
 - [ ] Fix ManyToOne foreign key field.

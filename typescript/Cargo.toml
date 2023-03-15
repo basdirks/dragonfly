@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 ir = { path = "../ir" }
-printer = { path = "../printer" }
+print = { path = "../print" }
 token-set = { path = "../token-set" }
 ord-str-map = { path = "../ord-str-map" }
 

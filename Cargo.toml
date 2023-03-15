@@ -7,7 +7,7 @@ members = [
     "ord-str-map",
     "token-set",
     "parser",
-    "printer",
+    "print",
     "prisma",
     "typescript",
 ]

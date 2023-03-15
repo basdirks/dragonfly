@@ -4,7 +4,7 @@ use {
         ConstDirective,
         Type,
     },
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

@@ -1,7 +1,7 @@
 use {
     super::attribute::Block,
     ir,
-    printer::Print,
+    print::Print,
     std::{
         borrow::Cow,
         io,

@@ -12,7 +12,7 @@ use {
         Cardinality,
     },
     ord_str_map::OrdStrMap,
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

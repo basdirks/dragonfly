@@ -1,6 +1,6 @@
 use {
     super::ConstArgument,
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

@@ -1,7 +1,7 @@
 use {
     ir::Enum as IrEnum,
     ord_str_map::OrdStrMap,
-    printer::Print,
+    print::Print,
     std::{
         borrow::Cow,
         io,

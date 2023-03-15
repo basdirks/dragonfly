@@ -1,6 +1,6 @@
 use {
     super::const_object_field::ConstObjectField,
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

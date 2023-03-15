@@ -4,7 +4,7 @@ pub use self::{
     r#const::Const,
 };
 use {
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

@@ -1,6 +1,6 @@
 use {
     super::r#type::Type,
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

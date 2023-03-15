@@ -4,7 +4,7 @@ use {
         Function,
         Value,
     },
-    printer::{
+    print::{
         Print,
         PrintInline,
     },
@@ -68,7 +68,7 @@ impl<'a> Field<'a> {
     /// # Examples
     /// ```rust
     /// use {
-    ///     printer::PrintInline,
+    ///     print::PrintInline,
     ///     prisma::attribute::Field,
     /// };
     ///
@@ -94,7 +94,7 @@ impl<'a> Field<'a> {
     ///
     /// ```rust
     /// use {
-    ///     printer::PrintInline,
+    ///     print::PrintInline,
     ///     prisma::attribute::Field,
     /// };
     ///
@@ -120,7 +120,7 @@ impl<'a> Field<'a> {
     ///
     /// ```rust
     /// use {
-    ///     printer::PrintInline,
+    ///     print::PrintInline,
     ///     prisma::attribute::Field,
     /// };
     ///
@@ -152,7 +152,7 @@ impl<'a> Field<'a> {
     ///
     /// ```rust
     /// use {
-    ///     printer::PrintInline,
+    ///     print::PrintInline,
     ///     prisma::attribute::Field,
     /// };
     ///

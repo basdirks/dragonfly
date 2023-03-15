@@ -5,7 +5,7 @@ pub use {
     provider::Provider,
 };
 use {
-    printer::{
+    print::{
         Print,
         PrintInline,
     },

@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 ast = { path = "../ast" }
 ir = { path = "../ir" }
-printer = { path = "../printer" }
+print = { path = "../print" }
 prisma = { path = "../prisma" }
 typescript = { path = "../typescript" }
 

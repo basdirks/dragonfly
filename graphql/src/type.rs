@@ -1,5 +1,5 @@
 use {
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         borrow::Cow,
         io,

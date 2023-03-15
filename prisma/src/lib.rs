@@ -33,7 +33,7 @@ use {
     self::schema_error::SchemaError,
     model::field::Modifier,
     ord_str_map::OrdStrMap,
-    printer::Print,
+    print::Print,
     std::io,
 };
 pub use {

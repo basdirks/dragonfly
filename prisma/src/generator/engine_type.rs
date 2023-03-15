@@ -1,5 +1,5 @@
 use {
-    printer::PrintInline,
+    print::PrintInline,
     std::{
         fmt::Display,
         io,

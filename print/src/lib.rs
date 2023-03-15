@@ -33,7 +33,7 @@
 //!
 //! ```rust
 //! use {
-//!     printer::Print,
+//!     print::Print,
 //!     std::io,
 //! };
 //!
@@ -97,7 +97,7 @@ pub trait PrintInline {
     ///
     /// ```rust
     /// use {
-    ///     printer::PrintInline,
+    ///     print::PrintInline,
     ///     std::io,
     /// };
     ///
@@ -151,7 +151,7 @@ pub trait PrintInline {
     ///
     /// ```rust
     /// use {
-    ///     printer::PrintInline,
+    ///     print::PrintInline,
     ///     std::io,
     /// };
     ///
@@ -256,7 +256,7 @@ pub trait Print {
     ///
     /// ```rust
     /// use {
-    ///     printer::Print,
+    ///     print::Print,
     ///     std::io,
     /// };
     ///

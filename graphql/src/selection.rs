@@ -4,7 +4,7 @@ use {
         FragmentSpread,
         InlineFragment,
     },
-    printer::Print,
+    print::Print,
     std::io,
 };
 
@@ -43,7 +43,7 @@ impl<'a> Selection<'a> {
     ///         Selection,
     ///         Value,
     ///     },
-    ///     printer::Print,
+    ///     print::Print,
     /// };
     ///
     /// let selections = vec![Selection::Field(Field {
@@ -130,7 +130,7 @@ mod tests {
             Argument,
             Value,
         },
-        printer::Print,
+        print::Print,
     };
 
     #[test]
