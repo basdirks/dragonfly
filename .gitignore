@@ -2,3 +2,4 @@
 /Cargo.lock
 /out
 **/*.profraw
+tarpaulin-report.html
