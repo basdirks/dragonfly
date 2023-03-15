@@ -100,13 +100,11 @@ enum Category {
 }
 ```
 
-## Roadmap
+## TODO short-term
 
 - [ ] Automate test coverage collection.
 - [ ] Show test coverage in README.
-- [ ] Output .d.ts instead of .ts.
 - [ ] Implement FromInterator and Extend for collections.
-- [ ] Fix ManyToOne foreign key field.
 - [ ] Generate foreign keys in PSL.
 - [ ] Generate GraphQL types.
 - [ ] Generate full GraphQL queries.
