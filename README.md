@@ -9,24 +9,24 @@ For a production-ready solution, check out [Wasp](https://wasp-lang.dev/).
 ### Dragonfly
 
 * **ast** — The initial Abstract Syntax Tree that Dragonfly is parsed into.
-* **ir** — The intermediate representation, more suitable for code generation.
+* **ir** — An intermediate representation that is more suitable for code generation.
 * **cli** — A command-line interface to generate files from the DSL.
 
 ### Data structures
 
-* **token-set** — An insertion-ordered set of values of type String.
+* **token-set** — An insertion-ordered set of String values.
 * **ord-str-map** — An insertion-ordered map with keys of type String.
 
 ### Generators
 
-* **prisma** — Generates and prints a Prisma schema.
-* **graphql** — Generates and prints a GraphQL schema.
-* **typescript** — Generates and prints TypeScript types.
+* **prisma** — Generate and print a Prisma schema.
+* **graphql** — Generate and print a GraphQL schema.
+* **typescript** — Generate and print TypeScript types.
 
 ### Utilities
 
-* **parser** — Parsing combinators used to parse the DSL.
-* **print** — A trait for printing ASTs.
+* **parser** — Combinators for parsing the DSL.
+* **print** — A trait for printing types.
 
 ## Example application
 
