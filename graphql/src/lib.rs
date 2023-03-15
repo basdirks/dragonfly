@@ -1,3 +1,6 @@
+//! GraphQL schema generation.
+//!
+//! Types and functions for creating and printing GraphQL schemas.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![deny(
     clippy::all,
@@ -26,8 +29,6 @@
     unused_results,
     variant_size_differences
 )]
-
-//! GraphQL schema generation.
 
 /// Arguments.
 pub mod argument;
@@ -67,7 +68,7 @@ pub use {
     inline_fragment::InlineFragment,
     query::{
         Query,
-        Variable as QueryVariable,
+        Variable,
     },
     r#enum::Enum,
     r#type::Type,

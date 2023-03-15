@@ -6,7 +6,7 @@ pub use {
     r#where::Where,
     return_type::ReturnType,
     schema::{
-        Node as SchemaNode,
+        Node,
         Schema,
     },
 };

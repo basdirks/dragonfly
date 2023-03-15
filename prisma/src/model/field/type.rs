@@ -9,14 +9,14 @@ use {
 
 /// A field type.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum FieldType<'a> {
+pub enum Type<'a> {
     /// A name.
     Name(Cow<'a, str>),
     /// A function.
     Function(Function<'a>),
 }
 
-impl PrintInline for FieldType<'_> {
+impl PrintInline for Type<'_> {
     fn print(
         &self,
         f: &mut dyn io::Write,
@@ -37,7 +37,7 @@ mod tests {
 
     #[test]
     fn test_name() {
-        let field_type = FieldType::Name("foo".into());
+        let field_type = Type::Name("foo".into());
         let mut f = Vec::new();
 
         field_type.print(&mut f).unwrap();
@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn test_function() {
-        let field_type = FieldType::Function(Function {
+        let field_type = Type::Function(Function {
             name: "foo".into(),
             parameters: vec![
                 Value::String("bar".into()),

@@ -69,9 +69,11 @@ impl From<ir::Type> for Type<'_> {
     }
 }
 
-impl<'a> From<ir::EnumRelation<'a>> for Type<'a> {
+impl<'a> From<ir::model::EnumRelation<'a>> for Type<'a> {
     fn from(
-        ir::EnumRelation { name, cardinality }: ir::EnumRelation<'a>
+        ir::model::EnumRelation { name, cardinality }: ir::model::EnumRelation<
+            'a,
+        >
     ) -> Self {
         match cardinality {
             ir::Cardinality::One => {
@@ -90,13 +92,13 @@ impl<'a> From<ir::EnumRelation<'a>> for Type<'a> {
     }
 }
 
-impl<'a> From<ir::Field<'a>> for Type<'a> {
+impl<'a> From<ir::model::Field<'a>> for Type<'a> {
     fn from(
-        ir::Field {
+        ir::model::Field {
             r#type,
             cardinality,
             ..
-        }: ir::Field
+        }: ir::model::Field
     ) -> Self {
         match cardinality {
             ir::Cardinality::One => r#type.into(),
@@ -168,7 +170,7 @@ mod tests {
     #[test]
     fn test_from_ir_enum_relation_one() {
         assert_eq!(
-            Type::from(ir::EnumRelation {
+            Type::from(ir::model::EnumRelation {
                 name: "foo".into(),
                 cardinality: ir::Cardinality::One,
             }),
@@ -182,7 +184,7 @@ mod tests {
     #[test]
     fn test_from_ir_enum_relation_many() {
         assert_eq!(
-            Type::from(ir::EnumRelation {
+            Type::from(ir::model::EnumRelation {
                 name: "foo".into(),
                 cardinality: ir::Cardinality::Many,
             }),

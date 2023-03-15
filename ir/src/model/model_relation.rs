@@ -15,7 +15,7 @@ pub enum Type {
 
 /// A model relation.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Relation<'a> {
+pub struct ModelRelation<'a> {
     /// The name of the model.
     pub model_name: Cow<'a, str>,
     /// The cardinality of the relation.

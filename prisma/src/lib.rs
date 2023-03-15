@@ -1,3 +1,7 @@
+//! Prisma schema generation.
+//!
+//! A schema can be created from an intermediate representation (`ir::Ir`) of a
+//! Dragonfly program.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![deny(
     clippy::all,
@@ -27,8 +31,6 @@
     variant_size_differences
 )]
 
-//! Prisma schema generation.
-
 use {
     self::schema_error::SchemaError,
     model::field::Modifier,
@@ -38,27 +40,9 @@ use {
 };
 pub use {
     argument::Argument,
-    attribute::{
-        Block as BlockAttribute,
-        Field as FieldAttribute,
-    },
-    data_source::{
-        DataSource,
-        Provider as DataSourceProvider,
-        RelationMode,
-    },
-    generator::{
-        BinaryTarget,
-        EngineType,
-        Generator,
-        PreviewFeature,
-        Provider as GeneratorProvider,
-    },
-    model::{
-        Field,
-        FieldType,
-        Model,
-    },
+    data_source::DataSource,
+    generator::Generator,
+    model::Model,
     r#enum::Enum,
     value::{
         Function,
@@ -131,12 +115,12 @@ impl<'a> Schema<'a> {
                 let reverse_relation_name = source.name().to_ascii_lowercase();
 
                 match relation.r#type {
-                    ir::RelationType::OneToMany => {
-                        let field = Field {
+                    ir::model::model_relation::Type::OneToMany => {
+                        let field = model::Field {
                             name: reverse_relation_name.clone().into(),
-                            r#type: FieldType::Name(source.name()),
+                            r#type: model::field::Type::Name(source.name()),
                             modifier: Modifier::Optional,
-                            attributes: vec![FieldAttribute {
+                            attributes: vec![attribute::Field {
                                 name: "relation".into(),
                                 arguments: vec![
                                     Argument {
@@ -185,11 +169,11 @@ impl<'a> Schema<'a> {
                             ));
                         }
 
-                        let field = Field {
+                        let field = model::Field {
                             name: format!("{}Id", source.name).into(),
-                            r#type: FieldType::Name("Int".into()),
+                            r#type: model::field::Type::Name("Int".into()),
                             modifier: Modifier::Optional,
-                            attributes: vec![FieldAttribute::unique()],
+                            attributes: vec![attribute::Field::unique()],
                         };
 
                         if target
@@ -203,12 +187,12 @@ impl<'a> Schema<'a> {
                             ));
                         }
                     }
-                    ir::RelationType::ManyToMany => {
-                        let field = Field {
+                    ir::model::model_relation::Type::ManyToMany => {
+                        let field = model::Field {
                             name: reverse_relation_name.clone().into(),
-                            r#type: FieldType::Name(source.name()),
+                            r#type: model::field::Type::Name(source.name()),
                             modifier: Modifier::List,
-                            attributes: vec![FieldAttribute {
+                            attributes: vec![attribute::Field {
                                 name: "relation".into(),
                                 arguments: vec![Argument {
                                     name: Some("name".into()),
@@ -234,12 +218,12 @@ impl<'a> Schema<'a> {
                             ));
                         }
                     }
-                    ir::RelationType::OneToOne => {
-                        let field = Field {
+                    ir::model::model_relation::Type::OneToOne => {
+                        let field = model::Field {
                             name: reverse_relation_name.clone().into(),
-                            r#type: FieldType::Name(source.name()),
+                            r#type: model::field::Type::Name(source.name()),
                             modifier: Modifier::None,
-                            attributes: vec![FieldAttribute {
+                            attributes: vec![attribute::Field {
                                 name: "relation".into(),
                                 arguments: vec![
                                     Argument {
@@ -288,11 +272,11 @@ impl<'a> Schema<'a> {
                             ));
                         }
 
-                        let field = Field {
+                        let field = model::Field {
                             name: format!("{}Id", source.name).into(),
-                            r#type: FieldType::Name("Int".into()),
+                            r#type: model::field::Type::Name("Int".into()),
                             modifier: Modifier::None,
-                            attributes: vec![FieldAttribute::unique()],
+                            attributes: vec![attribute::Field::unique()],
                         };
 
                         if target
@@ -306,7 +290,7 @@ impl<'a> Schema<'a> {
                             ));
                         }
                     }
-                    ir::RelationType::ManyToOne => {}
+                    ir::model::model_relation::Type::ManyToOne => {}
                 }
             } else {
                 return Err(SchemaError::unknown_model(source.name()));
@@ -472,7 +456,7 @@ model User {
         let schema = Schema {
             data_source: Some(DataSource {
                 name: "db".into(),
-                provider: DataSourceProvider::PostgreSql {
+                provider: data_source::Provider::PostgreSql {
                     user: "user".into(),
                     password: "password".into(),
                     host: "localhost".into(),
@@ -487,7 +471,7 @@ model User {
                 direct_url: Some(
                     "postgresql://user:password@localhost:5432/database".into(),
                 ),
-                relation_mode: RelationMode::ForeignKeys,
+                relation_mode: data_source::RelationMode::ForeignKeys,
             }),
             enums: OrdStrMap::from_iter([
                 (
@@ -511,15 +495,17 @@ model User {
                 "client",
                 Generator {
                     name: "client".into(),
-                    provider: GeneratorProvider::PrismaClientJs,
+                    provider: generator::Provider::PrismaClientJs,
                     output: Some("path/to/client".into()),
-                    binary_targets: vec![BinaryTarget::AlpineOpenSsl3_0],
-                    preview_features: vec![
-                        PreviewFeature::ExtendedWhereUnique,
-                        PreviewFeature::FullTextIndex,
-                        PreviewFeature::FullTextSearch,
+                    binary_targets: vec![
+                        generator::BinaryTarget::AlpineOpenSsl3_0,
                     ],
-                    engine_type: Some(EngineType::Binary),
+                    preview_features: vec![
+                        generator::PreviewFeature::ExtendedWhereUnique,
+                        generator::PreviewFeature::FullTextIndex,
+                        generator::PreviewFeature::FullTextSearch,
+                    ],
+                    engine_type: Some(generator::EngineType::Binary),
                 },
             )]),
             models: OrdStrMap::from_iter([(
@@ -527,8 +513,8 @@ model User {
                 Model {
                     name: "User".into(),
                     fields: OrdStrMap::from_iter([
-                        ("id", Field::id()),
-                        ("createdAt", Field::created_at()),
+                        ("id", model::Field::id()),
+                        ("createdAt", model::Field::created_at()),
                     ]),
                     attributes: Vec::new(),
                 },

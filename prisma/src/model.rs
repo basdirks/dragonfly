@@ -1,10 +1,9 @@
+pub use field::Field;
 use {
-    self::field::Modifier,
     crate::{
+        attribute,
         schema_error::SchemaError,
         Argument,
-        BlockAttribute,
-        FieldAttribute,
         Value,
     },
     ir::{
@@ -21,15 +20,9 @@ use {
         io,
     },
 };
-pub use {
-    field::Field,
-    field_type::FieldType,
-};
 
 /// Model fields.
 pub mod field;
-/// Field types.
-pub mod field_type;
 
 /// A Prisma model.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -41,7 +34,7 @@ pub struct Model<'a> {
     /// The fields of the model.
     pub fields: OrdStrMap<Field<'a>>,
     /// Block attributes.
-    pub attributes: Vec<BlockAttribute<'a>>,
+    pub attributes: Vec<attribute::Block<'a>>,
 }
 
 impl Print for Model<'_> {
@@ -138,15 +131,15 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
         }
 
         for (relation_name, enum_relation) in ir_model.enums {
-            let ir::EnumRelation { name, cardinality } = enum_relation;
+            let ir::model::EnumRelation { name, cardinality } = enum_relation;
 
             let modifier = match cardinality {
-                Cardinality::One => Modifier::None,
-                Cardinality::Many => Modifier::List,
+                Cardinality::One => field::Modifier::None,
+                Cardinality::Many => field::Modifier::List,
             };
 
             let field = Field {
-                r#type: FieldType::Name(name.clone()),
+                r#type: field::Type::Name(name.clone()),
                 name: name.clone(),
                 modifier,
                 attributes: Vec::new(),
@@ -162,13 +155,13 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
 
         for (relation_name, relation) in ir_model.relations {
             let field = match relation.r#type {
-                ir::RelationType::OneToOne => {
+                ir::model::model_relation::Type::OneToOne => {
                     Field {
                         name: relation_name.clone().into(),
-                        r#type: FieldType::Name(relation.model_name.clone()),
-                        modifier: Modifier::Optional,
+                        r#type: field::Type::Name(relation.model_name.clone()),
+                        modifier: field::Modifier::Optional,
                         attributes: vec![{
-                            FieldAttribute {
+                            attribute::Field {
                                 group: None,
                                 name: "relation".into(),
                                 arguments: vec![Argument {
@@ -182,13 +175,14 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
                         }],
                     }
                 }
-                ir::RelationType::OneToMany | ir::RelationType::ManyToMany => {
+                ir::model::model_relation::Type::OneToMany
+                | ir::model::model_relation::Type::ManyToMany => {
                     Field {
                         name: relation_name.clone().into(),
-                        r#type: FieldType::Name(relation.model_name.clone()),
-                        modifier: Modifier::List,
+                        r#type: field::Type::Name(relation.model_name.clone()),
+                        modifier: field::Modifier::List,
                         attributes: vec![{
-                            FieldAttribute {
+                            attribute::Field {
                                 group: None,
                                 name: "relation".into(),
                                 arguments: vec![Argument {
@@ -202,13 +196,13 @@ impl<'a> TryFrom<ir::Model<'a>> for Model<'a> {
                         }],
                     }
                 }
-                ir::RelationType::ManyToOne => {
+                ir::model::model_relation::Type::ManyToOne => {
                     Field {
                         name: relation_name.clone().into(),
-                        r#type: FieldType::Name(relation.model_name.clone()),
-                        modifier: Modifier::Optional,
+                        r#type: field::Type::Name(relation.model_name.clone()),
+                        modifier: field::Modifier::Optional,
                         attributes: vec![{
-                            FieldAttribute {
+                            attribute::Field {
                                 group: None,
                                 name: "relation".into(),
                                 arguments: vec![
@@ -265,7 +259,7 @@ mod tests {
         ir_model.insert_enum_relation("role", "Role").unwrap();
 
         ir_model
-            .insert_field(ir::Field {
+            .insert_field(ir::model::Field {
                 name: "age".into(),
                 r#type: ir::Type::Int,
                 cardinality: ir::Cardinality::One,
@@ -305,7 +299,7 @@ mod tests {
         let mut ir_model = ir::Model::new("User");
 
         ir_model
-            .insert_field(ir::Field {
+            .insert_field(ir::model::Field {
                 name: "id".into(),
                 r#type: ir::Type::Int,
                 cardinality: Cardinality::One,

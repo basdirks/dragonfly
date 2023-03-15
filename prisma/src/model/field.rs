@@ -1,6 +1,6 @@
+pub use r#type::Type;
 use {
-    super::field_type::FieldType,
-    crate::FieldAttribute,
+    crate::attribute,
     ir::{
         self,
         Cardinality,
@@ -11,6 +11,9 @@ use {
         io,
     },
 };
+
+/// A field type.
+pub mod r#type;
 
 /// Is the field required?
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -31,11 +34,11 @@ pub struct Field<'a> {
     /// camel case.
     pub name: Cow<'a, str>,
     /// The type of the field.
-    pub r#type: FieldType<'a>,
+    pub r#type: Type<'a>,
     /// Is the field optional, required, or a list?
     pub modifier: Modifier,
     /// Field attributes.
-    pub attributes: Vec<FieldAttribute<'a>>,
+    pub attributes: Vec<attribute::Field<'a>>,
 }
 
 impl<'a> Field<'a> {
@@ -44,11 +47,11 @@ impl<'a> Field<'a> {
     pub fn id() -> Self {
         Self {
             name: "id".into(),
-            r#type: FieldType::Name("Int".into()),
+            r#type: Type::Name("Int".into()),
             modifier: Modifier::None,
             attributes: vec![
-                FieldAttribute::id(),
-                FieldAttribute::default_auto_increment(),
+                attribute::Field::id(),
+                attribute::Field::default_auto_increment(),
             ],
         }
     }
@@ -58,9 +61,9 @@ impl<'a> Field<'a> {
     pub fn created_at() -> Self {
         Self {
             name: "createdAt".into(),
-            r#type: FieldType::Name("DateTime".into()),
+            r#type: Type::Name("DateTime".into()),
             modifier: Modifier::None,
-            attributes: vec![FieldAttribute::default_now()],
+            attributes: vec![attribute::Field::default_now()],
         }
     }
 
@@ -91,9 +94,9 @@ impl<'a> Field<'a> {
     }
 }
 
-impl<'a> From<ir::Field<'a>> for Field<'a> {
-    fn from(value: ir::Field<'a>) -> Self {
-        let ir::Field {
+impl<'a> From<ir::model::Field<'a>> for Field<'a> {
+    fn from(value: ir::model::Field<'a>) -> Self {
+        let ir::model::Field {
             name,
             r#type,
             cardinality,
@@ -103,7 +106,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::Boolean, Cardinality::One) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("Boolean".into()),
+                    r#type: Type::Name("Boolean".into()),
                     modifier: Modifier::None,
                     attributes: Vec::new(),
                 }
@@ -111,7 +114,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::DateTime, Cardinality::One) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("DateTime".into()),
+                    r#type: Type::Name("DateTime".into()),
                     modifier: Modifier::None,
                     attributes: Vec::new(),
                 }
@@ -119,7 +122,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::Float, Cardinality::One) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("Float".into()),
+                    r#type: Type::Name("Float".into()),
                     modifier: Modifier::None,
                     attributes: Vec::new(),
                 }
@@ -127,7 +130,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::Int, Cardinality::One) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("Int".into()),
+                    r#type: Type::Name("Int".into()),
                     modifier: Modifier::None,
                     attributes: Vec::new(),
                 }
@@ -135,7 +138,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::String, Cardinality::One) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("String".into()),
+                    r#type: Type::Name("String".into()),
                     modifier: Modifier::None,
                     attributes: Vec::new(),
                 }
@@ -143,7 +146,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::Boolean, Cardinality::Many) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("Boolean".into()),
+                    r#type: Type::Name("Boolean".into()),
                     modifier: Modifier::List,
                     attributes: Vec::new(),
                 }
@@ -151,7 +154,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::DateTime, Cardinality::Many) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("DateTime".into()),
+                    r#type: Type::Name("DateTime".into()),
                     modifier: Modifier::List,
                     attributes: Vec::new(),
                 }
@@ -159,7 +162,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::Float, Cardinality::Many) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("Float".into()),
+                    r#type: Type::Name("Float".into()),
                     modifier: Modifier::List,
                     attributes: Vec::new(),
                 }
@@ -167,7 +170,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::Int, Cardinality::Many) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("Int".into()),
+                    r#type: Type::Name("Int".into()),
                     modifier: Modifier::List,
                     attributes: Vec::new(),
                 }
@@ -175,7 +178,7 @@ impl<'a> From<ir::Field<'a>> for Field<'a> {
             (ir::Type::String, Cardinality::Many) => {
                 Self {
                     name,
-                    r#type: FieldType::Name("String".into()),
+                    r#type: Type::Name("String".into()),
                     modifier: Modifier::List,
                     attributes: Vec::new(),
                 }
@@ -192,7 +195,7 @@ mod tests {
     fn test_new() {
         let field = Field {
             name: "id".into(),
-            r#type: FieldType::Name("Int".into()),
+            r#type: Type::Name("Int".into()),
             modifier: Modifier::List,
             attributes: Vec::new(),
         };
@@ -208,7 +211,7 @@ mod tests {
     fn test_print_optional() {
         let field = Field {
             name: "aId".into(),
-            r#type: FieldType::Name("Int".into()),
+            r#type: Type::Name("Int".into()),
             modifier: Modifier::Optional,
             attributes: Vec::new(),
         };
@@ -222,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_from_one_boolean() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "predicate".into(),
             r#type: ir::Type::Boolean,
             cardinality: Cardinality::One,
@@ -237,7 +240,7 @@ mod tests {
 
     #[test]
     fn test_from_one_datetime() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "createdAt".into(),
             r#type: ir::Type::DateTime,
             cardinality: Cardinality::One,
@@ -252,7 +255,7 @@ mod tests {
 
     #[test]
     fn test_from_one_float() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "price".into(),
             r#type: ir::Type::Float,
             cardinality: Cardinality::One,
@@ -267,7 +270,7 @@ mod tests {
 
     #[test]
     fn test_from_one_int() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "id".into(),
             r#type: ir::Type::Int,
             cardinality: Cardinality::One,
@@ -282,7 +285,7 @@ mod tests {
 
     #[test]
     fn test_from_one_string() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "name".into(),
             r#type: ir::Type::String,
             cardinality: Cardinality::One,
@@ -297,7 +300,7 @@ mod tests {
 
     #[test]
     fn test_from_many_boolean() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "predicates".into(),
             r#type: ir::Type::Boolean,
             cardinality: Cardinality::Many,
@@ -312,7 +315,7 @@ mod tests {
 
     #[test]
     fn test_from_many_datetime() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "createdAt".into(),
             r#type: ir::Type::DateTime,
             cardinality: Cardinality::Many,
@@ -327,7 +330,7 @@ mod tests {
 
     #[test]
     fn test_from_many_float() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "prices".into(),
             r#type: ir::Type::Float,
             cardinality: Cardinality::Many,
@@ -342,7 +345,7 @@ mod tests {
 
     #[test]
     fn test_from_many_int() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "ids".into(),
             r#type: ir::Type::Int,
             cardinality: Cardinality::Many,
@@ -357,7 +360,7 @@ mod tests {
 
     #[test]
     fn test_from_many_string() {
-        let field = Field::from(ir::Field {
+        let field = Field::from(ir::model::Field {
             name: "names".into(),
             r#type: ir::Type::String,
             cardinality: Cardinality::Many,

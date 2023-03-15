@@ -1,3 +1,6 @@
+//! A parser combinator library.
+//!
+//! This library provides a set of combinators for parsing strings.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![deny(
     clippy::all,
@@ -27,12 +30,8 @@
     variant_size_differences
 )]
 
-//! A parser combinator library.
-//!
-//! This library provides a set of combinators for parsing strings.
-
 /// Parse ASCII identifiers with different case styles.
-pub mod case;
+pub mod capitalization;
 /// Parse common ASCII characters.
 pub mod char;
 /// Parse ASCII characters that match a predicate.
@@ -53,10 +52,10 @@ pub use {
         paren_close,
         paren_open,
     },
-    case::{
-        camel as camel_case,
+    capitalization::{
+        camel_case,
         capitalized,
-        pascal as pascal_case,
+        pascal_case,
     },
     char_predicate::{
         alphabetics,

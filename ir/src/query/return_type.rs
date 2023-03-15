@@ -12,16 +12,16 @@ pub struct ReturnType<'a> {
     pub cardinality: Cardinality,
 }
 
-impl<'a> From<ast::QueryReturnType<'a>> for ReturnType<'a> {
-    fn from(ast_return_type: ast::QueryReturnType<'a>) -> Self {
+impl<'a> From<ast::query::ReturnType<'a>> for ReturnType<'a> {
+    fn from(ast_return_type: ast::query::ReturnType<'a>) -> Self {
         match ast_return_type {
-            ast::QueryReturnType::Model(name) => {
+            ast::query::ReturnType::Model(name) => {
                 Self {
                     model_name: name,
                     cardinality: Cardinality::One,
                 }
             }
-            ast::QueryReturnType::Array(name) => {
+            ast::query::ReturnType::Array(name) => {
                 Self {
                     model_name: name,
                     cardinality: Cardinality::Many,
@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn test_one_from_ast() {
         assert_eq!(
-            ReturnType::from(ast::QueryReturnType::Model("User".into())),
+            ReturnType::from(ast::query::ReturnType::Model("User".into())),
             ReturnType {
                 model_name: "User".into(),
                 cardinality: Cardinality::One,
@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn test_many_from_ast() {
         assert_eq!(
-            ReturnType::from(ast::QueryReturnType::Array("User".into())),
+            ReturnType::from(ast::query::ReturnType::Array("User".into())),
             ReturnType {
                 model_name: "User".into(),
                 cardinality: Cardinality::Many,

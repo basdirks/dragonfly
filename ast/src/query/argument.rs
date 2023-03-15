@@ -70,7 +70,7 @@ impl Display for Argument<'_> {
 mod tests {
     use {
         super::*,
-        crate::Scalar,
+        crate::r#type,
     };
 
     #[test]
@@ -80,7 +80,7 @@ mod tests {
             Ok((
                 Argument {
                     name: "name".into(),
-                    r#type: Type::Scalar(Scalar::String),
+                    r#type: Type::Scalar(r#type::Scalar::String),
                 },
                 String::new()
             ))
@@ -92,7 +92,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Scalar(Scalar::Boolean),
+                r#type: Type::Scalar(r#type::Scalar::Boolean),
             }
             .to_string(),
             "$name: Boolean"
@@ -104,7 +104,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Scalar(Scalar::DateTime),
+                r#type: Type::Scalar(r#type::Scalar::DateTime),
             }
             .to_string(),
             "$name: DateTime"
@@ -116,7 +116,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Scalar(Scalar::Float),
+                r#type: Type::Scalar(r#type::Scalar::Float),
             }
             .to_string(),
             "$name: Float"
@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Scalar(Scalar::Int),
+                r#type: Type::Scalar(r#type::Scalar::Int),
             }
             .to_string(),
             "$name: Int"
@@ -140,7 +140,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Scalar(Scalar::String),
+                r#type: Type::Scalar(r#type::Scalar::String),
             }
             .to_string(),
             "$name: String"
@@ -152,7 +152,9 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Scalar(Scalar::Reference("reference".into())),
+                r#type: Type::Scalar(r#type::Scalar::Reference(
+                    "reference".into()
+                )),
             }
             .to_string(),
             "$name: reference"
@@ -164,7 +166,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Scalar(Scalar::Owned("reference".into())),
+                r#type: Type::Scalar(r#type::Scalar::Owned("reference".into())),
             }
             .to_string(),
             "$name: @reference"
@@ -176,7 +178,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Array(Scalar::Boolean),
+                r#type: Type::Array(r#type::Scalar::Boolean),
             }
             .to_string(),
             "$name: [Boolean]"
@@ -188,7 +190,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Array(Scalar::DateTime),
+                r#type: Type::Array(r#type::Scalar::DateTime),
             }
             .to_string(),
             "$name: [DateTime]"
@@ -200,7 +202,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Array(Scalar::Float),
+                r#type: Type::Array(r#type::Scalar::Float),
             }
             .to_string(),
             "$name: [Float]"
@@ -212,7 +214,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Array(Scalar::Int),
+                r#type: Type::Array(r#type::Scalar::Int),
             }
             .to_string(),
             "$name: [Int]"
@@ -224,7 +226,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Array(Scalar::String),
+                r#type: Type::Array(r#type::Scalar::String),
             }
             .to_string(),
             "$name: [String]"
@@ -236,7 +238,9 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Array(Scalar::Reference("reference".into())),
+                r#type: Type::Array(r#type::Scalar::Reference(
+                    "reference".into()
+                )),
             }
             .to_string(),
             "$name: [reference]"
@@ -248,7 +252,7 @@ mod tests {
         assert_eq!(
             Argument {
                 name: "name".into(),
-                r#type: Type::Array(Scalar::Owned("reference".into())),
+                r#type: Type::Array(r#type::Scalar::Owned("reference".into())),
             }
             .to_string(),
             "$name: [@reference]"

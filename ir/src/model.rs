@@ -1,11 +1,4 @@
-pub use self::{
-    enum_relation::EnumRelation,
-    field::Field,
-    relation::{
-        Relation,
-        Type as RelationType,
-    },
-};
+#![allow(clippy::module_name_repetitions)]
 use {
     crate::{
         Cardinality,
@@ -17,13 +10,18 @@ use {
         collections::BTreeSet,
     },
 };
+pub use {
+    enum_relation::EnumRelation,
+    field::Field,
+    model_relation::ModelRelation,
+};
 
 /// Enum relations.
 pub mod enum_relation;
 /// Model fields.
 pub mod field;
 /// Model relations.
-pub mod relation;
+pub mod model_relation;
 
 /// A model.
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -35,7 +33,7 @@ pub struct Model<'a> {
     /// The data fields of the model.
     pub fields: OrdStrMap<Field<'a>>,
     /// Relations to models that this model references.
-    pub relations: OrdStrMap<Relation<'a>>,
+    pub relations: OrdStrMap<ModelRelation<'a>>,
     /// Relations to enum values.
     pub enums: OrdStrMap<EnumRelation<'a>>,
 }
@@ -168,7 +166,7 @@ impl<'a> Model<'a> {
     pub fn insert_relation<S>(
         &mut self,
         field_name: S,
-        relation: Relation<'a>,
+        relation: ModelRelation<'a>,
     ) -> Result<(), TypeError<'a>>
     where
         S: Into<Cow<'a, str>> + Clone,
@@ -210,9 +208,9 @@ impl<'a> Model<'a> {
     {
         self.insert_relation(
             field_name,
-            Relation {
+            ModelRelation {
                 model_name: model_name.into(),
-                r#type: RelationType::OneToOne,
+                r#type: model_relation::Type::OneToOne,
             },
         )
     }
@@ -238,9 +236,9 @@ impl<'a> Model<'a> {
     {
         self.insert_relation(
             field_name,
-            Relation {
+            ModelRelation {
                 model_name: model_name.into(),
-                r#type: RelationType::OneToMany,
+                r#type: model_relation::Type::OneToMany,
             },
         )
     }
@@ -266,9 +264,9 @@ impl<'a> Model<'a> {
     {
         self.insert_relation(
             field_name,
-            Relation {
+            ModelRelation {
                 model_name: model_name.into(),
-                r#type: RelationType::ManyToOne,
+                r#type: model_relation::Type::ManyToOne,
             },
         )
     }
@@ -294,9 +292,9 @@ impl<'a> Model<'a> {
     {
         self.insert_relation(
             field_name,
-            Relation {
+            ModelRelation {
                 model_name: model_name.into(),
-                r#type: RelationType::ManyToMany,
+                r#type: model_relation::Type::ManyToMany,
             },
         )
     }
@@ -389,7 +387,7 @@ impl<'a> Model<'a> {
     pub fn model_relation<S>(
         &self,
         name: S,
-    ) -> Option<Relation<'a>>
+    ) -> Option<ModelRelation<'a>>
     where
         S: AsRef<str>,
     {

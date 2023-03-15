@@ -1,3 +1,8 @@
+//! The Abstract Syntax Tree of a Dragonfly program.
+//!
+//! This form is not intended to be used directly to generate code. Instead, it
+//! is used to generate a more efficient intermediate representation (`ir::Ir`)
+//! which is used to generate code.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![deny(
     clippy::all,
@@ -27,33 +32,11 @@
     variant_size_differences
 )]
 
-//! The abstract syntax tree of a Dragonfly program.
-//!
-//! This form is not intended to be used directly to generate code. Instead, it
-//! is used to generate a more efficient intermediate representation. This
-//! intermediate representation is then used to generate code.
-
-pub use self::{
-    model::{
-        Field,
-        Model,
-    },
-    query::{
-        Argument as QueryArgument,
-        Condition as QueryCondition,
-        Operator as QueryOperator,
-        Path as QueryPath,
-        Query,
-        ReturnType as QueryReturnType,
-        Schema as QuerySchema,
-        SchemaNode as QuerySchemaNode,
-        Where as QueryWhere,
-    },
+pub use {
+    model::Model,
+    query::Query,
     r#enum::Enum,
-    r#type::{
-        Scalar,
-        Type,
-    },
+    r#type::Type,
 };
 use {
     ord_str_map::OrdStrMap,
@@ -112,18 +95,8 @@ impl<'a> Ast<'a> {
     ///     ast::{
     ///         Ast,
     ///         Enum,
-    ///         Field,
     ///         Model,
     ///         Query,
-    ///         QueryArgument,
-    ///         QueryCondition,
-    ///         QueryOperator,
-    ///         QueryPath,
-    ///         QueryReturnType,
-    ///         QuerySchema,
-    ///         QuerySchemaNode,
-    ///         QueryWhere,
-    ///         Scalar,
     ///         Type,
     ///     },
     ///     ord_str_map::OrdStrMap,
@@ -213,34 +186,38 @@ impl<'a> Ast<'a> {
     ///             fields: OrdStrMap::from_iter([
     ///                 (
     ///                     "title",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "title".into(),
-    ///                         r#type: Type::Scalar(Scalar::String),
+    ///                         r#type: Type::Scalar(ast::r#type::Scalar::String),
     ///                     },
     ///                 ),
     ///                 (
     ///                     "country",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "country".into(),
-    ///                         r#type: Type::Scalar(Scalar::Reference(
-    ///                             "Country".into(),
-    ///                         )),
+    ///                         r#type: Type::Scalar(
+    ///                             ast::r#type::Scalar::Reference(
+    ///                                 "Country".into(),
+    ///                             ),
+    ///                         ),
     ///                     },
     ///                 ),
     ///                 (
     ///                     "category",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "category".into(),
-    ///                         r#type: Type::Array(Scalar::Reference(
-    ///                             "Category".into(),
-    ///                         )),
+    ///                         r#type: Type::Array(
+    ///                             ast::r#type::Scalar::Reference(
+    ///                                 "Category".into(),
+    ///                             ),
+    ///                         ),
     ///                     },
     ///                 ),
     ///                 (
     ///                     "dimensions",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "dimensions".into(),
-    ///                         r#type: Type::Scalar(Scalar::Owned(
+    ///                         r#type: Type::Scalar(ast::r#type::Scalar::Owned(
     ///                             "Dimensions".into(),
     ///                         )),
     ///                     },
@@ -255,16 +232,16 @@ impl<'a> Ast<'a> {
     ///             fields: OrdStrMap::from_iter([
     ///                 (
     ///                     "width",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "width".into(),
-    ///                         r#type: Type::Scalar(Scalar::Int),
+    ///                         r#type: Type::Scalar(ast::r#type::Scalar::Int),
     ///                     },
     ///                 ),
     ///                 (
     ///                     "height",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "height".into(),
-    ///                         r#type: Type::Scalar(Scalar::Int),
+    ///                         r#type: Type::Scalar(ast::r#type::Scalar::Int),
     ///                     },
     ///                 ),
     ///             ]),
@@ -277,34 +254,38 @@ impl<'a> Ast<'a> {
     ///             fields: OrdStrMap::from_iter([
     ///                 (
     ///                     "domain",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "domain".into(),
-    ///                         r#type: Type::Scalar(Scalar::String),
+    ///                         r#type: Type::Scalar(ast::r#type::Scalar::String),
     ///                     },
     ///                 ),
     ///                 (
     ///                     "drivingSide",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "drivingSide".into(),
-    ///                         r#type: Type::Scalar(Scalar::Reference(
-    ///                             "DrivingSide".into(),
-    ///                         )),
+    ///                         r#type: Type::Scalar(
+    ///                             ast::r#type::Scalar::Reference(
+    ///                                 "DrivingSide".into(),
+    ///                             ),
+    ///                         ),
     ///                     },
     ///                 ),
     ///                 (
     ///                     "flag",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "flag".into(),
-    ///                         r#type: Type::Scalar(Scalar::String),
+    ///                         r#type: Type::Scalar(ast::r#type::Scalar::String),
     ///                     },
     ///                 ),
     ///                 (
     ///                     "name",
-    ///                     Field {
+    ///                     ast::model::Field {
     ///                         name: "name".into(),
-    ///                         r#type: Type::Scalar(Scalar::Reference(
-    ///                             "CountryName".into(),
-    ///                         )),
+    ///                         r#type: Type::Scalar(
+    ///                             ast::r#type::Scalar::Reference(
+    ///                                 "CountryName".into(),
+    ///                             ),
+    ///                         ),
     ///                     },
     ///                 ),
     ///             ]),
@@ -351,20 +332,20 @@ impl<'a> Ast<'a> {
     ///         "images",
     ///         Query {
     ///             name: "images".into(),
-    ///             r#type: QueryReturnType::Array("Image".into()),
-    ///             schema: QuerySchema {
+    ///             r#type: ast::query::ReturnType::Array("Image".into()),
+    ///             schema: ast::query::Schema {
     ///                 name: "image".into(),
     ///                 nodes: vec![
-    ///                     QuerySchemaNode::Field {
+    ///                     ast::query::schema::Node::Field {
     ///                         name: "title".into(),
     ///                     },
-    ///                     QuerySchemaNode::Relation {
+    ///                     ast::query::schema::Node::Relation {
     ///                         name: "country".into(),
-    ///                         nodes: vec![QuerySchemaNode::Field {
+    ///                         nodes: vec![ast::query::schema::Node::Field {
     ///                             name: "name".into(),
     ///                         }],
     ///                     },
-    ///                     QuerySchemaNode::Field {
+    ///                     ast::query::schema::Node::Field {
     ///                         name: "category".into(),
     ///                     },
     ///                 ],
@@ -377,31 +358,31 @@ impl<'a> Ast<'a> {
     ///         "imagesByCountryName",
     ///         Query {
     ///             name: "imagesByCountryName".into(),
-    ///             r#type: QueryReturnType::Array("Image".into()),
-    ///             schema: QuerySchema {
+    ///             r#type: ast::query::ReturnType::Array("Image".into()),
+    ///             schema: ast::query::Schema {
     ///                 name: "image".into(),
     ///                 nodes: vec![
-    ///                     QuerySchemaNode::Field {
+    ///                     ast::query::schema::Node::Field {
     ///                         name: "title".into(),
     ///                     },
-    ///                     QuerySchemaNode::Field {
+    ///                     ast::query::schema::Node::Field {
     ///                         name: "category".into(),
     ///                     },
     ///                 ],
     ///             },
-    ///             r#where: Some(QueryWhere {
+    ///             r#where: Some(ast::query::Where {
     ///                 name: "image".into(),
-    ///                 conditions: vec![QueryCondition {
-    ///                     path: QueryPath::from_iter(["country", "name"]),
-    ///                     operator: QueryOperator::Equals,
+    ///                 conditions: vec![ast::query::Condition {
+    ///                     path: ast::query::Path::from_iter(["country", "name"]),
+    ///                     operator: ast::query::Operator::Equals,
     ///                     argument_name: "name".into(),
     ///                 }],
     ///             }),
     ///             arguments: OrdStrMap::from_iter([(
     ///                 "name",
-    ///                 QueryArgument {
+    ///                 ast::query::Argument {
     ///                     name: "name".into(),
-    ///                     r#type: Type::Scalar(Scalar::Reference(
+    ///                     r#type: Type::Scalar(ast::r#type::Scalar::Reference(
     ///                         "CountryName".into(),
     ///                     )),
     ///                 },

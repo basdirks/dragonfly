@@ -1,6 +1,6 @@
 use {
     crate::{
-        Scalar,
+        r#type,
         Type,
     },
     parser::{
@@ -36,10 +36,10 @@ impl<'a> ReturnType<'a> {
         let (_, input) = spaces(&input)?;
 
         match r#type {
-            Type::Scalar(Scalar::Reference(name)) => {
+            Type::Scalar(r#type::Scalar::Reference(name)) => {
                 Ok((Self::Model(name), input))
             }
-            Type::Array(Scalar::Reference(name)) => {
+            Type::Array(r#type::Scalar::Reference(name)) => {
                 Ok((Self::Array(name), input))
             }
             _ => {

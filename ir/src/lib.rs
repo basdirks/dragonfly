@@ -1,3 +1,6 @@
+//! The intermediate representation (IR) of the AST.
+//!
+//! Conversion from `ast::Ast` to `ir::Ir` also performs type checking.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![deny(
     clippy::all,
@@ -28,30 +31,10 @@
     variant_size_differences
 )]
 
-//! The intermediate representation (IR) of the AST.
-//!
-//! Conversion from AST to IR also performs type checking.
-
 pub use self::{
     cardinality::Cardinality,
-    model::{
-        EnumRelation,
-        Field,
-        Model,
-        Relation as ModelRelation,
-        RelationType,
-    },
-    query::{
-        Argument as QueryArgument,
-        ArgumentType as QueryArgumentType,
-        Condition as QueryCondition,
-        Operator as QueryOperator,
-        Query,
-        ReturnType as QueryReturnType,
-        Schema as QuerySchema,
-        SchemaNode as QuerySchemaNode,
-        Where as QueryWhere,
-    },
+    model::Model,
+    query::Query,
     r#enum::Enum,
     r#type::Type,
     type_error::TypeError,
@@ -114,7 +97,7 @@ impl<'a> Ir<'a> {
                 return current_model.field(&segment).map(|field| field.r#type);
             }
 
-            if let Some(ModelRelation {
+            if let Some(model::ModelRelation {
                 model_name: name, ..
             }) = current_model.model_relation(&segment)
             {
@@ -152,7 +135,7 @@ impl<'a> Ir<'a> {
                 return current_model.enum_relation(&segment).map(|r| r.name);
             }
 
-            if let Some(ModelRelation {
+            if let Some(model::ModelRelation {
                 model_name: name, ..
             }) = current_model.model_relation(&segment)
             {
@@ -249,17 +232,17 @@ impl<'a> Ir<'a> {
         &self,
         model_name: S,
         path: VecDeque<Cow<'a, str>>,
-        argument_type: QueryArgumentType<'a>,
+        argument_type: query::ArgumentType<'a>,
     ) -> bool
     where
         S: AsRef<str>,
     {
         match argument_type {
-            QueryArgumentType::Enum(rhs) => {
+            query::ArgumentType::Enum(rhs) => {
                 self.enum_type(model_name, path)
                     .map_or(false, |lhs| lhs == rhs)
             }
-            QueryArgumentType::Type(rhs) => {
+            query::ArgumentType::Type(rhs) => {
                 self.field_type(model_name, path)
                     .map_or(false, |lhs| lhs == rhs)
             }
@@ -280,9 +263,9 @@ impl<'a> Ir<'a> {
     pub fn query_schema<S>(
         &self,
         query_name: &S,
-        ast_schema: &ast::QuerySchema<'a>,
+        ast_schema: &ast::query::Schema<'a>,
         model: &Model<'a>,
-    ) -> Result<QuerySchema<'a>, TypeError<'a>>
+    ) -> Result<query::Schema<'a>, TypeError<'a>>
     where
         S: Into<Cow<'a, str>> + Clone,
     {
@@ -297,7 +280,7 @@ impl<'a> Ir<'a> {
             )?);
         }
 
-        Ok(QuerySchema {
+        Ok(query::Schema {
             alias: ast_schema.name.clone(),
             nodes,
         })
@@ -318,21 +301,21 @@ impl<'a> Ir<'a> {
     pub fn query_schema_node<S>(
         &self,
         query_name: S,
-        ast_node: ast::QuerySchemaNode<'a>,
+        ast_node: ast::query::schema::Node<'a>,
         model: &Model<'a>,
         mut path: VecDeque<Cow<'a, str>>,
-    ) -> Result<QuerySchemaNode<'a>, TypeError<'a>>
+    ) -> Result<query::schema::Node<'a>, TypeError<'a>>
     where
         S: Into<Cow<'a, str>> + Clone,
     {
         match ast_node {
-            ast::QuerySchemaNode::Field { name } => {
+            ast::query::schema::Node::Field { name } => {
                 path.push_back(name.clone());
 
                 if self.field_type(model.name(), path.clone()).is_some()
                     || self.enum_type(model.name(), path.clone()).is_some()
                 {
-                    Ok(QuerySchemaNode::Field { name })
+                    Ok(query::schema::Node::Field { name })
                 } else {
                     Err(TypeError::undefined_query_field(
                         query_name,
@@ -340,7 +323,7 @@ impl<'a> Ir<'a> {
                     ))
                 }
             }
-            ast::QuerySchemaNode::Relation {
+            ast::query::schema::Node::Relation {
                 name: ast_name,
                 nodes: ast_nodes,
             } => {
@@ -366,7 +349,7 @@ impl<'a> Ir<'a> {
                     }
                 }
 
-                Ok(QuerySchemaNode::Relation {
+                Ok(query::schema::Node::Relation {
                     name: ast_name,
                     nodes,
                 })
@@ -387,20 +370,20 @@ impl<'a> Ir<'a> {
     pub fn query_return_type<S>(
         &self,
         query_name: S,
-        ast_return_type: ast::QueryReturnType<'a>,
-    ) -> Result<(QueryReturnType<'a>, Model<'a>), TypeError<'a>>
+        ast_return_type: ast::query::ReturnType<'a>,
+    ) -> Result<(query::ReturnType<'a>, Model<'a>), TypeError<'a>>
     where
         S: Into<Cow<'a, str>>,
     {
-        let return_type = QueryReturnType::from(ast_return_type.clone());
+        let return_type = query::ReturnType::from(ast_return_type.clone());
 
         self.models.get(&return_type.model_name).map_or_else(
             || {
                 Err(TypeError::undefined_query_return_type(
                     query_name,
                     match ast_return_type {
-                        ast::QueryReturnType::Model(name)
-                        | ast::QueryReturnType::Array(name) => name,
+                        ast::query::ReturnType::Model(name)
+                        | ast::query::ReturnType::Array(name) => name,
                     },
                 ))
             },
@@ -429,42 +412,42 @@ impl<'a> Ir<'a> {
             let field_name = field.name.clone();
 
             match &field.r#type {
-                ast::Type::Scalar(ast::Scalar::Boolean) => {
-                    model.insert_field(Field {
+                ast::Type::Scalar(ast::r#type::Scalar::Boolean) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::Boolean,
                         cardinality: Cardinality::One,
                     })
                 }
-                ast::Type::Scalar(ast::Scalar::DateTime) => {
-                    model.insert_field(Field {
+                ast::Type::Scalar(ast::r#type::Scalar::DateTime) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::DateTime,
                         cardinality: Cardinality::One,
                     })
                 }
-                ast::Type::Scalar(ast::Scalar::Float) => {
-                    model.insert_field(Field {
+                ast::Type::Scalar(ast::r#type::Scalar::Float) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::Float,
                         cardinality: Cardinality::One,
                     })
                 }
-                ast::Type::Scalar(ast::Scalar::Int) => {
-                    model.insert_field(Field {
+                ast::Type::Scalar(ast::r#type::Scalar::Int) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::Int,
                         cardinality: Cardinality::One,
                     })
                 }
-                ast::Type::Scalar(ast::Scalar::String) => {
-                    model.insert_field(Field {
+                ast::Type::Scalar(ast::r#type::Scalar::String) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::String,
                         cardinality: Cardinality::One,
                     })
                 }
-                ast::Type::Scalar(ast::Scalar::Reference(name)) => {
+                ast::Type::Scalar(ast::r#type::Scalar::Reference(name)) => {
                     if enum_names.contains(name) {
                         model.insert_enum_relation(field_name, name.clone())
                     } else if model_names.contains(name) {
@@ -477,7 +460,7 @@ impl<'a> Ir<'a> {
                         ))
                     }
                 }
-                ast::Type::Scalar(ast::Scalar::Owned(name)) => {
+                ast::Type::Scalar(ast::r#type::Scalar::Owned(name)) => {
                     if model_names.contains(name) {
                         model.insert_one_to_one(field_name, name.clone())
                     } else {
@@ -488,42 +471,42 @@ impl<'a> Ir<'a> {
                         ))
                     }
                 }
-                ast::Type::Array(ast::Scalar::Boolean) => {
-                    model.insert_field(Field {
+                ast::Type::Array(ast::r#type::Scalar::Boolean) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::Boolean,
                         cardinality: Cardinality::Many,
                     })
                 }
-                ast::Type::Array(ast::Scalar::DateTime) => {
-                    model.insert_field(Field {
+                ast::Type::Array(ast::r#type::Scalar::DateTime) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::DateTime,
                         cardinality: Cardinality::Many,
                     })
                 }
-                ast::Type::Array(ast::Scalar::Float) => {
-                    model.insert_field(Field {
+                ast::Type::Array(ast::r#type::Scalar::Float) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::Float,
                         cardinality: Cardinality::Many,
                     })
                 }
-                ast::Type::Array(ast::Scalar::Int) => {
-                    model.insert_field(Field {
+                ast::Type::Array(ast::r#type::Scalar::Int) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::Int,
                         cardinality: Cardinality::Many,
                     })
                 }
-                ast::Type::Array(ast::Scalar::String) => {
-                    model.insert_field(Field {
+                ast::Type::Array(ast::r#type::Scalar::String) => {
+                    model.insert_field(model::Field {
                         name: field_name,
                         r#type: Type::String,
                         cardinality: Cardinality::Many,
                     })
                 }
-                ast::Type::Array(ast::Scalar::Reference(name)) => {
+                ast::Type::Array(ast::r#type::Scalar::Reference(name)) => {
                     if enum_names.contains(name) {
                         model.insert_enums_relation(field_name, name.clone())
                     } else if model_names.contains(name) {
@@ -536,7 +519,7 @@ impl<'a> Ir<'a> {
                         ))
                     }
                 }
-                ast::Type::Array(ast::Scalar::Owned(name)) => {
+                ast::Type::Array(ast::r#type::Scalar::Owned(name)) => {
                     if model_names.contains(name) {
                         model.insert_one_to_many(field_name, name.clone())
                     } else {
@@ -587,9 +570,9 @@ impl<'a> Ir<'a> {
 
         for (argument_name, ast_argument) in ast_query.arguments.iter() {
             if let Some(argument) =
-                QueryArgument::from_ast_type(&ast_argument, enum_names)
+                query::Argument::from_ast_type(&ast_argument, enum_names)
             {
-                let _: Option<QueryArgument<'a>> =
+                let _: Option<query::Argument<'a>> =
                     query.arguments.insert(argument_name, argument);
             };
         }
@@ -624,14 +607,14 @@ impl<'a> Ir<'a> {
                     ));
                 }
 
-                conditions.push(QueryCondition {
+                conditions.push(query::Condition {
                     lhs: path.clone(),
                     operator: ast_condition.operator.into(),
                     rhs: ast_condition.argument_name.clone(),
                 });
             }
 
-            query.r#where = Some(QueryWhere { alias, conditions });
+            query.r#where = Some(query::Where { alias, conditions });
         }
 
         if self.queries.insert(ast_query.name.clone(), query).is_some() {
@@ -714,19 +697,19 @@ mod tests {
         let mut address_model = Model::new("Address");
         let mut postbox_model = Model::new("Postbox");
 
-        user_model.insert_field(Field {
+        user_model.insert_field(model::Field {
             name: "name".into(),
             r#type: Type::String,
             cardinality: Cardinality::One,
         })?;
 
-        address_model.insert_field(Field {
+        address_model.insert_field(model::Field {
             name: "street".into(),
             r#type: Type::String,
             cardinality: Cardinality::One,
         })?;
 
-        postbox_model.insert_field(Field {
+        postbox_model.insert_field(model::Field {
             name: "number".into(),
             r#type: Type::Int,
             cardinality: Cardinality::One,
@@ -789,7 +772,7 @@ mod tests {
             values: TokenSet::from_iter(["home", "work"]),
         };
 
-        user_model.insert_field(Field {
+        user_model.insert_field(model::Field {
             name: "name".into(),
             r#type: Type::String,
             cardinality: Cardinality::One,
@@ -848,7 +831,7 @@ mod tests {
             values: TokenSet::from_iter(["home", "work"]),
         };
 
-        user_model.insert_field(Field {
+        user_model.insert_field(model::Field {
             name: "name".into(),
             r#type: Type::String,
             cardinality: Cardinality::One,
@@ -864,19 +847,19 @@ mod tests {
         assert!(ir.check_argument_type(
             "User",
             once("name").map(Into::into).collect(),
-            QueryArgumentType::Type(Type::String)
+            query::ArgumentType::Type(Type::String)
         ));
 
         assert!(ir.check_argument_type(
             "User",
             ["address", "type"].into_iter().map(Into::into).collect(),
-            QueryArgumentType::Enum("AddressType".into())
+            query::ArgumentType::Enum("AddressType".into())
         ));
 
         assert!(!ir.check_argument_type(
             "User",
             ["address", "street"].into_iter().map(Into::into).collect(),
-            QueryArgumentType::Type(Type::String)
+            query::ArgumentType::Type(Type::String)
         ));
 
         assert!(!ir.check_argument_type(
@@ -885,7 +868,7 @@ mod tests {
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-            QueryArgumentType::Type(Type::String)
+            query::ArgumentType::Type(Type::String)
         ));
 
         Ok(())
@@ -991,96 +974,98 @@ query myQuery($booleanArgument: Boolean): [Alpha] {
                         name: "myQuery".into(),
                         arguments: OrdStrMap::from_iter([(
                             "booleanArgument",
-                            QueryArgument {
+                            query::Argument {
                                 name: "booleanArgument".into(),
-                                r#type: QueryArgumentType::Type(Type::Boolean),
+                                r#type: query::ArgumentType::Type(
+                                    Type::Boolean
+                                ),
                                 cardinality: Cardinality::One,
                             }
                         )]),
-                        r#type: QueryReturnType {
+                        r#type: query::ReturnType {
                             model_name: "Alpha".into(),
                             cardinality: Cardinality::Many,
                         },
-                        schema: QuerySchema {
+                        schema: query::Schema {
                             alias: "alpha".into(),
                             nodes: vec![
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myBoolean".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myDateTime".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myFloat".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myInt".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myString".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myBooleans".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myDateTimes".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myFloats".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myInts".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myStrings".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myZeta".into()
                                 },
-                                QuerySchemaNode::Field {
+                                query::schema::Node::Field {
                                     name: "myZetas".into()
                                 },
-                                QuerySchemaNode::Relation {
+                                query::schema::Node::Relation {
                                     name: "myBeta".into(),
                                     nodes: vec![
-                                        QuerySchemaNode::Field {
+                                        query::schema::Node::Field {
                                             name: "foo".into()
                                         },
-                                        QuerySchemaNode::Relation {
+                                        query::schema::Node::Relation {
                                             name: "myGamma".into(),
                                             nodes: vec![
-                                                QuerySchemaNode::Field {
+                                                query::schema::Node::Field {
                                                     name: "foo".into()
                                                 }
                                             ]
                                         },
                                     ],
                                 },
-                                QuerySchemaNode::Relation {
+                                query::schema::Node::Relation {
                                     name: "myGammas".into(),
-                                    nodes: vec![QuerySchemaNode::Field {
+                                    nodes: vec![query::schema::Node::Field {
                                         name: "foo".into()
                                     }],
                                 },
-                                QuerySchemaNode::Relation {
+                                query::schema::Node::Relation {
                                     name: "myDelta".into(),
-                                    nodes: vec![QuerySchemaNode::Field {
+                                    nodes: vec![query::schema::Node::Field {
                                         name: "foo".into()
                                     }],
                                 },
-                                QuerySchemaNode::Relation {
+                                query::schema::Node::Relation {
                                     name: "myEpsilons".into(),
-                                    nodes: vec![QuerySchemaNode::Field {
+                                    nodes: vec![query::schema::Node::Field {
                                         name: "foo".into()
                                     }],
                                 },
                             ]
                         },
-                        r#where: Some(QueryWhere {
+                        r#where: Some(query::Where {
                             alias: "alpha".into(),
-                            conditions: vec![QueryCondition {
+                            conditions: vec![query::Condition {
                                 lhs: once("myBoolean".into()).collect(),
-                                operator: QueryOperator::Equals,
+                                operator: query::Operator::Equals,
                                 rhs: "booleanArgument".into(),
                             }]
                         }),
@@ -1090,61 +1075,61 @@ query myQuery($booleanArgument: Boolean): [Alpha] {
                     ("Alpha", {
                         let mut model = Model::new("Alpha");
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myBoolean".into(),
                             r#type: Type::Boolean,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myDateTime".into(),
                             r#type: Type::DateTime,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myFloat".into(),
                             r#type: Type::Float,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myInt".into(),
                             r#type: Type::Int,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myString".into(),
                             r#type: Type::String,
                             cardinality: Cardinality::One,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myBooleans".into(),
                             r#type: Type::Boolean,
                             cardinality: Cardinality::Many,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myDateTimes".into(),
                             r#type: Type::DateTime,
                             cardinality: Cardinality::Many,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myFloats".into(),
                             r#type: Type::Float,
                             cardinality: Cardinality::Many,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myInts".into(),
                             r#type: Type::Int,
                             cardinality: Cardinality::Many,
                         })?;
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "myStrings".into(),
                             r#type: Type::String,
                             cardinality: Cardinality::Many,
@@ -1162,7 +1147,7 @@ query myQuery($booleanArgument: Boolean): [Alpha] {
                     ("Beta", {
                         let mut model = Model::new("Beta");
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "foo".into(),
                             r#type: Type::String,
                             cardinality: Cardinality::One,
@@ -1175,7 +1160,7 @@ query myQuery($booleanArgument: Boolean): [Alpha] {
                     ("Gamma", {
                         let mut model = Model::new("Gamma");
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "foo".into(),
                             r#type: Type::String,
                             cardinality: Cardinality::One,
@@ -1186,7 +1171,7 @@ query myQuery($booleanArgument: Boolean): [Alpha] {
                     ("Delta", {
                         let mut model = Model::new("Delta");
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "foo".into(),
                             r#type: Type::String,
                             cardinality: Cardinality::One,
@@ -1197,7 +1182,7 @@ query myQuery($booleanArgument: Boolean): [Alpha] {
                     ("Epsilon", {
                         let mut model = Model::new("Epsilon");
 
-                        model.insert_field(Field {
+                        model.insert_field(model::Field {
                             name: "foo".into(),
                             r#type: Type::String,
                             cardinality: Cardinality::One,
@@ -1257,12 +1242,12 @@ query myQuery($booleanArgument: Boolean): [Alpha] {
         let query = Query {
             name: "users".into(),
             arguments: OrdStrMap::new(),
-            schema: QuerySchema {
+            schema: query::Schema {
                 alias: "user".into(),
                 nodes: Vec::new(),
             },
             r#where: None,
-            r#type: QueryReturnType {
+            r#type: query::ReturnType {
                 model_name: "User".into(),
                 cardinality: Cardinality::Many,
             },

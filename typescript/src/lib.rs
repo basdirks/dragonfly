@@ -1,3 +1,7 @@
+//! TypeScript code generation.
+//!
+//! TypeScript interfaces and enums can be generated from an intermediate
+//! representation (`ir::Ir`) of a Dragonfly program.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![deny(
     clippy::all,
@@ -28,15 +32,10 @@
     variant_size_differences
 )]
 
-//! TypeScript code generation.
-
 pub use {
     expression_with_type_arguments::ExpressionWithTypeArguments,
     import::Import,
-    interface::{
-        Interface,
-        Property as InterfaceProperty,
-    },
+    interface::Interface,
     named_specifier::NamedSpecifier,
     r#type::{
         FunctionArgument,
@@ -45,10 +44,7 @@ pub use {
         ObjectLiteralProperty,
         Type,
     },
-    string_enum::{
-        StringEnum as Enum,
-        Variant as EnumVariant,
-    },
+    string_enum::StringEnum,
     type_parameter::TypeParameter,
 };
 

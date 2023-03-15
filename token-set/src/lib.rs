@@ -1,6 +1,7 @@
 //! # Token Set
 //!
-//! A set of `String` values that preserves insertion order.
+//! A set of `String` values that preserves insertion order. Implemented as a
+//! `BTreeSet` with a `VecDeque` for iteration order.
 #![feature(rustdoc_missing_doc_code_examples)]
 #![feature(const_btree_len)]
 #![deny(

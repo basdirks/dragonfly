@@ -167,14 +167,7 @@ impl<'a> Where<'a> {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*,
-        crate::{
-            QueryCondition,
-            QueryOperator,
-            QueryPath,
-        },
-    };
+    use super::*;
 
     #[test]
     fn test_parse_where() {
@@ -196,9 +189,9 @@ where {
             Ok((
                 Where {
                     name: "foo".into(),
-                    conditions: vec![QueryCondition {
-                        path: QueryPath::from_iter(["bar"]),
-                        operator: QueryOperator::Contains,
+                    conditions: vec![Condition {
+                        path: Path::from_iter(["bar"]),
+                        operator: Operator::Contains,
                         argument_name: "foo".into(),
                     }]
                 },
@@ -231,14 +224,14 @@ where {
                 Where {
                     name: "image".into(),
                     conditions: vec![
-                        QueryCondition {
-                            path: QueryPath::from_iter(["title"]),
-                            operator: QueryOperator::Equals,
+                        Condition {
+                            path: Path::from_iter(["title"]),
+                            operator: Operator::Equals,
                             argument_name: "title".into(),
                         },
-                        QueryCondition {
-                            path: QueryPath::from_iter(["title", "tags"]),
-                            operator: QueryOperator::Contains,
+                        Condition {
+                            path: Path::from_iter(["title", "tags"]),
+                            operator: Operator::Contains,
                             argument_name: "tag".into(),
                         }
                     ]
@@ -315,19 +308,19 @@ where {
                 Where {
                     name: "foo".into(),
                     conditions: vec![
-                        QueryCondition {
-                            path: QueryPath::from_iter(["bar"]),
-                            operator: QueryOperator::Contains,
+                        Condition {
+                            path: Path::from_iter(["bar"]),
+                            operator: Operator::Contains,
                             argument_name: "baz".into(),
                         },
-                        QueryCondition {
-                            path: QueryPath::from_iter(["bar"]),
-                            operator: QueryOperator::Contains,
+                        Condition {
+                            path: Path::from_iter(["bar"]),
+                            operator: Operator::Contains,
                             argument_name: "bar".into(),
                         },
-                        QueryCondition {
-                            path: QueryPath::from_iter(["baz"]),
-                            operator: QueryOperator::Equals,
+                        Condition {
+                            path: Path::from_iter(["baz"]),
+                            operator: Operator::Equals,
                             argument_name: "baz".into(),
                         }
                     ]

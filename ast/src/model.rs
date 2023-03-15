@@ -84,7 +84,7 @@ mod tests {
     use {
         super::*,
         crate::{
-            Scalar,
+            r#type::Scalar,
             Type,
         },
     };

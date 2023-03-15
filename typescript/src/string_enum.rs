@@ -1,5 +1,5 @@
 use {
-    ir::Enum as IrEnum,
+    ir,
     ord_str_map::OrdStrMap,
     print::Print,
     std::{
@@ -79,9 +79,9 @@ impl Print for StringEnum<'_> {
     }
 }
 
-impl<'a> From<IrEnum<'a>> for StringEnum<'a> {
-    fn from(ir_enum: IrEnum<'a>) -> Self {
-        let IrEnum { name, values } = ir_enum;
+impl<'a> From<ir::Enum<'a>> for StringEnum<'a> {
+    fn from(ir_enum: ir::Enum<'a>) -> Self {
+        let ir::Enum { name, values } = ir_enum;
 
         let mut r#enum = Self {
             identifier: name,
@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn test_from_ir_enum() {
         assert_eq!(
-            StringEnum::from(IrEnum {
+            StringEnum::from(ir::Enum {
                 name: "CountryName".into(),
                 values: TokenSet::from_iter(["France", "Germany", "Italy"]),
             }),
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn test_enum_from_ir_enum() {
-        let ir_enum = IrEnum {
+        let ir_enum = ir::Enum {
             name: "CountryName".into(),
             values: TokenSet::from_iter([
                 "France",

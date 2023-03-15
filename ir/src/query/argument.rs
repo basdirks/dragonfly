@@ -31,7 +31,7 @@ impl<'a> Argument<'a> {
     /// * `enum_names` - The names of the enums.
     #[must_use]
     pub fn from_ast_type(
-        argument: &ast::QueryArgument<'a>,
+        argument: &ast::query::Argument<'a>,
         enum_names: &BTreeSet<Cow<'a, str>>,
     ) -> Option<Self> {
         let argument_name = argument.name.clone();
@@ -141,7 +141,7 @@ mod tests {
     fn test_from_boolean() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "is_admin".into(),
                     r#type: ast::r#type::Type::Scalar(
                         ast::r#type::Scalar::Boolean
@@ -161,7 +161,7 @@ mod tests {
     fn test_from_date_time() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "created_at".into(),
                     r#type: ast::r#type::Type::Scalar(
                         ast::r#type::Scalar::DateTime
@@ -181,7 +181,7 @@ mod tests {
     fn test_from_float() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "price".into(),
                     r#type: ast::r#type::Type::Scalar(
                         ast::r#type::Scalar::Float
@@ -201,7 +201,7 @@ mod tests {
     fn test_from_int() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "age".into(),
                     r#type: ast::r#type::Type::Scalar(ast::r#type::Scalar::Int),
                 },
@@ -219,7 +219,7 @@ mod tests {
     fn test_from_string() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "name".into(),
                     r#type: ast::r#type::Type::Scalar(
                         ast::r#type::Scalar::String
@@ -239,7 +239,7 @@ mod tests {
     fn test_from_enum() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "role".into(),
                     r#type: ast::r#type::Type::Scalar(
                         ast::r#type::Scalar::Reference("Role".into())
@@ -259,7 +259,7 @@ mod tests {
     fn test_from_boolean_array() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "is_admin".into(),
                     r#type: ast::r#type::Type::Array(
                         ast::r#type::Scalar::Boolean
@@ -279,7 +279,7 @@ mod tests {
     fn test_from_date_time_array() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "created_at".into(),
                     r#type: ast::r#type::Type::Array(
                         ast::r#type::Scalar::DateTime
@@ -299,7 +299,7 @@ mod tests {
     fn test_from_float_array() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "price".into(),
                     r#type: ast::r#type::Type::Array(
                         ast::r#type::Scalar::Float
@@ -319,7 +319,7 @@ mod tests {
     fn test_from_int_array() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "age".into(),
                     r#type: ast::r#type::Type::Array(ast::r#type::Scalar::Int),
                 },
@@ -337,7 +337,7 @@ mod tests {
     fn test_from_string_array() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "name".into(),
                     r#type: ast::r#type::Type::Array(
                         ast::r#type::Scalar::String
@@ -357,7 +357,7 @@ mod tests {
     fn test_from_enum_array() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "roles".into(),
                     r#type: ast::r#type::Type::Array(
                         ast::r#type::Scalar::Reference("Role".into())
@@ -377,7 +377,7 @@ mod tests {
     fn test_from_owned() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "foo".into(),
                     r#type: ast::r#type::Type::Scalar(
                         ast::r#type::Scalar::Owned("Foo".into())
@@ -393,7 +393,7 @@ mod tests {
     fn test_from_owned_array() {
         assert_eq!(
             Argument::from_ast_type(
-                &ast::QueryArgument {
+                &ast::query::Argument {
                     name: "foos".into(),
                     r#type: ast::r#type::Type::Array(
                         ast::r#type::Scalar::Owned("Foo".into())

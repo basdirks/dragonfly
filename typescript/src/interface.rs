@@ -100,7 +100,7 @@ impl<'a> From<ir::Model<'a>> for Interface<'a> {
 
         for (relation_name, relation) in ir_model.relations {
             interface.properties.push(match relation.r#type {
-                ir::RelationType::OneToOne => {
+                ir::model::model_relation::Type::OneToOne => {
                     Property {
                         identifier: relation_name.into(),
                         r#type: Type::TypeReference {
@@ -110,7 +110,7 @@ impl<'a> From<ir::Model<'a>> for Interface<'a> {
                         optional: true,
                     }
                 }
-                ir::RelationType::ManyToOne => {
+                ir::model::model_relation::Type::ManyToOne => {
                     Property {
                         identifier: relation_name.into(),
                         r#type: Type::TypeReference {
@@ -120,7 +120,8 @@ impl<'a> From<ir::Model<'a>> for Interface<'a> {
                         optional: false,
                     }
                 }
-                ir::RelationType::OneToMany | ir::RelationType::ManyToMany => {
+                ir::model::model_relation::Type::OneToMany
+                | ir::model::model_relation::Type::ManyToMany => {
                     Property {
                         identifier: relation_name.into(),
                         r#type: Type::Array(Box::new(Type::TypeReference {
@@ -155,61 +156,61 @@ mod tests {
         model.insert_enum_relation("countryName", "CountryName")?;
         model.insert_enums_relation("tags", "Tag")?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "isPublic".into(),
             r#type: ir::Type::Boolean,
             cardinality: ir::Cardinality::One,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "createdAt".into(),
             r#type: ir::Type::DateTime,
             cardinality: ir::Cardinality::One,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "latitude".into(),
             r#type: ir::Type::Float,
             cardinality: ir::Cardinality::One,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "height".into(),
             r#type: ir::Type::Int,
             cardinality: ir::Cardinality::One,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "title".into(),
             r#type: ir::Type::String,
             cardinality: ir::Cardinality::One,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "anArrayOfBooleansIsDumb".into(),
             r#type: ir::Type::Boolean,
             cardinality: ir::Cardinality::Many,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "events".into(),
             r#type: ir::Type::DateTime,
             cardinality: ir::Cardinality::Many,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "latitudes".into(),
             r#type: ir::Type::Float,
             cardinality: ir::Cardinality::Many,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "heights".into(),
             r#type: ir::Type::Int,
             cardinality: ir::Cardinality::Many,
         })?;
 
-        model.insert_field(ir::Field {
+        model.insert_field(ir::model::Field {
             name: "names".into(),
             r#type: ir::Type::String,
             cardinality: ir::Cardinality::Many,

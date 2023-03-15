@@ -1,5 +1,5 @@
 use {
-    ir::Enum as IrEnum,
+    ir,
     print::Print,
     std::{
         borrow::Cow,
@@ -39,8 +39,8 @@ impl Print for Enum<'_> {
     }
 }
 
-impl<'a> From<IrEnum<'a>> for Enum<'a> {
-    fn from(ir_enum: IrEnum<'a>) -> Self {
+impl<'a> From<ir::Enum<'a>> for Enum<'a> {
+    fn from(ir_enum: ir::Enum<'a>) -> Self {
         let mut r#enum = Self {
             name: ir_enum.name.clone(),
             values: TokenSet::new(),
@@ -104,7 +104,7 @@ enum Test {
     #[test]
     fn test_from() {
         assert_eq!(
-            Enum::from(IrEnum {
+            Enum::from(ir::Enum {
                 name: "Test".into(),
                 values: TokenSet::from_iter(["A", "B"])
             }),

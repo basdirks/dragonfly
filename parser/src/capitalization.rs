@@ -128,7 +128,7 @@ pub fn capitalized(input: &str) -> ParseResult<String> {
 ///
 /// assert_eq!(pascal_case(""), Err(ParseError::UnexpectedEof));
 /// ```
-pub fn pascal(input: &str) -> ParseResult<String> {
+pub fn pascal_case(input: &str) -> ParseResult<String> {
     if let Ok((parts, input)) = many1(input, capitalized) {
         return Ok((parts.join(""), input));
     }
@@ -186,7 +186,7 @@ pub fn pascal(input: &str) -> ParseResult<String> {
 ///
 /// assert_eq!(camel_case(""), Err(ParseError::UnexpectedEof));
 /// ```
-pub fn camel(input: &str) -> ParseResult<String> {
+pub fn camel_case(input: &str) -> ParseResult<String> {
     let (head, input) = many1(input, lowercase).map_err(|e| {
         match e {
             ParseError::UnexpectedChar { .. } => {

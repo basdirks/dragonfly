@@ -28,7 +28,7 @@ pub use {
     },
     return_type::ReturnType,
     schema::{
-        Node as SchemaNode,
+        Node,
         Schema,
     },
 };
@@ -162,17 +162,7 @@ impl<'a> Query<'a> {
 mod tests {
     use {
         super::*,
-        crate::{
-            QueryArgument,
-            QueryCondition,
-            QueryOperator,
-            QueryPath,
-            QueryReturnType,
-            QuerySchema,
-            QuerySchemaNode,
-            QueryWhere,
-            Scalar,
-        },
+        crate::r#type,
         ord_str_map::OrdStrMap,
     };
 
@@ -192,13 +182,13 @@ mod tests {
         let expected = Query {
             name: "images".into(),
             arguments: OrdStrMap::new(),
-            schema: QuerySchema {
+            schema: Schema {
                 name: "image".into(),
-                nodes: vec![QuerySchemaNode::Field {
+                nodes: vec![Node::Field {
                     name: "title".into(),
                 }],
             },
-            r#type: QueryReturnType::Array("Image".into()),
+            r#type: ReturnType::Array("Image".into()),
             r#where: None,
         };
 
@@ -235,40 +225,40 @@ mod tests {
 
                 let _: Option<Argument> = arguments.insert(
                     "tag",
-                    QueryArgument {
+                    Argument {
                         name: "tag".into(),
-                        r#type: Type::Scalar(Scalar::String),
+                        r#type: Type::Scalar(r#type::Scalar::String),
                     },
                 );
 
                 let _: Option<Argument> = arguments.insert(
                     "title",
-                    QueryArgument {
+                    Argument {
                         name: "title".into(),
-                        r#type: Type::Scalar(Scalar::String),
+                        r#type: Type::Scalar(r#type::Scalar::String),
                     },
                 );
 
                 arguments
             },
-            schema: QuerySchema {
+            schema: Schema {
                 name: "image".into(),
-                nodes: vec![QuerySchemaNode::Field {
+                nodes: vec![Node::Field {
                     name: "title".into(),
                 }],
             },
-            r#type: QueryReturnType::Array("Image".into()),
-            r#where: Some(QueryWhere {
+            r#type: ReturnType::Array("Image".into()),
+            r#where: Some(Where {
                 name: "image".into(),
                 conditions: vec![
-                    QueryCondition {
-                        path: QueryPath::from_iter(["title"]),
-                        operator: QueryOperator::Equals,
+                    Condition {
+                        path: Path::from_iter(["title"]),
+                        operator: Operator::Equals,
                         argument_name: "title".into(),
                     },
-                    QueryCondition {
-                        path: QueryPath::from_iter(["title", "tags"]),
-                        operator: QueryOperator::Contains,
+                    Condition {
+                        path: Path::from_iter(["title", "tags"]),
+                        operator: Operator::Contains,
                         argument_name: "tag".into(),
                     },
                 ],

@@ -146,7 +146,7 @@ where
     }
 
     for r#enum in ast.enums.values() {
-        typescript::Enum::from(r#enum.clone())
+        typescript::StringEnum::from(r#enum.clone())
             .print(0, &mut file)
             .map_err(|error| {
                 format!(
